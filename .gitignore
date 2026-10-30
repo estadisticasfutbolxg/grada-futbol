@@ -1,0 +1,13 @@
+.env
+.env.*
+!.env.example
+.cache/
+__pycache__/
+*.pyc
+data/
+*.sqlite
+*.sqlite.gz
+*.tar.gz
+*.png
+publish-source.py
+qa.cjs
