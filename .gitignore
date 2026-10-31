@@ -1,13 +1,19 @@
+# Credenciales y estado local
 .env
 .env.*
 !.env.example
 .cache/
 __pycache__/
 *.pyc
+
+# Datos y bases generadas
 data/
 *.sqlite
 *.sqlite.gz
 *.tar.gz
-*.png
+dist/downloads/*
+!dist/downloads/README.md
+
+# Herramientas locales de esta preparación
 publish-source.py
 qa.cjs
