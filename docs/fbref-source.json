@@ -1,0 +1,119 @@
+{
+  "repository": "m-mahadi/top5-football-dataset",
+  "commit": "8940299c2c56c2c0932d3caf292336f5e1689893",
+  "commit_date": "2026-08-18T12:24:14Z",
+  "original_source": "FBref (Sports Reference), según el repositorio de origen",
+  "download_route": "public_github_snapshot",
+  "files": [
+    {
+      "path": "data/clean/players/defense.csv",
+      "sha": "fc9e32a86d756eb4c4de9791ab39dbde32fb1f35",
+      "local": "players/defense.csv"
+    },
+    {
+      "path": "data/clean/players/gca.csv",
+      "sha": "1e866754cf288a252efb16d022f3f7ac35bf67b6",
+      "local": "players/gca.csv"
+    },
+    {
+      "path": "data/clean/players/keeper.csv",
+      "sha": "92c12f3c5e10712ac0dbc029b39b03ce9de0ad6d",
+      "local": "players/keeper.csv"
+    },
+    {
+      "path": "data/clean/players/keeper_adv.csv",
+      "sha": "90613f3ebe0ed840366220c88f3ab3c4ad16fa48",
+      "local": "players/keeper_adv.csv"
+    },
+    {
+      "path": "data/clean/players/misc.csv",
+      "sha": "5a348f30c9af8ee364a8ae9cd2f3dd2280a5dceb",
+      "local": "players/misc.csv"
+    },
+    {
+      "path": "data/clean/players/passing.csv",
+      "sha": "2024d1f8c9eec2e1ce7b006622a359b387e64b81",
+      "local": "players/passing.csv"
+    },
+    {
+      "path": "data/clean/players/passing_types.csv",
+      "sha": "3946dc7747f9f08eaaa8bbac6d8a66e8a9a3ee0f",
+      "local": "players/passing_types.csv"
+    },
+    {
+      "path": "data/clean/players/playing_time.csv",
+      "sha": "83cf2beea4471534f9acd3c44bc8f10a566b502d",
+      "local": "players/playing_time.csv"
+    },
+    {
+      "path": "data/clean/players/possession.csv",
+      "sha": "e8c227d46ffbf99ca8758a1a0989e6e8f516267e",
+      "local": "players/possession.csv"
+    },
+    {
+      "path": "data/clean/players/shooting.csv",
+      "sha": "99a37fee3213de269a991345bc0ae48897bf9404",
+      "local": "players/shooting.csv"
+    },
+    {
+      "path": "data/clean/players/standard.csv",
+      "sha": "789917442a443ee53a64cce092c7a5461f35a8de",
+      "local": "players/standard.csv"
+    },
+    {
+      "path": "data/clean/teams/defense.csv",
+      "sha": "d04b6f9c6da928ff7069abac650faa5ef83485da",
+      "local": "teams/defense.csv"
+    },
+    {
+      "path": "data/clean/teams/gca.csv",
+      "sha": "cf9c085b1da989d2d9aeb64c5b55e92b6c901947",
+      "local": "teams/gca.csv"
+    },
+    {
+      "path": "data/clean/teams/keeper.csv",
+      "sha": "9b99fd9f745e586238cc0b63b1b1aca9b00ecf1e",
+      "local": "teams/keeper.csv"
+    },
+    {
+      "path": "data/clean/teams/keeper_adv.csv",
+      "sha": "64617d74130789e0741963d059fc198f5eb63314",
+      "local": "teams/keeper_adv.csv"
+    },
+    {
+      "path": "data/clean/teams/misc.csv",
+      "sha": "de8e131990278743dcb9f7f6447048757dd843b9",
+      "local": "teams/misc.csv"
+    },
+    {
+      "path": "data/clean/teams/passing.csv",
+      "sha": "b47cdcd20cadeeffde3142927cc8e6dee9ea954a",
+      "local": "teams/passing.csv"
+    },
+    {
+      "path": "data/clean/teams/passing_types.csv",
+      "sha": "1b9eea62fb3419e6c8c6a508ba1df851220ffd36",
+      "local": "teams/passing_types.csv"
+    },
+    {
+      "path": "data/clean/teams/playing_time.csv",
+      "sha": "3c070ff9de76418419f40efe7c2e26257471d112",
+      "local": "teams/playing_time.csv"
+    },
+    {
+      "path": "data/clean/teams/possession.csv",
+      "sha": "5ddd310aa95756765e1fd9670690286036fdf8f7",
+      "local": "teams/possession.csv"
+    },
+    {
+      "path": "data/clean/teams/shooting.csv",
+      "sha": "3a615f5c5a1ac4e7e670ca3779dd24e71c26935b",
+      "local": "teams/shooting.csv"
+    },
+    {
+      "path": "data/clean/teams/standard.csv",
+      "sha": "f2943280f41bfcf72fde862b704060252deab327",
+      "local": "teams/standard.csv"
+    }
+  ]
+}

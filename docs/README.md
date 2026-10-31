@@ -21,11 +21,14 @@ loop/
   workflows/pages.yml             Flujo de publicación ya existente
 scripts/
   import_statsbomb.py             Importación y generación de datos
+  import_fbref.py                 Snapshot FBref a CSV y SQLite
   validate_data.py                Comprobaciones locales sin red
   check_collaboration_docs.py     Enlaces, skills y estructura del loop
 docs/
   ARCHITECTURE.md                  Estructura y puntos de coordinación
   DATA.md                         Contrato, cálculos y límites
+  FBREF.md                        Origen y límites de LaLiga 2025/26
+  fbref-source.json               Commit y SHA fijados del snapshot
   STATUS.md                       Hechos comprobados, pendientes y siguientes pasos
   decisions/                      Decisiones duraderas
 ```

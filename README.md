@@ -1,43 +1,37 @@
 # GRADA · Estadísticas de fútbol
 
-Web en español con líderes, tablas por equipo y jugador, perfiles, comparador y exportación CSV. Está hecha con HTML, CSS y JavaScript, sin dependencias de aplicación.
+Web en español de líderes, tablas por equipo y jugador, perfiles, comparación y CSV. HTML, CSS y JavaScript en `dist/`; importación y generación de bases SQLite con Python de biblioteca estándar.
 
-Los datos son de **StatsBomb Open Data, Mundial masculino de 2022**: 64 partidos, 32 selecciones, 681 registros de jugadores y 234.637 eventos. Los marcadores suman 172 goles. La cobertura y la fecha de importación aparecen en la web. No se incluyen cifras de demostración. PSxG y goles evitados se muestran como no disponibles.
+## Qué incluye el repositorio
 
-## Estado de esta entrega
+- El código de la web y un arranque vacío (`dist/data.js`). No hay cifras de demostración.
+- `scripts/import_statsbomb.py`: descarga los 64 partidos del Mundial masculino 2022, agrega métricas y genera los datos de la web y SQLite.
+- `scripts/import_fbref.py`: descarga una copia pública identificada como procedente de FBref, fijada por commit y SHA; extrae LaLiga 2025/26 y genera CSV y SQLite separados.
+- Skills, loop, plantillas y validadores para trabajar entre dos personas.
 
-Esta entrega incorpora las skills, la documentación, el loop y sus validadores. El código y los datos de la aplicación todavía deben subirse al remoto mediante GRADA-001. Las cifras y descargas descritas debajo corresponden al paquete completo preparado localmente; consulta [el estado comprobado](docs/STATUS.md) antes de asumir que están en GitHub.
+**Las bases y los datos generados no se incluyen en Git.** La web muestra que faltan los datos hasta ejecutar la importación de StatsBomb. FBref se conserva aparte: no se mezcla automáticamente con los rankings del Mundial.
 
-## Ver la web
+## Generar los datos de la web y la base
 
-Abre `dist/index.html` en tu navegador. Los datos ya importados están incluidos en `dist/data.js`; no hace falta una API, registro ni servidor para consultar las tablas. Si prefieres servirla localmente:
-
-```sh
-python -m http.server 8000 --directory dist
-```
-
-Abre http://localhost:8000. El botón CSV descarga la tabla actual respetando filtros, orden y modo por 90 minutos.
-
-## Base de datos gratuita
-
-SQLite no necesita registro, servidor ni suscripción. En `dist/downloads/` se incluyen:
-
-- `statsbomb.sqlite.gz`: base de datos SQLite comprimida. Descomprímela para abrirla con DB Browser for SQLite, Python u otra herramienta compatible.
-- `statsbomb.json`: métricas derivadas de equipos, jugadores y partidos.
-- `SHA256SUMS`: comprobación de integridad del archivo comprimido.
-- `source-manifest.json`: rutas y SHA de los archivos de origen usados en la importación incluida.
-
-Tablas de SQLite: `matches`, `events`, `lineups`, `players`, `teams`, `metadata`. Los eventos conservan un subconjunto normalizado de campos. La base incluye los eventos de las tandas para consulta, pero estos se excluyen de las métricas. No se importa StatsBomb 360 ni `freeze_frame`.
-
-## Volver a importar
-
-Requiere Python 3.10 o posterior y conexión a Internet. Solo usa la biblioteca estándar:
+Requiere Python 3.10 o posterior y acceso a Internet. Desde la raíz del proyecto:
 
 ```sh
 python scripts/import_statsbomb.py
+python scripts/validate_data.py
+python -m http.server 8000 --directory dist
 ```
 
-La importación comprueba la integridad de SQLite y que los totales de goles y xG coincidan. Los JSON originales quedan en la caché local `data/raw/`, excluida de Git.
+Abre http://localhost:8000. No necesitas instalar paquetes de Python, npm ni contratar una base de datos. El CSV del navegador respeta los filtros, el orden y el modo por 90 minutos.
+
+El importador genera:
+
+- `dist/data.js`: estadísticas reales que consume la web.
+- `dist/downloads/statsbomb.json`: payload de jugadores, equipos y partidos.
+- `dist/downloads/statsbomb.sqlite.gz`: base descargable comprimida.
+- `dist/downloads/SHA256SUMS`: integridad del archivo anterior.
+- `data/statsbomb.sqlite` y caché original en `data/raw/`.
+
+El `data.js` versionado es solo el arranque vacío. Al importar se modifica localmente: conserva ese cambio para explorar los datos, pero no añadas el payload generado a un commit de código. Las descargas y la caché están ignoradas por Git.
 
 Para una importación parcial explícita:
 
@@ -45,37 +39,43 @@ Para una importación parcial explícita:
 python scripts/import_statsbomb.py --limit 3
 ```
 
-La web indicará la cobertura parcial. Sus rankings solo representarán esos partidos.
+La web indica esa cobertura y no presenta sus rankings como los totales del Mundial. Las salidas de una importación se validan juntas; el importador todavía no promociona todo el conjunto de manera atómica, según GRADA-003.
 
-## GitHub Pages
+## Descargar FBref · LaLiga 2025/26
 
-El flujo `.github/workflows/pages.yml` permite regenerar los datos y publicar `dist/`. Para activarlo, el propietario debe seleccionar **Settings → Pages → Source → GitHub Actions**, y ejecutarlo desde **Actions → Publicar GRADA con StatsBomb → Run workflow**. Una subida a `main` también lo ejecuta. Subir el código al repositorio no equivale a haber publicado la web.
+```sh
+python scripts/import_fbref.py
+```
 
-## Métricas y límites
+Salida: `data/fbref/laliga-2025-26/`, con 22 CSV, `metadata.json` y `fbref_laliga_2025_26.sqlite`. La copia usada declara 38 partidos por cada uno de los 20 equipos, 611 registros jugador-equipo y 39 de porteros. Los traspasos pueden producir varias filas de un jugador.
 
-- Goles y xG: eventos `Shot` y `shot.statsbomb_xg`; las tandas (periodo 5) se excluyen. Los goles de equipo proceden del marcador, incluidos los autogoles. Los autogoles no añaden xG.
-- Pases: intentos de pase y pases sin `pass.outcome` como completados.
-- Asistencias: `pass.goal_assist`.
-- xA derivada: suma del xG de los tiros enlazados por `pass.assisted_shot_id`. No es un modelo independiente del valor esperado de todos los pases.
-- Pases progresivos: pases completados que avanzan al menos 10 metros en el eje longitudinal, convirtiendo el campo StatsBomb de 120 unidades a 105 metros. Es una definición propia de GRADA.
-- Conversión: goles / tiros. Precisión: pases completados / intentados. Los líderes de precisión requieren al menos 30 intentos.
-- Paradas: tiros rivales con resultado `Saved`, `Saved to Post` o `Saved Off Target`, asignados al portero presente mediante el orden de alineaciones, cambios y eventos. El porcentaje usa paradas / (paradas + goles encajados), incluidos los autogoles.
-- Minutos: suma de intervalos de posición de las alineaciones, con límite de 90 o 120 minutos. No incluyen el tiempo añadido. Sin intervalos válidos, el dato por 90 queda sin calcular.
-- Portería a cero: equipo sin encajar goles y portero con al menos 60 minutos en portería.
-- PSxG y goles evitados: **no disponibles**, nunca rellenados con cero ni estimaciones.
-- Posesión: no calculada.
+La descarga directa de FBref devolvió 403 desde el entorno de preparación. El script usa la copia pública `m-mahadi/top5-football-dataset` identificada como FBref, fijada en [docs/fbref-source.json](docs/fbref-source.json). No descarga su tabla combinada con otros proveedores. [FBREF.md](docs/FBREF.md) documenta origen, cobertura y limitaciones.
 
-## Fuente y licencia de datos
+Esta captura tiene goles, asistencias, tiros, minutos y paradas. Pases, xG y PSxG no están disponibles en las tablas seleccionadas; las celdas ausentes quedan vacías en CSV y `NULL` en SQLite. No se completan con datos ficticios ni se presentan como métricas de StatsBomb.
 
-Fuente: [StatsBomb Open Data](https://github.com/statsbomb/open-data), actualmente alojada en [hudl/open-data](https://github.com/hudl/open-data). Consulta su [licencia](https://github.com/hudl/open-data/blob/master/LICENSE.pdf) y términos de uso. Los datos y la marca StatsBomb pertenecen a sus titulares.
+## Publicación opcional en GitHub Pages
 
-## Trabajar entre dos personas
+El workflow `.github/workflows/pages.yml` importa StatsBomb, comprueba el código y publica `dist/` si el propietario configura **Settings → Pages → Source → GitHub Actions**. Las bases se generan durante el workflow y se sirven como artefactos de la web; no se guardan en el historial Git.
 
-Empieza por [CONTRIBUTING.md](CONTRIBUTING.md) y [el mapa de documentación](docs/README.md). Las instrucciones para asistentes están en [AGENTS.md](AGENTS.md), y las tres skills compartidas en `.agents/skills/`. El [loop de tareas](loop/README.md) incluye un [prompt reutilizable](loop/PROMPT.md), plantillas y fichas de arranque. El [estado real](docs/STATUS.md) distingue la copia local, GitHub y la publicación.
+La presencia de ese archivo no confirma un despliegue. Revisa el estado y la URL reales después de ejecutarlo. También puedes servir `dist/` en otro alojamiento estático tras generar los datos.
 
-Comprobaciones locales sin red:
+## Métricas y colaboración
+
+Las definiciones de goles, tandas, xA derivada, minutos nominales y porteros están en [DATA.md](docs/DATA.md). PSxG y goles evitados no se calculan en la importación StatsBomb.
+
+Para trabajar entre dos personas, empieza por [CONTRIBUTING.md](CONTRIBUTING.md), [AGENTS.md](AGENTS.md) y [el loop](loop/README.md). Skills: `$grada-loop`, `$grada-data` y `$grada-review`.
+
+Comprobaciones sin red:
 
 ```sh
 python scripts/check_collaboration_docs.py
-python scripts/validate_data.py
+node --check dist/app.js
+python -m py_compile scripts/import_statsbomb.py scripts/import_fbref.py
 ```
+
+Después de generar StatsBomb, ejecuta `python scripts/validate_data.py`. Los datos y bases actuales se conservan localmente; este repositorio distribuye su código generador.
+
+## Fuentes
+
+- [StatsBomb Open Data](https://github.com/hudl/open-data) y [licencia de datos](https://github.com/hudl/open-data/blob/master/LICENSE.pdf).
+- [Copia pública atribuida a FBref](https://github.com/m-mahadi/top5-football-dataset), su aviso de datos y los términos de Sports Reference. La licencia MIT de ese repositorio cubre su código, no concede derechos sobre los datos.

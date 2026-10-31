@@ -45,3 +45,7 @@ El manifiesto de SHA del origen incluido fue capturado durante la descarga media
 ## Publicación
 
 Un push es una operación de Git, un workflow es una ejecución y una URL publicada es otro resultado. Verifica los tres por separado cuando formen parte de la tarea. No hay despliegue confirmado de GRADA en el estado documentado; consulta [STATUS.md](STATUS.md).
+
+## Importación FBref independiente
+
+`scripts/import_fbref.py` toma una copia pública de FBref fijada en `docs/fbref-source.json`, verifica los SHA y escribe CSV y SQLite en `data/fbref/`, fuera de Git. Su esquema es distinto del payload de StatsBomb y no se conecta automáticamente a la UI. Consulta [FBREF.md](FBREF.md).

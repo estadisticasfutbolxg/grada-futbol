@@ -52,3 +52,7 @@ El validador trabaja sin red, comprueba integridad y concordancia de artefactos,
 ## Datos de referencia, no constantes universales
 
 La captura incluida contiene 64 partidos, 32 selecciones, 681 registros de jugadores, 234.637 eventos y 172 goles en marcadores. Los registros pueden incluir personas mencionadas en eventos sin minutos nominales. No uses estos números como reglas para otras competiciones o importaciones parciales.
+
+## Otra fuente: FBref
+
+La importación opcional de FBref está separada y documentada en [FBREF.md](FBREF.md). No sustituye este contrato del payload de la web. Sus campos vacíos permanecen ausentes y no se completan con valores de otro proveedor.

@@ -1,12 +1,12 @@
 # GRADA-001 · Subir y verificar la base del repositorio
 
-- Estado: `blocked`
+- Estado: `review`
 - Responsable: estadisticasfutbolxg
 - Revisor: por asignar
-- Rama: por crear en el remoto completo
+- Rama de entrega: `docs/colaboracion`
 - Base remota observada: `d73f0123d12fe33eb23cbc62cabff0c3760c8909`
 - Issue: no creado; identificador local
-- PR: no creado
+- PR: #1, ampliado con código y generadores
 - Objetivo de entrega: repositorio remoto completo y clonable
 
 ## Objetivo
@@ -15,12 +15,12 @@ Que ambas personas puedan clonar la misma versión de GRADA con código, datos r
 
 ## Alcance y coordinación
 
-La carga inicial incluye código de `dist/`, datos servidos de `dist/downloads/`, importador, validador, skills, documentación, loop y plantillas. No incluye caché `data/raw/`, secretos ni estado interno de Sites. La tarea de documentación GRADA-002 prepara parte de este paquete.
+La carga inicial incluye código de `dist/`, importadores, validadores, skills, documentación, loop y plantillas. El usuario ha indicado expresamente que no se suba la base: los datos de `dist/downloads/` y `data.js` se generan, no se versionan como payload. No se suben cachés, secretos ni estado interno de Sites.
 
 ## Aceptación
 
 - [ ] La rama remota contiene el proyecto completo, no solo `.gitignore`.
-- [ ] Un clon limpio abre la web y ejecuta el validador de datos sin importar por red.
+- [ ] Un clon limpio abre la web vacía; tras ejecutar la importación, el validador comprueba los datos reales generados.
 - [ ] Ambas personas tienen los accesos adecuados, comprobados por el propietario.
 - [ ] Consta el commit remoto verificado y el siguiente paso para publicar, si se desea.
 
@@ -30,4 +30,4 @@ La carga inicial incluye código de `dist/`, datos servidos de `dist/downloads/`
 
 ## Siguiente paso
 
-Subir el contenido del paquete desde GitHub o desde un entorno con escritura funcional; verificar después los archivos y el commit remoto. No repetir llamadas pendientes indefinidamente. Esta tarea no acredita que la web esté publicada.
+Verificar la ampliación de PR #1 con código y generadores; la base queda fuera por indicación del usuario. La revisión, el merge y el despliegue siguen siendo pasos separados.
