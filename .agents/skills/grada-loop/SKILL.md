@@ -19,7 +19,9 @@ description: Ejecuta una tarea acotada en GRADA con coordinación entre dos pers
 - Si cambias datos o métricas, aplica `.agents/skills/grada-data/SKILL.md`.
 - Ejecuta los checks proporcionales de `AGENTS.md`. Repara fallos de la tarea, no problemas ajenos sin relación.
 - Compara el diff con los criterios. Aplica `.agents/skills/grada-review/SKILL.md` para el autocontrol y la entrega.
-- Actualiza solo la ficha de la tarea con resultado, evidencia y siguiente paso. Prepara commit o PR dentro de la autorización vigente; no marques `done` por haber terminado de editar.
+- Actualiza la ficha de la tarea con resultado, evidencia y siguiente paso; no marques `done` por haber terminado de editar.
+- Por preferencia expresa del usuario, guarda cada incremento coherente en un commit y súbelo a la rama de la tarea en GitHub tras los checks relevantes, sin esperar a terminar toda la funcionalidad. No subas credenciales, bases ni capturas generadas. Usa un PR en borrador si quedan criterios pendientes y actualiza su estado al completar la revisión.
+- Verifica el SHA remoto después de cada subida y registra el enlace comprobado. Si falla el push, conserva el commit y continúa solo el trabajo independiente. No confundas commit local, subida, merge y despliegue.
 
 ## Coordinación y salida
 

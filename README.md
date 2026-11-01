@@ -79,3 +79,7 @@ Después de generar StatsBomb, ejecuta `python scripts/validate_data.py`. Los da
 
 - [StatsBomb Open Data](https://github.com/hudl/open-data) y [licencia de datos](https://github.com/hudl/open-data/blob/master/LICENSE.pdf).
 - [Copia pública atribuida a FBref](https://github.com/m-mahadi/top5-football-dataset), su aviso de datos y los términos de Sports Reference. La licencia MIT de ese repositorio cubre su código, no concede derechos sobre los datos.
+
+## LaLiga 2026/27 y ayuda de métricas
+
+La web permite actualizar LaLiga 2026/27 desde ESPN con su botón. Para generar la captura que se sirve en Sites, ejecuta `python scripts/import_laliga.py`; no se versionan los datos generados. Consulta [fuente, campos y límites](docs/LALIGA.md). En porteros se muestran xG y goles recibidos por 90 cuando existen minutos y xG; las cabeceras explican cada métrica con cursor, teclado o el botón ⓘ.

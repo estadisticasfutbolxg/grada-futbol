@@ -17,7 +17,7 @@ GRADA es una web de estadísticas de fútbol en español. Usa HTML/CSS/JavaScrip
 
 ## Datos y producto
 
-- Los datos visibles deben proceder de StatsBomb Open Data y declarar competición, temporada y cobertura.
+- Los datos visibles deben proceder de StatsBomb Open Data o de la integración de ESPN autorizada para LaLiga 2026/27; declarar fuente, competición, temporada y cobertura. No mezclar métricas entre proveedores.
 - Nunca inventes cifras, extrapoles una temporada con un multiplicador ni completes métricas ausentes con cero. Conserva `null` y muestra `—`.
 - Excluye las tandas de las métricas; conserva la distinción entre goles de jugadores y marcadores con autogoles.
 - Mantén explícitas las definiciones de xA derivada, minutos y paradas. PSxG y goles evitados siguen no disponibles hasta que exista una fuente adecuada.

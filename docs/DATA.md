@@ -56,3 +56,11 @@ La captura incluida contiene 64 partidos, 32 selecciones, 681 registros de jugad
 ## Otra fuente: FBref
 
 La importación opcional de FBref está separada y documentada en [FBREF.md](FBREF.md). No sustituye este contrato del payload de la web. Sus campos vacíos permanecen ausentes y no se completan con valores de otro proveedor.
+
+## Tasas de porteros en la interfaz
+
+`xga90` = `xga × 90 / minutes` y `conceded90` = `conceded × 90 / minutes`. Se muestran junto a los totales en la tabla, ficha y comparador de porteros. Son campos derivados al mostrar/exportar; no alteran los artefactos históricos. Si faltan valores o los minutos son cero, el resultado es `null`. En modo «Por 90 min» las columnas originales se normalizan una vez y no se repiten las tasas fijas. Las cabeceras y el CSV identifican la unidad.
+
+## LaLiga 2026/27
+
+La integración de ESPN está autorizada por el usuario y documentada en [LALIGA.md](LALIGA.md). Reutiliza la forma del payload con identificadores de jugador compuestos por equipo y jugador y campos ausentes como `null`. Cada conjunto conserva su fuente y sus definiciones. La validación de StatsBomb no valida capturas de ESPN; `dist/laliga.js` comprueba estas últimas.
