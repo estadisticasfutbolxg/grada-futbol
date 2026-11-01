@@ -4,3 +4,11 @@
 .databanner{margin:0 0 20px;padding:15px 18px;background:#fff8e9;border:1px solid #ead7aa;border-radius:6px;color:#624e28;font-size:12px;line-height:1.7}.downloadlinks{display:flex;gap:20px;flex-wrap:wrap}.downloadlinks a,footer a{color:#1768a4}.empty{padding:30px 20px;text-align:center;font-size:12px;color:#68717b;line-height:1.7}.compareselect{width:100%;margin:14px 0}.detailtitle{margin-top:14px}button:disabled{opacity:.5;cursor:default;filter:none}select:disabled{color:#626870;cursor:default}
 
 .sblogo{width:104px;height:auto;display:block}footer{align-items:center;gap:20px;flex-wrap:wrap}
+
+/* Column descriptions stay outside the table's scroll container. */
+.column-head{display:flex;align-items:center;gap:6px;justify-content:flex-end}
+th .column-head button{white-space:nowrap}.column-info{border:0;background:transparent;color:#68717b;padding:8px 4px;min-width:24px;min-height:32px;font-size:12px}
+.column-info:hover{color:#a91729}.column-info:focus-visible{outline:2px solid #b31326;outline-offset:2px}
+#column-tooltip{position:fixed;z-index:1000;width:max-content;max-width:min(340px,calc(100vw - 16px));padding:12px 14px;background:#202732;color:#fff;border-radius:6px;box-shadow:0 5px 20px #0003;font-size:12px;line-height:1.6;text-align:left;overflow-wrap:anywhere}
+#column-tooltip[hidden]{display:none}.refresh{background:#b31326;color:white;font-size:12px}#refresh-status:not(:empty){margin:8px 0;font-weight:600}.filters .scope{flex-basis:100%;margin-left:0}
+@media(max-width:600px){.filters{gap:8px}.filters .refresh{order:4;flex-basis:100%}.column-info{min-width:28px;min-height:40px}.column-head{gap:2px}}

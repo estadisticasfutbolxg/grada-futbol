@@ -49,3 +49,7 @@ Un push es una operación de Git, un workflow es una ejecución y una URL public
 ## Importación FBref independiente
 
 `scripts/import_fbref.py` toma una copia pública de FBref fijada en `docs/fbref-source.json`, verifica los SHA y escribe CSV y SQLite en `data/fbref/`, fuera de Git. Su esquema es distinto del payload de StatsBomb y no se conecta automáticamente a la UI. Consulta [FBREF.md](FBREF.md).
+
+## Consulta de LaLiga 2026/27
+
+`dist/metrics.js` contiene la normalización y las tasas; `dist/laliga.js`, la consulta/validación y adaptación de ESPN. `scripts/import_laliga.py` genera una captura real atómica para Sites, reutilizando ese adaptador. El botón actualiza la copia del navegador. Consulta [LALIGA.md](LALIGA.md) para campos, cobertura y límites. El hosting continúa siendo estático.
