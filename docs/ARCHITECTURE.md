@@ -57,3 +57,7 @@ Un push es una operación de Git, un workflow es una ejecución y una URL public
 ## Captura de Understat
 
 `scripts/import_understat.py` extrae y valida datos públicos de LaLiga 2026/27, genera JSON y SQLite. `dist/understat.js` valida la captura consumida por la UI; `dist/security.js` restringe enlaces y protege CSV. El selector mantiene los proveedores separados. El botón de Understat recarga la captura publicada, según [UNDERSTAT.md](UNDERSTAT.md).
+
+## Vista combinada, radar y filtros
+
+La vista combinada autorizada da prioridad a Understat y complementa coincidencias inequívocas con ESPN, conservando origen, fecha y denominadores por métrica. Añade descargas explícitas, radar por posición y filtros numéricos. Consulta [definiciones y límites](COMBINED.md).

@@ -76,3 +76,7 @@ La [integración Understat](UNDERSTAT.md) conserva su modelo de xG/xA y minutos 
 - `xgaPerMatch` = `xga / matches` del registro del portero. Una aparición parcial cuenta como partido jugado. No se usa el número de partidos del equipo ni se sustituye `xga` por el dato de equipo.
 
 Estas métricas se derivan al mostrar y exportar. Se calculan a partir de los totales originales y conservan su valor en modo por 90. Con denominador cero, ausente o inválido se muestra `—`; un numerador cero con denominador positivo da 0. Las ratios de ataque se muestran con dos decimales y ×, mientras que el CSV conserva valores numéricos. Los tiros forman parte de las columnas visibles y se normalizan por 90 al seleccionar esa unidad. Understat y ESPN no ofrecen `xga` por portero en las capturas actuales: `xgaPerMatch` queda ausente.
+
+## Vista combinada, radar y filtros
+
+La vista combinada autorizada da prioridad a Understat y complementa coincidencias inequívocas con ESPN, conservando origen, fecha y denominadores por métrica. Añade descargas explícitas, radar por posición y filtros numéricos. Consulta [definiciones y límites](COMBINED.md).

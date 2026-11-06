@@ -1,6 +1,6 @@
 # LaLiga 2026/27 · Actualización pública
 
-La web ofrece LaLiga 2026/27 mediante la API pública de ESPN. El selector conserva el Mundial 2022 de StatsBomb como conjunto independiente. No se mezclan métricas entre proveedores ni se presentan los datos de FBref 2025/26 como otra temporada.
+La web ofrece LaLiga 2026/27 mediante la API pública de ESPN. El selector conserva el Mundial 2022 de StatsBomb como conjunto independiente. Las vistas individuales conservan su proveedor. La [vista combinada autorizada](COMBINED.md) da prioridad a Understat y conserva la procedencia y cobertura de cada campo ESPN. Los datos de FBref 2025/26 no se presentan como otra temporada.
 
 ## Actualizar en la web
 
