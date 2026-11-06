@@ -22,3 +22,8 @@ test('keeper radar supports appearances when the source has no minutes',()=>{
  const peers=Array.from({length:6},(_,i)=>({id:i,pos:'POR',minutes:null,matches:3,saves:9,conceded:3,savepct:75}));
  const profile=radar.profile(peers[0],peers);assert.equal(profile.axes.length,3);assert(profile.axes.some(a=>a.key==='concededPerMatch'&&a.lowerBetter));
 });
+
+test('each radar reference axis uses its own provider coverage',()=>{
+ const keepers=Array.from({length:6},(_,i)=>({id:i,pos:'POR',minutes:900,matches:10,saves:9,conceded:3,savepct:75,metricContexts:Object.fromEntries(['saves','conceded','savepct'].map(k=>[k,{source:'ESPN',minutes:null,matches:i===5?1:3}]))}));
+ const profile=radar.profile(keepers[0],keepers);assert.equal(profile.axes.length,3);assert(profile.axes.every(a=>a.referenceCount===5));
+});
