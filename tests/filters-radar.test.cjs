@@ -27,3 +27,20 @@ test('each radar reference axis uses its own provider coverage',()=>{
  const keepers=Array.from({length:6},(_,i)=>({id:i,pos:'POR',minutes:900,matches:10,saves:9,conceded:3,savepct:75,metricContexts:Object.fromEntries(['saves','conceded','savepct'].map(k=>[k,{source:'ESPN',minutes:null,matches:i===5?1:3}]))}));
  const profile=radar.profile(keepers[0],keepers);assert.equal(profile.axes.length,3);assert(profile.axes.every(a=>a.referenceCount===5));
 });
+
+test('relative polygon area is normalized to its regular maximum',()=>{
+ assert.equal(radar.relativeArea([100,100,100,100,100,100]),1);
+ assert.equal(radar.relativeArea([50,50,50,50]),0.25);
+ assert.equal(radar.relativeArea([0,0,0]),0);
+ assert.equal(radar.relativeArea([100,0,100]),1/3);
+ assert.equal(radar.relativeArea([100,100]),null);assert.equal(radar.relativeArea([100,101,0]),null);
+});
+test('position templates exclude attack from keepers and missing common axes do not receive a table score',()=>{
+ const peers=Array.from({length:6},(_,i)=>({id:i,pos:'POR',minutes:900,matches:10,saves:30,conceded:10,savepct:75,prevented:2,highClaims:10,sweeperActions:20,goals:99,xg:99,xa:99}));
+ const all=radar.profiles(peers),p=all.get(peers[0]);
+ assert.equal(p.axes.length,6);assert.equal(p.area,0.25);assert.equal(p.comparableArea,0.25);
+ assert(!p.axes.some(a=>['goals','xg','xa'].includes(a.key)));
+ peers[0].highClaims=null;const partial=radar.profile(peers[0],peers);
+ assert.equal(partial.axes.length,5);assert.equal(partial.comparableArea,null);assert.equal(partial.area,0.25);
+ assert(filters.matches(peers[1],[{key:'radarArea',op:'>=',value:'0.2'}],(p,k)=>k==='radarArea'?all.get(p).comparableArea:null));
+});

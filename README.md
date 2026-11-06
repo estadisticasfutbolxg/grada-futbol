@@ -90,4 +90,8 @@ Ejecuta `python scripts/import_understat.py` con Python 3.11+ para generar JSON 
 
 ## Vista combinada, radar y filtros
 
-La vista combinada autorizada da prioridad a Understat y complementa coincidencias inequívocas con ESPN, conservando origen, fecha y denominadores por métrica. Añade descargas explícitas, radar por posición y filtros numéricos. Consulta [definiciones y límites](docs/COMBINED.md).
+La vista combinada autorizada da prioridad a Understat y complementa coincidencias inequívocas con ESPN y FotMob, conservando origen, fecha y denominadores por métrica. Añade descargas explícitas, radar por posición y filtros numéricos. Consulta [definiciones y límites](docs/COMBINED.md).
+
+## Pase, defensa y ataque de FotMob · LaLiga 2026/27
+
+Ejecuta `python scripts/import_fotmob.py` con Python 3.11+ y después `node scripts/build_combined.cjs`. Descarga rankings HTML reales y genera JSON/SQLite, con pases precisos/90, pases rompelíneas, entradas, intercepciones, recuperaciones, tiros a puerta, regates y métricas de porteros, entre otras. Consulta [FOTMOB.md](docs/FOTMOB.md) para unidades y cobertura. La tabla de jugadores añade un área normalizada del radar (0–1), ordenable y filtrable, comparable dentro de la misma posición y ejes.

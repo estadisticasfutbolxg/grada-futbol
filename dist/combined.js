@@ -3,14 +3,15 @@
   const node = typeof module === 'object' && module.exports;
   const understat = node ? require('./understat.js') : root.GradaUnderstat;
   const espn = node ? require('./laliga.js') : root.GradaLaLiga;
+  const fotmob = node ? require('./fotmob.js') : root.GradaFotmob;
   const SOURCE = 'Understat + ESPN';
-  const fields = ['matches','minutes','goals','assists','xg','xa','shots','passes','completed','accuracy','conversion','delta','saves','savepct','conceded','xga','clean','tackles','interceptions','keypasses','progressive','psxg','prevented'];
+  const fields = [...new Set(['matches','minutes','goals','assists','xg','xa','shots','passes','completed','accuracy','conversion','delta','saves','savepct','conceded','xga','clean','tackles','interceptions','recoveries','keypasses','progressive','psxg','prevented',...fotmob.fields])];
   const numeric = n => typeof n === 'number' && Number.isFinite(n);
   function normalize(value) { return String(value ?? '').normalize('NFKD').replace(/\p{M}/gu,'').toLowerCase().replace(/[^a-z0-9]/g,''); }
   function teamKey(name) {
     const key = normalize(name);
-    // Public names in the two validated league snapshots; no fuzzy matching.
-    return key === 'deportivo' ? 'deportivolacoruna' : key;
+    // Public names in the validated league snapshots; no fuzzy matching.
+    return ({deportivo:'deportivolacoruna',deportivoacoruna:'deportivolacoruna',deportivoalaves:'alaves'})[key] || key;
   }
   function index(rows,key) {
     const map = new Map();
@@ -21,8 +22,8 @@
     }
     return map;
   }
-  function combine(u,e) {
-    understat.validate(u); espn.validate(e);
+  function combine(u,e,f=null) {
+    understat.validate(u); espn.validate(e); if(f) fotmob.validate(f);
     if (u.metadata.competition !== e.metadata.competition || u.metadata.season !== e.metadata.season) throw new Error('Las fuentes no corresponden a la misma competición y temporada.');
     const uTeams = new Map(u.teams.map(t=>[String(t.id),teamKey(t.name)]));
     const eTeams = new Map(e.teams.map(t=>[String(t.id),teamKey(t.name)]));
@@ -31,25 +32,30 @@
     const eKey = p => eTeams.get(String(p.team_id))+'|'+normalize(p.name);
     const uTeamIndex = index(u.teams,t=>teamKey(t.name)), eTeamIndex = index(e.teams,t=>teamKey(t.name));
     const ui = index(u.players.filter(p=>uTeams.has(String(p.team_id))),uKey), ei = index(e.players,eKey);
-    const matchedIDs = new Set();
-    const stats = {matched_players:0,understat_only_players:0,ambiguous_players:0,conflicting_players:0};
-    function merge(primary,other,kind) {
+    const fTeams = new Map((f?.teams||[]).map(t=>[String(t.id),teamKey(t.name)]));
+    const fi = index(f?.players||[],p=>fTeams.get(String(p.team_id))+'|'+normalize(p.name));
+    const fTeamIndex = index(f?.teams||[],t=>teamKey(t.name));
+    const matchedIDs = new Set(), matchedFotmobIDs = new Set();
+    const stats = {matched_players:0,understat_only_players:0,ambiguous_players:0,conflicting_players:0,espn_matched_players:0,fotmob_matched_players:0};
+    function merge(primary,other,kind,additional=null) {
       const row = {...primary,id:(kind === 'player'?'combined:':'')+primary.id,fieldSources:{name:'Understat',team:'Understat',pos:'Understat'},metricContexts:{},sourceRecords:{Understat:{...primary}}};
       if (other) row.sourceRecords.ESPN = {...other};
+      if(additional) row.sourceRecords.FotMob = {...additional};
       const differences = [];
       for (const key of fields) {
-        const source = numeric(primary[key]) ? 'Understat' : other && numeric(other[key]) ? 'ESPN' : null;
-        row[key] = source ? (source === 'Understat' ? primary[key] : other[key]) : null;
+        const chosen = [['Understat',primary],['ESPN',other],['FotMob',additional]].find(([,r])=>r&&(numeric(r[key])||numeric(r.metricContexts?.[key]?.reportedPer90)));
+        const source = chosen?.[0], sourceRow = chosen?.[1];
+        row[key] = sourceRow && numeric(sourceRow[key]) ? sourceRow[key] : null;
         if (source) {
-          const sourceRow = source === 'Understat' ? primary : other;
           row.fieldSources[key] = source;
-          row.metricContexts[key] = {source,matches:sourceRow.matches ?? null,minutes:sourceRow.minutes ?? null};
+          row.metricContexts[key] = {...sourceRow.metricContexts?.[key],source,matches:sourceRow.matches ?? null,minutes:sourceRow.minutes ?? null};
         }
-        if (other && numeric(primary[key]) && numeric(other[key]) && primary[key] !== other[key]) differences.push(key);
+        if (new Set([primary,other,additional].filter(Boolean).map(r=>r[key]).filter(numeric)).size>1) differences.push(key);
       }
-      row.combination = {matched:!!other,conflicting_fields:differences};
+      row.combination = {matched:!!other||!!additional,conflicting_fields:differences};
       // Derived values must describe the same numerator/denominator cohort.
       function derived(key,a,b,calculate) {
+        if (row.metricContexts[key]?.reportedValue && numeric(row[key])) return;
         if (numeric(row[a]) && numeric(row[b]) && row.fieldSources[a] === row.fieldSources[b]) {
           row[key] = calculate(row[a],row[b]);
           if (numeric(row[key])) { row.fieldSources[key] = row.fieldSources[a]; row.metricContexts[key] = {...row.metricContexts[a]}; return; }
@@ -68,10 +74,15 @@
       const club = uTeams.get(String(p.team_id));
       const unique = !!club && !!normalize(p.name) && uTeamIndex.get(club)?.length === 1 && eTeamIndex.get(club)?.length === 1 && own.length === 1 && candidates.length === 1 && sameKeeperRole;
       const other = unique ? candidates[0] : null;
-      const row = merge(p,other,'player');
-      row.combination.ambiguous = candidates.length > 0 && !unique;
-      if (other) { stats.matched_players++; matchedIDs.add(other.id); }
-      else stats.understat_only_players++;
+      const fc = fi.get(key)||[];
+      const fRole = fc.length===1&&((p.pos==='POR')===(fc[0].pos==='POR'));
+      const fUnique = !!club&&!!normalize(p.name)&&own.length===1&&fc.length===1&&fRole&&uTeamIndex.get(club)?.length===1&&fTeamIndex.get(club)?.length===1;
+      const extra = fUnique?fc[0]:null;
+      const row = merge(p,other,'player',extra);
+      row.combination.ambiguous = (candidates.length > 0 && !unique)||(fc.length>0&&!fUnique);
+      if (other||extra) stats.matched_players++; else stats.understat_only_players++;
+      if(other){stats.espn_matched_players++;matchedIDs.add(other.id);}
+      if(extra){stats.fotmob_matched_players++;matchedFotmobIDs.add(extra.id);}
       if (row.combination.ambiguous) stats.ambiguous_players++;
       if (row.combination.conflicting_fields.length) stats.conflicting_players++;
       return row;
@@ -82,11 +93,13 @@
       return merge(t,club && candidates.length === 1 && ut.get(teamKey(t.name)).length === 1 ? candidates[0] : null,'team');
     });
     const sources = {Understat:{...u.metadata},ESPN:{...e.metadata}};
-    return {metadata:{...u.metadata,source:SOURCE,url:u.metadata.url,complete:false,sources,combination:{...stats,espn_players_not_joined:e.players.length-matchedIDs.size},
-      imported_at:new Date(Math.min(Date.parse(u.metadata.imported_at),Date.parse(e.metadata.imported_at))).toISOString(),
-      notes:'Catálogo y valores prioritarios de Understat. ESPN complementa únicamente coincidencias inequívocas de nombre y equipo. '+stats.matched_players+'/'+players.length+' jugadores combinados. Las capturas pueden cubrir distintos partidos; cada campo conserva su fuente y PJ. Los casos dudosos mantienen Understat. Las tasas usan minutos y PJ de la fuente de su numerador; no se infieren minutos de ESPN ni xG recibidos de porteros.'},
+    if(f) sources.FotMob={...f.metadata};
+    return {metadata:{...u.metadata,kind:'combined',source:SOURCE+(f?' + FotMob':''),url:u.metadata.url,complete:false,sources,combination:{...stats,espn_players_not_joined:e.players.length-matchedIDs.size,fotmob_players_not_joined:f?f.players.length-matchedFotmobIDs.size:0},
+      imported_at:new Date(Math.min(...Object.values(sources).map(m=>Date.parse(m.imported_at)))).toISOString(),
+      notes:'Catálogo y valores prioritarios de Understat. ESPN y, cuando está disponible, FotMob complementan coincidencias inequívocas de nombre y equipo. '+stats.matched_players+'/'+players.length+' jugadores combinados. Las capturas pueden cubrir distintos partidos; cada campo conserva su fuente y PJ. Los casos dudosos mantienen Understat. Las tasas usan minutos y PJ de la fuente de su numerador; no se infieren minutos de ESPN ni xG recibidos de porteros.'},
       players,teams,matches:u.matches.map(m=>({...m}))};
   }
-  const api = {combine,normalize,SOURCE};
+  function isCombined(data){return data?.metadata?.kind==='combined'||data?.metadata?.source===SOURCE;}
+  const api = {combine,normalize,SOURCE,isCombined};
   if (node) module.exports = api; else root.GradaCombined = api;
 })(typeof window === 'object' ? window : globalThis);

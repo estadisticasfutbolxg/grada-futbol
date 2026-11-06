@@ -1,16 +1,16 @@
 # LaLiga combinada, radar y filtros
 
-La vista **LaLiga · Combinado** usa el catálogo de jugadores de Understat y añade las métricas disponibles de ESPN. Es una combinación autorizada expresamente por el usuario y sustituye la regla anterior de mantener siempre los proveedores separados. Las vistas individuales se conservan.
+La vista **LaLiga · Combinado** usa el catálogo de jugadores de Understat y añade las métricas disponibles de ESPN y [FotMob](FOTMOB.md). Es una combinación autorizada expresamente por el usuario y sustituye la regla anterior de mantener siempre los proveedores separados. Las vistas individuales de Understat y ESPN se conservan; FotMob dispone de descargas originales JSON y SQLite.
 
 ## Identidad y prioridad
 
-Se exige LaLiga 2026/27 validada en ambas fuentes. Se comparan nombres completos y clubes tras normalizar acentos, espacios y puntuación. «Deportivo» y «Deportivo La Coruna» son un alias explícito de club presente en ambas capturas. No hay aproximación por apellidos ni similitud difusa.
+Se exige LaLiga 2026/27 validada en todas las fuentes. Se comparan nombres completos y clubes tras normalizar acentos, espacios y puntuación. Los alias verificados son «Deportivo»/«Deportivo A Coruña»/«Deportivo La Coruna» y «Deportivo Alavés»/«Alavés». No hay aproximación por apellidos ni similitud difusa.
 
-Un nombre y club deben aparecer una única vez en cada fuente. Los registros agregados de traspasos sin equipo único, homónimos y discrepancias de rol portero/campo se conservan solo como Understat. Los jugadores exclusivos de ESPN siguen en su vista y descarga; no amplían el catálogo combinado ni crean duplicados dudosos.
+Cada unión exige un nombre y club únicos en ambas fuentes de esa pareja, y coherencia del rol portero/campo. Los agregados de traspasos sin equipo único conservan solo Understat. No se usa un candidato ambiguo; una tercera fuente puede complementar al jugador si su coincidencia propia sí es inequívoca. Los jugadores exclusivos de ESPN siguen en su vista y descarga; no amplían el catálogo combinado ni crean duplicados dudosos.
 
-**Understat tiene prioridad**, incluidos sus ceros. ESPN solo completa campos desconocidos. Las discrepancias quedan en `combination.conflicting_fields`; los registros originales están en `sourceRecords`. `metadata.sources` conserva la captura de cada proveedor. El combinado usa como fecha general la más antigua, no la hora de calcular la unión.
+**Prioridad: Understat → ESPN → FotMob**, incluidos los ceros conocidos. Cada proveedor posterior solo completa campos desconocidos. Las discrepancias quedan en `combination.conflicting_fields`; los registros originales están en `sourceRecords`. `metadata.sources` conserva la captura de cada proveedor. El combinado usa como fecha general la más antigua, no la hora de calcular la unión.
 
-La captura actual une 411 de los 487 registros Understat. Los demás conservan Understat, sin rellenarlos con cifras inventadas. Las capturas siguen siendo las del 1 de noviembre de 2026.
+La captura actual complementa 448 de los 487 registros Understat: 411 coinciden con ESPN y 429 con FotMob (hay solapamiento). Los 39 restantes conservan solo Understat. Understat y ESPN mantienen sus capturas del 1 de noviembre; FotMob incorpora la consulta del 6 de noviembre. Los 59 registros FotMob no unidos siguen en sus descargas; no se añaden al catálogo combinado mediante identidades dudosas. Si falta FotMob, se conserva el combinado de dos fuentes.
 
 ## Fuentes y denominadores por campo
 
@@ -18,18 +18,19 @@ Cada valor tiene `fieldSources` y `metricContexts`, con proveedor, PJ y minutos 
 
 Las paradas y los goles recibidos pueden proceder de ESPN mientras que minutos, xG, xA, goles y tiros proceden de Understat. Las tasas usan **el denominador del proveedor del numerador**: las paradas por partido usan los PJ ESPN y las paradas por 90 quedan ausentes si ESPN no aporta minutos. No se usan minutos Understat para normalizar una cifra ESPN, ni basta una coincidencia de número de partidos para asumir que los conjuntos son idénticos.
 
-Goles/xG y asistencias/xA requieren el mismo proveedor en ambos campos. Conversión, goles−xG, precisión de pase y porcentaje de paradas se calculan con valores de la misma procedencia. Ningún proveedor usado ofrece xG recibidos por portero en LaLiga: sigue `null`. No se atribuye a un portero la cifra de su equipo.
+Goles/xG y asistencias/xA requieren el mismo proveedor en ambos campos. Conversión, goles−xG, precisión de pase y porcentaje de paradas se calculan con valores de la misma procedencia; un porcentaje publicado se conserva sin reconstruir recuentos ausentes. FotMob aporta tasas /90 publicadas que se usan directamente y se identifican en la procedencia, sin deducir totales del redondeo. Ningún proveedor usado ofrece xG previo al tiro recibido por portero en LaLiga: sigue `null`. Los goles evitados publicados por FotMob y su xGOT ofensivo son campos distintos. No se atribuye a un portero la cifra de su equipo.
 
 ## Descargas
 
 - **ESPN JSON** descarga el conjunto ESPN disponible, con su fecha.
+- **FotMob JSON / SQLite** descargan el conjunto FotMob original con sus métricas y procedencia.
 - **Combinado JSON** descarga la combinación completa, fuentes, conflictos y registros originales.
 - **CSV** respeta búsqueda, posición, equipo, filtros numéricos, orden y unidad. En la vista combinada añade fuente, PJ de origen y fecha por columna.
 - Los SQLite originales permanecen en sus vistas individuales. No se ofrece un SQLite de Understat como si fuera combinado.
 
-El botón «Actualizar ESPN y combinar» consulta ESPN y reconstruye la combinación usando la captura Understat existente; no renueva la fecha de Understat. Ante un fallo conserva los datos activos.
+El botón «Actualizar ESPN y combinar» consulta ESPN y reconstruye la combinación usando las capturas Understat y FotMob existentes; no renueva sus fechas. Ante un fallo conserva los datos activos.
 
-Para reproducir el JSON desde dos capturas locales reales, con Node 18+:
+Para reproducir el JSON desde las capturas locales reales, con Node 18+ (FotMob se incorpora si su archivo existe):
 
 ```sh
 node scripts/build_combined.cjs
@@ -39,11 +40,19 @@ Los archivos generados quedan fuera de GitHub; se distribuyen el código y sus i
 
 ## Radar por jugador
 
-Se ofrece en ficha y comparador. Muestra entre tres y seis ejes con estadísticas disponibles y percentiles frente a la misma posición. Delanteros priorizan goles, xG, xA, tiros, pases clave y conversión; centrocampistas y defensas usan sus métricas disponibles de creación, pase y defensa. Los porteros usan paradas %, paradas/PJ y goles recibidos/PJ, además de distribución o porterías a cero cuando existen.
+Se ofrece en ficha y comparador. Muestra entre tres y seis ejes con estadísticas disponibles y percentiles frente a la misma posición. Delanteros priorizan goles, xG, tiros a puerta, xA, regates y conversión. Centrocampistas priorizan pases precisos/90, acierto, xA/90, recuperaciones, entradas e intercepciones. Defensas priorizan entradas, intercepciones, despejes, bloqueos, recuperaciones y pase. Porteros priorizan paradas %, paradas/PJ, goles recibidos/PJ (menos es mejor), goles evitados/90, balones aéreos atrapados y acciones de líbero. No se usan goles marcados, xG ofensivo ni xA en porteros. Existen alternativas pertinentes cuando una fuente carece de alguno de esos ejes.
+
+Los ejes se eligen una vez por posición y conjunto, con referencia suficiente, no por cada jugador o filtro de tabla. Si a un jugador le faltan ejes comunes, puede verse un radar parcial con al menos tres valores, pero su área no se utiliza en la tabla para evitar comparaciones desiguales.
 
 Se requieren al menos cinco referencias por eje y tres ejes válidos. La referencia exige 450 minutos en jugadores de campo y 180 en porteros; cuando no hay minutos de porteros se exigen 2 PJ. Los empates usan rango medio: `(menores + 0,5 × iguales) / referencias × 100`. En goles recibidos se invierte la escala, pues un menor valor es favorable. Las ausencias se omiten; no se dibujan como cero.
 
 Los ejes indican su unidad (/90, /PJ o porcentaje), fuente y muestra. «Ver valores y procedencia» ofrece una alternativa textual accesible. El gráfico describe producción estadística y exposición al juego, no capacidades físicas ni una evaluación aislada del equipo o los rivales. El mínimo de minutos no se aplica al jugador consultado; puede compararse una muestra pequeña, cuyo tiempo de juego se muestra en la ficha.
+
+### Área relativa de 0 a 1
+
+Cada gráfico muestra su área dividida por el área del polígono máximo, con todos los ejes en P100. Para ejes equidistantes y radios `r[i] = percentil[i] / 100`, el cociente es `sum(r[i] * r[(i+1) % n]) / n`. Un radar al máximo da 1; todos los radios en P50 dan 0,25. Es una medida geométrica del radar, no el AUC de una curva ROC ni una probabilidad.
+
+**Área radar (0–1)** aparece también en las tablas de jugadores, ficha, comparador, filtros y CSV. Solo muestra una cifra en la tabla si están todos los ejes comunes de esa posición, y puede ordenarse. Exige comparar la misma posición, conjunto, ejes y orden: el área depende de sus ejes adyacentes. Cambiar de proveedor o temporada cambia la referencia. En «Todos» se indica que hay que filtrar por posición; no se presenta como valoración universal. Los filtros y el modo total/90 no cambian el área ni sus referencias.
 
 ## Filtros
 
