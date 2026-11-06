@@ -4,7 +4,7 @@ const baseline = window.GRADA_DATA;
 let data = baseline, loaded = !!(data?.metadata && Array.isArray(data.players) && data.players.length && Array.isArray(data.teams));
 let liveData = null, understatData = null, view = 'overview', pos = 'Todos', unit = 'total', sort = 'goals', direction = -1, choices = [], refreshing = false, interaction = 0;
 const CACHE = 'grada:espn:laliga:2026-27:v1';
-const labels = {name:'Jugador',team:'Equipo',pos:'Posición',matches:'PJ',minutes:'Min',goals:'Goles',assists:'Asist.',xg:'xG',xa:'xA derivada',conversion:'Conv. %',delta:'Goles − xG',passes:'Pases',completed:'Completados',accuracy:'Pases %',shots:'Tiros',saves:'Paradas',savepct:'Paradas %',conceded:'Goles rec.',xga:'xG recibidos',xga90:'xG recibidos /90',conceded90:'Goles rec. /90',psxg:'PSxG',prevented:'Goles evitados',clean:'Porterías a 0',tackles:'Entradas',interceptions:'Intercepc.',keypasses:'Pases clave',progressive:'Pases progres.'};
+const labels = {name:'Jugador',team:'Equipo',pos:'Posición',matches:'PJ',minutes:'Min',goals:'Goles',assists:'Asist.',xg:'xG',xa:'xA derivada',conversion:'Conv. %',delta:'Goles − xG',passes:'Pases',completed:'Completados',accuracy:'Pases %',shots:'Tiros',saves:'Paradas',savepct:'Paradas %',conceded:'Goles rec.',xga:'xG recibidos',xga90:'xG recibidos /90',xgaPerMatch:'xG rec. / partido',goalsPerXg:'Goles / xG',assistsPerXa:'Asist. / xA',conceded90:'Goles rec. /90',psxg:'PSxG',prevented:'Goles evitados',clean:'Porterías a 0',tackles:'Entradas',interceptions:'Intercepc.',keypasses:'Pases clave',progressive:'Pases progres.'};
 const descriptions = {
   rank:'Puesto dentro de los resultados visibles y del orden seleccionado. No es una clasificación oficial.',
   name:'Nombre del jugador. Selecciónalo para abrir su ficha.',team:'Equipo al que corresponden estas estadísticas.',pos:'Posición: POR portero, DEF defensa, MED centrocampista y DEL delantero.',
@@ -14,6 +14,9 @@ const descriptions = {
   assists:'Pases identificados como asistencia de gol por el proveedor.',
   xg:'Goles esperados: suma de la probabilidad de gol de los tiros antes de conocer su resultado. Modelo de StatsBomb; incluye penaltis de partido y excluye tandas.',
   xa:'xA derivada: suma del xG de los tiros enlazados con un pase del jugador. No es un modelo independiente de todos los pases.',
+  goalsPerXg:'Goles marcados ÷ xG acumulado. Se muestra como multiplicador: 1× coincide con el xG, 1,20× significa un 20 % más de goles y 0,80× un 20 % menos. No es una probabilidad ni un porcentaje de conversión; con xG cero o ausente se muestra —. Se calcula con el mismo proveedor y conserva su valor en modo por 90.',
+  assistsPerXa:'Asistencias de gol ÷ xA acumulada de la fuente activa. Multiplicador: 1× coincide con la xA y 1,20× significa un 20 % más de asistencias. Depende también de la finalización de los compañeros; con xA cero o ausente se muestra —. Conserva su valor en modo por 90.',
+  xgaPerMatch:'xG recibidos por partido jugado = xG atribuidos al portero ÷ partidos en los que participó ese portero. Una aparición parcial cuenta como un partido; no equivale a xG recibidos por 90 minutos. Sin xG atribuibles o sin partidos válidos se muestra —. Nunca se sustituye por el xG recibido de su equipo.',
   conversion:'Porcentaje de conversión = goles marcados ÷ tiros realizados × 100. Sin tiros se muestra —.',
   delta:'Goles marcados menos xG acumulado. Un valor positivo indica más goles que los esperados por el modelo.',
   passes:'Intentos de pase; incluye completados y no completados.',completed:'Pases que llegaron a su destino según el proveedor.',accuracy:'Precisión de pase = pases completados ÷ intentos × 100.',
@@ -32,9 +35,9 @@ const descriptions = {
   progressive:'Pases completados con al menos 10 metros de avance longitudinal. Definición de GRADA: 120 unidades de StatsBomb equivalen a 105 metros.'
 };
 const rates = GradaMetrics.rates;
-const playerkeys = ['matches','minutes','goals','assists','xg','xa','shots','conversion','delta','passes','accuracy','keypasses','progressive','tackles','interceptions'];
-const keeperkeys = ['matches','minutes','saves','savepct','conceded','conceded90','xga','xga90','psxg','prevented','clean','passes','accuracy'];
-const teamkeys = ['matches','goals','xg','delta','conceded','xga','passes','accuracy'];
+const playerkeys = ['matches','minutes','goals','assists','xg','xa','shots','goalsPerXg','assistsPerXa','conversion','delta','passes','accuracy','keypasses','progressive','tackles','interceptions'];
+const keeperkeys = ['matches','minutes','saves','savepct','conceded','conceded90','xga','xga90','xgaPerMatch','psxg','prevented','clean','passes','accuracy'];
+const teamkeys = ['matches','shots','goals','xg','goalsPerXg','delta','conceded','xga','passes','accuracy'];
 function esc(v) { return String(v ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function initials(s) { return String(s).split(' ').map(w=>w[0]).slice(0,2).join(''); }
 function players() { return loaded ? data.players : []; }
@@ -52,16 +55,17 @@ function description(k,isTeam = view === 'teams') {
   if (isUnderstat() && k === 'xg') text = 'Goles esperados según el modelo Understat: suma de las probabilidades de gol de los tiros, incluidos penaltis de partido.';
   if (isUnderstat() && k === 'xa') text = 'xA de Understat: goles esperados de los tiros generados por los pases del jugador, según el modelo de este proveedor.';
   if (isUnderstat() && k === 'minutes') text = 'Minutos publicados por Understat. Para equipos se usan 90 minutos por partido de liga.';
-  if (isUnderstat() && ['saves','savepct','conceded','conceded90','xga','xga90','clean','passes','completed','accuracy','tackles','interceptions','progressive'].includes(k) && !(view === 'teams' && ['conceded','xga'].includes(k))) text += ' No disponible para este registro en la descarga de Understat; no se usa el dato de equipo como si fuera de un portero.';
+  if (isUnderstat() && ['saves','savepct','conceded','conceded90','xga','xga90','xgaPerMatch','clean','passes','completed','accuracy','tackles','interceptions','progressive'].includes(k) && !(view === 'teams' && ['conceded','xga'].includes(k))) text += ' No disponible para este registro en la descarga de Understat; no se usa el dato de equipo como si fuera de un portero.';
   if (unit === '90' && rates.has(k)) text += ' Se muestra por 90 minutos: total × 90 ÷ minutos; sin minutos válidos, —.';
-  if (isLive() && ['minutes','xg','xa','xga','xga90','conceded90','passes','completed','accuracy','progressive','keypasses','tackles','interceptions','clean','delta'].includes(k)) text += ' No disponible en la consulta de ESPN de LaLiga 2026/27.';
+  if (isLive() && ['minutes','xg','xa','xga','xga90','xgaPerMatch','goalsPerXg','assistsPerXa','conceded90','passes','completed','accuracy','progressive','keypasses','tackles','interceptions','clean','delta'].includes(k)) text += ' No disponible en la consulta de ESPN de LaLiga 2026/27.';
   return text + ' Un guion (—) significa que el dato no está disponible.';
 }
 function val(p,k) {
   const n = metric(p,k);
   if (n === null) return '—';
-  const decimals = GradaMetrics.fixedRates[k] || unit === '90' && rates.has(k) ? 2 : ['xg','xa','delta','conversion','savepct','xga','psxg','prevented','minutes'].includes(k) ? 1 : 0;
-  return new Intl.NumberFormat('es-ES',{maximumFractionDigits:decimals}).format(n);
+  const factor = Object.hasOwn(GradaMetrics.ratios,k);
+  const decimals = factor || Object.hasOwn(GradaMetrics.perMatch,k) || GradaMetrics.fixedRates[k] || unit === '90' && rates.has(k) ? 2 : ['xg','xa','delta','conversion','savepct','xga','psxg','prevented','minutes'].includes(k) ? 1 : 0;
+  return new Intl.NumberFormat('es-ES',{minimumFractionDigits:factor?2:0,maximumFractionDigits:decimals}).format(n)+(factor?'×':'');
 }
 function compare(a,b,key = sort) {
   const x = ['name','team','pos'].includes(key) ? a[key] ?? null : metric(a,key), y = ['name','team','pos'].includes(key) ? b[key] ?? null : metric(b,key);
@@ -73,10 +77,19 @@ function compare(a,b,key = sort) {
 }
 function keysFor(p,isTeam = false) { return (isTeam ? teamkeys : p.pos === 'POR' ? keeperkeys : playerkeys).filter(k=>unit !== '90' || !GradaMetrics.fixedRates[k]); }
 function columns() {
-  let base = view === 'teams' ? ['name',...teamkeys] : pos === 'POR' ? ['name','team','minutes','saves','savepct','conceded',...(unit === 'total' ? ['conceded90'] : []),'xga',...(unit === 'total' ? ['xga90'] : []),'clean'] : pos === 'DEF' ? ['name','team','minutes','tackles','interceptions','passes','accuracy','progressive'] : pos === 'MED' ? ['name','team','minutes','goals','assists','xa','keypasses','accuracy'] : ['name','team','pos','minutes','goals','assists','xg','xa','conversion'];
+  let base;
+  if (view === 'teams') base = ['name',...teamkeys];
+  else if (pos === 'POR') base = ['name','team','matches','minutes','saves','savepct','conceded',...(unit === 'total' ? ['conceded90'] : []),'xga','xgaPerMatch',...(unit === 'total' ? ['xga90'] : []),'clean'];
+  else if (pos === 'DEF') base = ['name','team','minutes','tackles','interceptions','passes','accuracy','progressive'];
+  else if (pos === 'MED') base = ['name','team','minutes','shots','goals','assists','xg','xa','goalsPerXg','assistsPerXa','keypasses','accuracy'];
+  else base = ['name','team','pos','minutes','shots','goals','assists','xg','xa','goalsPerXg','assistsPerXa','conversion'];
+  if (view !== 'teams' && pos !== 'POR') {
+    for (const key of ['shots','goalsPerXg','assistsPerXa']) if (!base.includes(key)) base.push(key);
+  }
   if (labels[sort] && !base.includes(sort)) base.push(sort);
   return base;
 }
+
 function rows() {
   const search = $('#search').value.trim().toLocaleLowerCase('es'), tf = $('#teamfilter').value;
   return (view === 'teams' ? teams() : players().filter(p=>(pos === 'Todos' || p.pos === pos) && (!tf || p.team === tf))).filter(p=>(p.name+' '+(p.team || '')).toLocaleLowerCase('es').includes(search)).sort((a,b)=>compare(a,b));
@@ -174,6 +187,7 @@ function detail(id,isTeam) {
 }
 function navigate(v,scroll = true) {
   view = v;
+  if (v === 'teams' && sort === 'assistsPerXa') sort = 'goalsPerXg';
   const info = {overview:['Vista general','Estadísticas de fútbol','Líderes, rankings y estadísticas de jugadores y equipos.'],players:['Jugadores','Estadísticas de jugadores','Datos de '+source()+'. Selecciona un jugador para explorar.'],teams:['Equipos','Estadísticas de equipos','Ataque, defensa y distribución de los equipos.'],compare:['Comparador','Comparador de jugadores','Contrasta perfiles y métricas en su contexto.'],glossary:['Glosario','Glosario de métricas','Definiciones y límites de los datos disponibles.']}[v];
   $('#crumb').textContent = info[0]; $('#pagetitle').textContent = info[1]; $('#pagesub').textContent = info[2];
   $$('nav button').forEach(b=>b.classList.toggle('active',b.dataset.view === v));
@@ -234,7 +248,7 @@ async function reloadUnderstat() {
 const terms = [
   ['Fuentes y cobertura','Mundial 2022: StatsBomb Open Data. LaLiga 2026/27: Understat para xG, xA y minutos, en una captura con fecha; también clasificación y plantillas actuales de ESPN; temporada en curso y cobertura parcial de jugadores. Cada consulta conserva su fuente y fecha. No se mezclan proveedores.'],
   ['xG · Goles esperados',descriptions.xg+' Los endpoints de ESPN usados aquí no lo incluyen.'],['xA derivada de tiros',descriptions.xa],['Conversión y goles − xG',descriptions.conversion+' '+descriptions.delta],
-  ['Paradas y xG recibidos',descriptions.saves+' '+descriptions.xga],['Tasas de porteros por 90',descriptions.xga90+' '+descriptions.conceded90],['PSxG y goles evitados',descriptions.psxg+' '+descriptions.prevented],
+  ['Paradas y xG recibidos',descriptions.saves+' '+descriptions.xga],['Goles/xG y asistencias/xA',descriptions.goalsPerXg+' '+descriptions.assistsPerXa],['xG recibidos por partido',descriptions.xgaPerMatch],['Tasas de porteros por 90',descriptions.xga90+' '+descriptions.conceded90],['PSxG y goles evitados',descriptions.psxg+' '+descriptions.prevented],
   ['Precisión de pase',descriptions.accuracy+' El panel de líderes exige al menos 30 intentos.'],['Pases clave y progresivos',descriptions.keypasses+' '+descriptions.progressive],['Minutos y por 90',descriptions.minutes+' Volumen × 90 ÷ minutos. Los porcentajes conservan su denominador. ESPN no proporciona minutos en esta consulta: las tasas se muestran —.'],
   ['Entradas e intercepciones',descriptions.tackles+' '+descriptions.interceptions],['Portería a cero y porcentaje de paradas',descriptions.clean+' '+descriptions.savepct],
   ['Actualizar LaLiga','El botón consulta la API pública de ESPN desde tu navegador: clasificación y plantillas de los 20 equipos. Solo sustituye la captura al validar todas las respuestas y la temporada. La copia se guarda en este navegador; no actualiza la de otros visitantes. Si falla, conserva los datos anteriores. No se eluden restricciones de FBref.']
