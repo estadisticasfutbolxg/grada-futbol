@@ -44,7 +44,7 @@ El manifiesto de SHA del origen incluido fue capturado durante la descarga media
 
 ## Publicación
 
-Un push es una operación de Git, un workflow es una ejecución y una URL publicada es otro resultado. Verifica los tres por separado cuando formen parte de la tarea. No hay despliegue confirmado de GRADA en el estado documentado; consulta [STATUS.md](STATUS.md).
+Un push es una operación de Git, un workflow es una ejecución y una URL publicada es otro resultado. Verifica los tres por separado cuando formen parte de la tarea. El Site público y las versiones confirmadas se registran en [STATUS.md](STATUS.md).
 
 ## Importación FBref independiente
 
