@@ -68,3 +68,11 @@ La integración de ESPN está autorizada por el usuario y documentada en [LALIGA
 ## Understat · LaLiga 2026/27
 
 La [integración Understat](UNDERSTAT.md) conserva su modelo de xG/xA y minutos como fuente independiente. Los xG recibidos de equipos no se atribuyen a porteros. El agregado de un jugador con varios equipos se conserva como lo entrega el proveedor. El JSON y SQLite se generan desde la misma respuesta validada.
+
+## Ratios de ataque y porteros por partido
+
+- `goalsPerXg` = `goals / xg`. Se muestra como multiplicador: 1× coincide con los goles esperados; 1,20× supone un 20 % más. No es la conversión (goles/tiros).
+- `assistsPerXa` = `assists / xa`, usando la definición de xA del proveedor activo. También depende de cómo finalizan los compañeros. No se mezclan fuentes.
+- `xgaPerMatch` = `xga / matches` del registro del portero. Una aparición parcial cuenta como partido jugado. No se usa el número de partidos del equipo ni se sustituye `xga` por el dato de equipo.
+
+Estas métricas se derivan al mostrar y exportar. Se calculan a partir de los totales originales y conservan su valor en modo por 90. Con denominador cero, ausente o inválido se muestra `—`; un numerador cero con denominador positivo da 0. Las ratios de ataque se muestran con dos decimales y ×, mientras que el CSV conserva valores numéricos. Los tiros forman parte de las columnas visibles y se normalizan por 90 al seleccionar esa unidad. Understat y ESPN no ofrecen `xga` por portero en las capturas actuales: `xgaPerMatch` queda ausente.
