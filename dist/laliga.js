@@ -56,13 +56,13 @@
     return payload;
   }
   function validate(data) {
-    if (data?.metadata?.source !== 'ESPN' || data.metadata.season !== '2026/27' || data.metadata.season_id !== YEAR ||
+    if (data?.metadata?.source !== 'ESPN' || data.metadata.season !== '2026/27' || data.metadata.season_id !== YEAR || data.metadata.competition !== 'LaLiga' || typeof data.metadata.notes !== 'string' || data.metadata.notes.length > 2000 ||
         !Number.isFinite(Date.parse(data.metadata.imported_at)) || !Array.isArray(data.teams) || data.teams.length !== 20 ||
-        !Array.isArray(data.players) || data.players.length < 20 || new Set(data.teams.map(t=>String(t.id))).size !== 20 ||
+        !Array.isArray(data.players) || data.players.length < 20 || data.players.length > 2000 || new Set(data.teams.map(t=>String(t.id))).size !== 20 ||
         new Set(data.players.map(p=>p.id)).size !== data.players.length || !Array.isArray(data.matches)) throw new Error('Captura de LaLiga inválida.');
     const teamIDs = new Set(data.teams.map(t=>String(t.id)));
     for (const row of [...data.teams,...data.players]) {
-      if (!row.id || typeof row.name !== 'string' || !row.name.trim()) throw new Error('Registro sin identidad.');
+      if (!row.id || typeof row.name !== 'string' || !row.name.trim() || row.name.length > 250) throw new Error('Registro sin identidad.');
       for (const key of ['matches','minutes','goals','assists','shots','saves','conceded','xg','xga','xa','passes','savepct','conversion']) {
         if (row[key] !== undefined && row[key] !== null && !numeric(row[key])) throw new Error('Métrica no válida: '+key);
       }

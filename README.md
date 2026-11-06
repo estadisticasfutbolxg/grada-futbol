@@ -83,3 +83,7 @@ Después de generar StatsBomb, ejecuta `python scripts/validate_data.py`. Los da
 ## LaLiga 2026/27 y ayuda de métricas
 
 La web permite actualizar LaLiga 2026/27 desde ESPN con su botón. Para generar la captura que se sirve en Sites, ejecuta `python scripts/import_laliga.py`; no se versionan los datos generados. Consulta [fuente, campos y límites](docs/LALIGA.md). En porteros se muestran xG y goles recibidos por 90 cuando existen minutos y xG; las cabeceras explican cada métrica con cursor, teclado o el botón ⓘ.
+
+## Descargar xG de Understat · LaLiga 2026/27
+
+Ejecuta `python scripts/import_understat.py` con Python 3.11+ para generar JSON y SQLite comprimido. Incluye xG y xA de jugadores, minutos, goles, tiros y xG a favor/en contra de equipos. Consulta [UNDERSTAT.md](docs/UNDERSTAT.md) para cobertura, actualización y métricas ausentes. Los datos generados se conservan fuera de GitHub.

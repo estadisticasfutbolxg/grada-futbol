@@ -47,3 +47,17 @@ Pendiente de implementación y publicación.
 ## Incremento 1 · 1 de noviembre
 
 Implementados tasas, ayudas y actualización ESPN. Checks: sintaxis JS, 7 casos de métricas/proveedor en dos archivos de Node, `validate_data.py` y `check_collaboration_docs.py` correctos. Captura real: 20 equipos, 627 registros de jugadores y 104/380 partidos. La revisión de navegador requiere habilitar sockets del proceso Chromium; pendiente. El usuario pide además descargar Understat y guardar cada incremento en GitHub. La skill del loop recoge esa preferencia.
+
+## Integración del incremento 1
+
+PR [#2](https://github.com/estadisticasfutbolxg/grada-futbol/pull/2) fusionado por squash con autorización explícita del usuario: `831f1e338641fe75c47c84272d97d9ac0df734a3`. SHA del incremento en rama comprobado: `fe418cf9f9f80c03fd2bd02517243b1991175857`. Chromium pasó tasas, tooltips cursor/teclado/Escape, orden, CSV, ficha, comparación, vacío y conservación ante fallo de red; vista móvil 390 px sin desbordamiento. Sites ya tiene acceso público confirmado (revisión 2). Se prepara el despliegue del código. El usuario pide integrar y publicar cada incremento comprobado.
+
+## Incremento Understat y seguridad · 5 de noviembre
+
+Se retoman los cambios locales previos sin perderlos. Rama prevista `feat/understat-xg-security`, base GitHub comprobada `831f1e338641fe75c47c84272d97d9ac0df734a3`. La captura real anterior, del 1 de noviembre, contiene 105 partidos, 20 equipos y 487 jugadores; regenerada y validada conservando su fecha. Se intenta actualizar desde el origen sin sustituir datos válidos ante error.
+
+Se añade el scraper Python, SQLite/JSON, integración de la captura en la web, CSP, escape HTML, enlaces fijos y protección de fórmulas CSV. La actualización de Understat en la web recarga la captura publicada; no es un backend Python. No hay cifras de paradas ni xG recibidos de porteros en esta descarga de liga. PR y despliegue pendientes de confirmar.
+
+### Verificación del incremento · 6 de noviembre
+
+Sintaxis de los módulos JS, pruebas de métricas/proveedor/CSV, tres pruebas Python, validador de artefactos StatsBomb y enlaces de documentación correctos. JSON/SQLite de Understat regenerados desde la respuesta real del 1 de noviembre con su fecha original. Se comprobarán además conteos y xG entre la captura, JSON y SQLite. La consulta del 5 de noviembre devuelve HTML en vez de JSON y no confirma la temporada; no se publica como descarga reciente. El nuevo intento de navegador quedó pendiente de permiso de sockets: no se afirma esa comprobación visual. Autocontrol detectó y corrigió el cambio de Understat a ESPN cuando falta la caché de ESPN.
