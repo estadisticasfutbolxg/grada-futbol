@@ -41,3 +41,7 @@ Pendiente. Capturas disponibles: Understat y ESPN del 1 de noviembre; no se pres
 Pendientes de registrar: PR, integración y publicación. El botón de actualización se comprueba también con respuestas capturadas en la prueba local, sin afirmar una nueva consulta real a los proveedores.
 
 También pasó la actualización del combinado en navegador: fallo simulado conserva la captura; respuestas reales previamente capturadas permiten probar una actualización satisfactoria que mantiene la vista combinada y conserva la fecha Understat. Esa simulación no modifica las capturas publicadas ni se presenta como descarga nueva.
+
+## Integración y revisión del radar
+
+PR [#6](https://github.com/estadisticasfutbolxg/grada-futbol/pull/6) fusionado: `7728c3447d7b0bd064068b63fcade0c7a9cce5a5`. La revisión adicional detectó que la elegibilidad de la referencia del radar debía usar el contexto de cada eje, no los minutos principales de la fila. Se corrige y prueba: un portero con 900 minutos Understat pero solo 1 PJ ESPN no entra como referencia del eje de paradas ESPN. No se modifican cifras ni coincidencias.

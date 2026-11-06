@@ -21,16 +21,23 @@
   }
   function profile(player,all) {
     const minimum = player.pos === 'POR' ? 180 : 450;
-    const peers = all.filter(p=>p.pos === player.pos && (typeof p.minutes === 'number' ? p.minutes >= minimum : player.pos === 'POR' && p.matches >= 2));
+    const samePosition = all.filter(p=>p.pos === player.pos);
+    function eligible(record,key) {
+      const ctx = metrics.context(record,key);
+      const minutes = ctx && Object.hasOwn(ctx,'minutes') ? ctx.minutes : record.minutes;
+      const matches = ctx && Object.hasOwn(ctx,'matches') ? ctx.matches : record.matches;
+      return Number.isFinite(minutes) ? minutes >= minimum : player.pos === 'POR' && Number.isFinite(matches) && matches >= 2;
+    }
+    const peers = samePosition.filter(p=>(priorities[player.pos] || []).some(key=>eligible(p,key) && Number.isFinite(metrics.metric(p,key,axes[key][1]))));
     const values = [];
     for (const key of priorities[player.pos] || []) {
       const [label,unit,lower] = axes[key], value = metrics.metric(player,key,unit);
-      const reference = peers.map(p=>metrics.metric(p,key,unit)).filter(Number.isFinite);
+      const reference = peers.filter(p=>eligible(p,key)).map(p=>metrics.metric(p,key,unit)).filter(Number.isFinite);
       if (!Number.isFinite(value) || reference.length < 5) continue;
       values.push({key,label,value,percentile:percentile(value,reference,lower),lowerBetter:!!lower,referenceCount:reference.length,source:metrics.context(player,key)?.source || null});
       if (values.length === 6) break;
     }
-    return {axes:values.length>=3?values:[],minimumMinutes:minimum,peerCount:peers.length,availableAxes:values.length,referenceRule:player.pos === 'POR'?'misma posición, mínimo 180 min o 2 PJ cuando no hay minutos':'misma posición, mínimo 450 minutos'};
+    return {axes:values.length>=3?values:[],minimumMinutes:minimum,peerCount:peers.length,availableAxes:values.length,referenceRule:player.pos === 'POR'?'misma posición, mínimo 180 min o 2 PJ del proveedor de cada eje':'misma posición, mínimo 450 minutos'};
   }
   const api = {profile,percentile};
   if (typeof module === 'object' && module.exports) module.exports = api; else root.GradaRadar = api;
