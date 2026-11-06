@@ -56,8 +56,12 @@ Un push es una operación de Git, un workflow es una ejecución y una URL public
 
 ## Captura de Understat
 
-`scripts/import_understat.py` extrae y valida datos públicos de LaLiga 2026/27, genera JSON y SQLite. `dist/understat.js` valida la captura consumida por la UI; `dist/security.js` restringe enlaces y protege CSV. El selector mantiene los proveedores separados. El botón de Understat recarga la captura publicada, según [UNDERSTAT.md](UNDERSTAT.md).
+`scripts/import_understat.py` extrae y valida datos públicos de LaLiga 2026/27, genera JSON y SQLite. `dist/understat.js` valida la captura consumida por la UI; `dist/security.js` restringe enlaces y protege CSV. El selector conserva las vistas individuales junto al combinado autorizado. El botón de Understat recarga la captura publicada, según [UNDERSTAT.md](UNDERSTAT.md).
 
 ## Vista combinada, radar y filtros
 
-La vista combinada autorizada da prioridad a Understat y complementa coincidencias inequívocas con ESPN, conservando origen, fecha y denominadores por métrica. Añade descargas explícitas, radar por posición y filtros numéricos. Consulta [definiciones y límites](COMBINED.md).
+La vista combinada autorizada da prioridad a Understat y complementa coincidencias inequívocas con ESPN y FotMob, conservando origen, fecha y denominadores por métrica. Añade descargas explícitas, radar por posición y filtros numéricos. Consulta [definiciones y límites](COMBINED.md).
+
+## FotMob y perfiles por posición
+
+`scripts/import_fotmob.py` extrae rankings públicos de HTML y genera JSON/SQLite con contexto por campo. `dist/fotmob.js` valida la captura y declara sus métricas; `dist/combined.js` aplica prioridad Understat → ESPN → FotMob. `dist/metrics.js` conserva tasas publicadas y denominadores propios. `dist/radar.js` calcula referencias compartidas por posición, percentiles y área relativa; `dist/app.js` guarda perfiles derivados en memoria, sin mutar las capturas originales. `dist/filters.js` permite un lector de métricas para filtrar el área derivada. Consulta [FOTMOB.md](FOTMOB.md) y [COMBINED.md](COMBINED.md).

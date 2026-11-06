@@ -28,6 +28,8 @@ docs/
   ARCHITECTURE.md                  Estructura y puntos de coordinación
   DATA.md                         Contrato, cálculos y límites
   FBREF.md                        Origen y límites de LaLiga 2025/26
+  FOTMOB.md                       Pase, defensa, ataque y portería LaLiga 2026/27
+  COMBINED.md                     Fuentes, perfiles por posición, área y filtros
   fbref-source.json               Commit y SHA fijados del snapshot
   STATUS.md                       Hechos comprobados, pendientes y siguientes pasos
   decisions/                      Decisiones duraderas

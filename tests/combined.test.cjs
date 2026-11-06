@@ -36,3 +36,28 @@ test('requires the authorized season and retains the oldest source date as captu
  const {u,e}=fixture();e.metadata.imported_at='2026-11-05T12:00:00Z';assert.equal(combine(u,e).metadata.imported_at,'2026-11-01T12:00:00.000Z');
  e.metadata.season='2025/26';assert.throws(()=>combine(u,e));
 });
+
+function fotmobFixture(u){
+ const api=require('../dist/fotmob.js');
+ return {metadata:{source:'FotMob',competition:'LaLiga',season:'2026/27',season_id:38843,league_id:87,imported_at:'2026-11-06T12:00:00Z'},teams:u.teams.map(t=>({...t})),players:u.players.map(p=>({
+   ...Object.fromEntries(api.fields.map(k=>[k,null])),id:p.id,name:p.name,team_id:p.team_id,team:p.team,pos:p.pos,matches:10,minutes:700,
+   passes:null,completed:null,accuracy:94.4,tackles:20,interceptions:null,recoveries:null,saves:99,prevented:-3,shotsOnTargetPer90:2.7,
+   metricContexts:Object.fromEntries(['completed','accuracy','tackles','prevented','saves','shotsOnTargetPer90'].map(k=>[k,{source:'FotMob',matches:10,minutes:700,captured_at:'2026-11-06T12:00:00Z',...(k==='completed'?{reportedPer90:105.9}:k==='tackles'?{reportedPer90:2.6}:k==='accuracy'?{reportedValue:true}:{})}]))
+ }))};
+}
+test('third source preserves priority, published rates and negative goals prevented without fabricating totals',()=>{
+ const {u,e}=fixture(),f=fotmobFixture(u),before=JSON.stringify(f),p=combine(u,e,f).players[0];
+ assert.equal(p.saves,12);assert.equal(p.fieldSources.saves,'ESPN');assert.equal(p.minutes,180);
+ assert.equal(p.completed,null);assert.equal(p.passes,null);assert.equal(metric(p,'completedPer90'),105.9);
+ assert.equal(p.accuracy,94.4);assert.equal(p.tackles,20);assert.equal(metric(p,'tackles','90'),2.6);
+ assert.equal(p.metricContexts.tackles.minutes,700);assert.equal(p.metricContexts.tackles.captured_at,f.metadata.imported_at);
+ assert.equal(metric(p,'prevented'),-3);assert.equal(metric(p,'shotsOnTargetPer90','90'),2.7);
+ assert.equal(JSON.stringify(f),before);assert.equal(combine(u,e,f).metadata.combination.fotmob_matched_players,20);
+ u.players[0].tackles=0;assert.equal(combine(u,e,f).players[0].tackles,0);
+});
+test('FotMob rejects season mismatches, invented counts, and ambiguous matches',()=>{
+ const {u,e}=fixture(),f=fotmobFixture(u);f.metadata.season_id=2025;assert.throws(()=>combine(u,e,f));f.metadata.season_id=38843;
+ f.players[0].completed=823.66;assert.throws(()=>combine(u,e,f));f.players[0].completed=null;
+ f.players[0].name='Otro nombre';assert.equal(combine(u,e,f).players[0].tackles,null);
+ f.players[0].name=u.players[0].name;f.players.push({...f.players[0],id:'9999'});assert.equal(combine(u,e,f).players[0].tackles,null);
+});

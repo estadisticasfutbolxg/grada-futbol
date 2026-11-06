@@ -79,4 +79,8 @@ Estas métricas se derivan al mostrar y exportar. Se calculan a partir de los to
 
 ## Vista combinada, radar y filtros
 
-La vista combinada autorizada da prioridad a Understat y complementa coincidencias inequívocas con ESPN, conservando origen, fecha y denominadores por métrica. Añade descargas explícitas, radar por posición y filtros numéricos. Consulta [definiciones y límites](COMBINED.md).
+La vista combinada autorizada da prioridad a Understat y complementa coincidencias inequívocas con ESPN y FotMob, conservando origen, fecha y denominadores por métrica. Añade descargas explícitas, radar por posición y filtros numéricos. Consulta [definiciones y límites](COMBINED.md).
+
+## FotMob y área del radar
+
+La [captura FotMob](FOTMOB.md) añade métricas de pase, defensa, ataque, disciplina y portería a LaLiga, con tasa publicada, minutos, PJ, URL y fecha por campo. `completedPer90` puede existir sin `completed`; no se infieren totales redondeados. `lineBreakingPasses` no sustituye `progressive`. `xgot` ofensivo no sustituye `xga` de portero; `prevented` conserva el valor publicado, incluso negativo. El área del radar se deriva en memoria de percentiles con ejes comunes por posición, entre 0 y 1, según [COMBINED.md](COMBINED.md); no modifica JSON ni SQLite de las fuentes.
