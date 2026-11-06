@@ -1,5 +1,19 @@
 # Estado comprobado de GRADA
 
+## Actualización verificada · 6 de noviembre de 2026
+
+- Web pública: [GRADA](https://grada-futbol-analitica.ivanmatema2.chatgpt.site), versión 4 desplegada con estado `succeeded`. Incluye tiros, goles/xG, asistencias/xA y xG recibidos por partido de portero cuando la fuente los aporta.
+- Código integrado en GitHub mediante PR #1, #2, #3 y #4. El incremento de ratios está en el squash `e3fa04e18b2bc1fb4b324013bb0f6da870b297d9`. Su código desplegado en el repositorio de Sites corresponde a `b4541ec3efa022c20a7fdc13cda5263720240f8b`; son repositorios distintos.
+- StatsBomb mantiene la captura real del Mundial 2022. Understat añade una captura del 1 de noviembre de LaLiga 2026/27: 105 partidos, 20 equipos y 487 jugadores. ESPN es un conjunto separado con su botón de consulta directa. Las fuentes y fechas aparecen en la web.
+- La web es estática. Python se usa para generar los archivos, con código en GitHub y datos fuera de su historial. El botón de Understat recarga la captura publicada; no ejecuta Python en Sites.
+- Las pruebas de métricas y navegador del incremento, incluida la vista móvil, pasaron. No se ha invitado a otra persona ni modificado permisos de edición. No consta una revisión independiente del colaborador.
+
+Consulta las tareas [de porteros y Understat](../loop/tasks/20261101-codex-porteros-laliga.md) y [de tiros y ratios](../loop/tasks/20261106-codex-shots-ratios.md) para la evidencia.
+
+## Registro histórico · 31 de octubre
+
+Las comprobaciones siguientes describen la preparación original y no sustituyen la actualización anterior.
+
 Última comprobación de la entrega de colaboración: 31 de octubre de 2026. Los datos importados registran `2026-10-30T13:22:21Z` (UTC).
 
 ## Copia local

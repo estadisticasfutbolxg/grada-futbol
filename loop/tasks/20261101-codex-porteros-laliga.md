@@ -1,13 +1,13 @@
 # 20261101 · Porteros, ayuda de columnas y LaLiga 2026/27
 
-- Estado: `active`
+- Estado: `done`
 - Responsable: Codex, a petición de Ivan
 - Revisor: colaborador por asignar; autocontrol de Codex
 - Rama: `feat/keepers-help-live-laliga`
 - Base Sites: `8f440ac4ac0675472d38f106c52c1048a6f72fee`
 - Base GitHub: `e4c19afeba176a1c710d1823df0eb4f1c9759f41`
 - Issue: no creado
-- PR: pendiente
+- PR: [#2](https://github.com/estadisticasfutbolxg/grada-futbol/pull/2) y [#3](https://github.com/estadisticasfutbolxg/grada-futbol/pull/3), fusionados
 - Objetivo de entrega: código en PR y edición publicada en Sites, pública por petición posterior
 
 ## Objetivo
@@ -20,17 +20,17 @@ Interfaz en `dist/`, adaptador y generador de ESPN, pruebas de métricas/actuali
 
 ## Aceptación
 
-- [ ] Porteros con xG recibidos/90 y goles encajados/90; sin doble normalización y con nulos correctos.
-- [ ] Ayuda de todas las columnas por cursor y teclado, sin cortar el texto al desplazar la tabla.
-- [ ] Actualización real de LaLiga 2026/27, procedencia, fecha, cobertura y error que conserva la última captura válida.
-- [ ] Filtros, comparación, ficha y CSV coherentes con fuente y unidad.
-- [ ] Validación, código subido y publicación confirmada con acceso público solicitado.
+- [x] Porteros con xG recibidos/90 y goles encajados/90; sin doble normalización y con nulos correctos.
+- [x] Ayuda de todas las columnas por cursor y teclado, sin cortar el texto al desplazar la tabla.
+- [x] Actualización real de LaLiga 2026/27, procedencia, fecha, cobertura y error que conserva la última captura válida.
+- [x] Filtros, comparación, ficha y CSV coherentes con fuente y unidad.
+- [x] Validación, código subido y publicación confirmada con acceso público solicitado.
 
 ## Iteración actual
 
 1. Validar los campos reales de ESPN y conservar métricas ausentes como null.
 2. Implementar tasas, ayudas y actualización con caché local.
-3. Comprobar datos, comportamiento y publicar la edición privada.
+3. Comprobar datos, comportamiento y publicar con la audiencia solicitada.
 
 ### Evidencia
 
@@ -61,3 +61,9 @@ Se añade el scraper Python, SQLite/JSON, integración de la captura en la web, 
 ### Verificación del incremento · 6 de noviembre
 
 Sintaxis de los módulos JS, pruebas de métricas/proveedor/CSV, tres pruebas Python, validador de artefactos StatsBomb y enlaces de documentación correctos. JSON/SQLite de Understat regenerados desde la respuesta real del 1 de noviembre con su fecha original. Se comprobarán además conteos y xG entre la captura, JSON y SQLite. La consulta del 5 de noviembre devuelve HTML en vez de JSON y no confirma la temporada; no se publica como descarga reciente. El nuevo intento de navegador quedó pendiente de permiso de sockets: no se afirma esa comprobación visual. Autocontrol detectó y corrigió el cambio de Understat a ESPN cuando falta la caché de ESPN.
+
+## Cierre comprobado · 6 de noviembre
+
+Understat integrado por PR #3, squash `32950eca3b408fd8b669d356ff564b70a701238e`. La versión 3 de Sites corresponde al código fuente `467a86c0f131738ed19cb2e3bf6502110165dff2` y su deployment `appgdep_6aeda63857f4819181ad6c7377c490ab` devolvió `succeeded`. Site público, sin colaboradores añadidos. El incremento de ratios posterior está entregado en la [tarea del 6 de noviembre](20261106-codex-shots-ratios.md).
+
+La captura de Understat sigue fechada el 1 de noviembre; la consulta posterior no confirmó LaLiga 2026/27 y se conservó el último conjunto válido. «Recargar captura Understat» carga el archivo publicado, mientras que el botón de ESPN consulta su API desde el navegador. No hay backend Python permanente. Las métricas de porteros ausentes permanecen —. La revisión de navegador de tiros y ratios del incremento posterior pasó también el cambio entre estas fuentes.
