@@ -1,12 +1,12 @@
 # 20261106 · Fuentes combinadas, descargas, radar y filtros numéricos
 
-- Estado: `active`
+- Estado: `done`
 - Responsable: Codex, a petición de Ivan
 - Revisor: autocontrol; colaborador sin asignar
 - Rama: `feat/combined-data-radars-filters`
 - Base GitHub: `328d21c2e695a572f25342fa722a4a36a69995db`
 - Base Sites: `a96c868911c3d07567826618b1874d8910068dfd`; remoto de Sites sincronizado
-- PR: pendiente
+- PR: [#6](https://github.com/estadisticasfutbolxg/grada-futbol/pull/6) y [#7](https://github.com/estadisticasfutbolxg/grada-futbol/pull/7), fusionados
 - Entrega: PR, integración y despliegue público, según autorización vigente
 
 ## Objetivo y aceptación
@@ -16,7 +16,7 @@
 - [x] Botones explícitos para descargar ESPN y el combinado; CSV con procedencia.
 - [x] Radar por jugador en ficha y comparador: percentiles por posición, con denominadores y datos disponibles; nunca convertir ausencias en cero.
 - [x] Filtros por minutos, goles y otras medidas, combinables y aplicados a totales explícitamente.
-- [ ] Checks, navegador con capturas reales, PR/merge y publicación verificados.
+- [x] Checks, navegador con capturas reales, PR/merge y publicación verificados.
 
 ## Plan y alcance
 
@@ -45,3 +45,11 @@ También pasó la actualización del combinado en navegador: fallo simulado cons
 ## Integración y revisión del radar
 
 PR [#6](https://github.com/estadisticasfutbolxg/grada-futbol/pull/6) fusionado: `7728c3447d7b0bd064068b63fcade0c7a9cce5a5`. La revisión adicional detectó que la elegibilidad de la referencia del radar debía usar el contexto de cada eje, no los minutos principales de la fila. Se corrige y prueba: un portero con 900 minutos Understat pero solo 1 PJ ESPN no entra como referencia del eje de paradas ESPN. No se modifican cifras ni coincidencias.
+
+## Entrega confirmada
+
+Corrección del radar integrada por PR #7: `192a5aa98cf3e85c89be4ecda50a26961e630568`. Fuente de Sites subida y verificada: `1aa73ca7ed1a48ec47f96f626ea6985197988be5`. El paquete se comprobó contra ese código y conserva las capturas reales.
+
+Versión 5 de [GRADA](https://grada-futbol-analitica.ivanmatema2.chatgpt.site) desplegada con estado nativo `succeeded`. Deployment: `appgdep_6aede08cbdb88191a334c0cdc059aad0`. Audiencia pública conservada, sin cambios de permisos de edición. La combinación se calcula en el navegador y el generador permite reproducirla; no requiere backend ni claves.
+
+Las fuentes conservan su fecha del 1 de noviembre. El radar no inventa habilidades ni datos ausentes. Las métricas de LaLiga sin respaldo, especialmente xG recibidos de porteros, siguen —. Registro posterior de documentación; no cambia el contenido web desplegado.

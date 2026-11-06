@@ -2,13 +2,13 @@
 
 ## Actualización verificada · 6 de noviembre de 2026
 
-- Web pública: [GRADA](https://grada-futbol-analitica.ivanmatema2.chatgpt.site), versión 4 desplegada con estado `succeeded`. Incluye tiros, goles/xG, asistencias/xA y xG recibidos por partido de portero cuando la fuente los aporta.
-- Código integrado en GitHub mediante PR #1, #2, #3 y #4. El incremento de ratios está en el squash `e3fa04e18b2bc1fb4b324013bb0f6da870b297d9`. Su código desplegado en el repositorio de Sites corresponde a `b4541ec3efa022c20a7fdc13cda5263720240f8b`; son repositorios distintos.
-- StatsBomb mantiene la captura real del Mundial 2022. Understat añade una captura del 1 de noviembre de LaLiga 2026/27: 105 partidos, 20 equipos y 487 jugadores. ESPN es un conjunto separado con su botón de consulta directa. Las fuentes y fechas aparecen en la web.
-- La web es estática. Python se usa para generar los archivos, con código en GitHub y datos fuera de su historial. El botón de Understat recarga la captura publicada; no ejecuta Python en Sites.
+- Web pública: [GRADA](https://grada-futbol-analitica.ivanmatema2.chatgpt.site), versión 5 desplegada con estado `succeeded`. Incluye la vista combinada Understat + ESPN con prioridad Understat, descargas JSON/CSV, radar por jugador y filtros numéricos, además de tiros y ratios. Las métricas ausentes siguen —.
+- Código funcional integrado mediante PR #1, #2, #3, #4, #6 y #7; PR #5 registró el despliegue anterior. La corrección final del radar está en `192a5aa98cf3e85c89be4ecda50a26961e630568`. El código desplegado en el repositorio de Sites corresponde a `1aa73ca7ed1a48ec47f96f626ea6985197988be5`; son repositorios distintos.
+- StatsBomb mantiene la captura real del Mundial 2022. Understat añade una captura del 1 de noviembre de LaLiga 2026/27: 105 partidos, 20 equipos y 487 jugadores. Las vistas individuales siguen accesibles. La combinada completa 411/487 registros Understat con coincidencias inequívocas de ESPN y conserva el origen, PJ y fecha de cada campo.
+- La web es estática. Python se usa para generar los archivos, con código en GitHub y datos fuera de su historial. El botón de Understat recarga la captura publicada; no ejecuta Python en Sites. El combinado se calcula en el navegador; su actualización renueva ESPN manteniendo la captura Understat.
 - Las pruebas de métricas y navegador del incremento, incluida la vista móvil, pasaron. No se ha invitado a otra persona ni modificado permisos de edición. No consta una revisión independiente del colaborador.
 
-Consulta las tareas [de porteros y Understat](../loop/tasks/20261101-codex-porteros-laliga.md) y [de tiros y ratios](../loop/tasks/20261106-codex-shots-ratios.md) para la evidencia.
+Consulta las tareas [de porteros y Understat](../loop/tasks/20261101-codex-porteros-laliga.md) y [de tiros y ratios](../loop/tasks/20261106-codex-shots-ratios.md) y [del combinado, radares y filtros](../loop/tasks/20261106-codex-combined-radars-filters.md) para la evidencia.
 
 ## Registro histórico · 31 de octubre
 
