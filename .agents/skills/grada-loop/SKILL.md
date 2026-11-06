@@ -21,6 +21,7 @@ description: Ejecuta una tarea acotada en GRADA con coordinación entre dos pers
 - Compara el diff con los criterios. Aplica `.agents/skills/grada-review/SKILL.md` para el autocontrol y la entrega.
 - Actualiza la ficha de la tarea con resultado, evidencia y siguiente paso; no marques `done` por haber terminado de editar.
 - Por preferencia expresa del usuario, guarda cada incremento coherente en un commit y súbelo a la rama de la tarea en GitHub tras los checks relevantes, sin esperar a terminar toda la funcionalidad. No subas credenciales, bases ni capturas generadas. Usa un PR en borrador si quedan criterios pendientes y actualiza su estado al completar la revisión.
+- Tras validar y subir cada incremento, abre o actualiza su PR y fusiónalo dentro de la autorización expresa vigente del usuario; respeta los checks y protecciones reales. Publica también la web en Sites después de cada incremento integrado, conservando la audiencia solicitada. Una funcionalidad incompleta puede permanecer en una rama o PR en borrador; no se publica como terminada.
 - Verifica el SHA remoto después de cada subida y registra el enlace comprobado. Si falla el push, conserva el commit y continúa solo el trabajo independiente. No confundas commit local, subida, merge y despliegue.
 
 ## Coordinación y salida
@@ -30,3 +31,7 @@ Una persona modifica la ficha; el revisor usa el PR. Si la otra persona cambia e
 Cierra cada incremento con evidencia y continúa las vueltas necesarias de la misma tarea hasta satisfacer el objetivo autorizado. Termina la tarea cuando el objetivo completo está entregado o hay un bloqueo real. Si dos intentos de reparación del mismo fallo no aportan nueva evidencia, cambia el diagnóstico o registra el bloqueo. En ese caso deja causa observada, intentos y acción siguiente; no repitas llamadas pendientes indefinidamente. Puedes retomar cuando haya nueva información.
 
 Resume en la entrega: tarea, cambios, comprobaciones, estado real de Git, límites y siguiente acción. Usa `loop/templates/handoff.md` si cambia la persona o la sesión. La skill no autoriza por sí sola un merge, un despliegue ni cambios de acceso; respeta las autorizaciones que ya existan.
+
+## Seguridad y calidad solicitadas
+
+En cada incremento, valida los datos externos, conserva los valores ausentes y comprueba errores de red. Mantén funciones de cálculo y adaptación separadas de la interfaz, con pruebas de sus invariantes. Escapa el texto al generar HTML y protege las exportaciones CSV frente a fórmulas. No introduzcas secretos en el cliente, capturas en GitHub ni endpoints de escritura públicos. Conserva restringidos los permisos de edición del Site, aunque el acceso de lectura sea público. Registra los límites de seguridad comprobados; no prometas seguridad absoluta.

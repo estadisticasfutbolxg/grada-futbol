@@ -64,3 +64,7 @@ La importación opcional de FBref está separada y documentada en [FBREF.md](FBR
 ## LaLiga 2026/27
 
 La integración de ESPN está autorizada por el usuario y documentada en [LALIGA.md](LALIGA.md). Reutiliza la forma del payload con identificadores de jugador compuestos por equipo y jugador y campos ausentes como `null`. Cada conjunto conserva su fuente y sus definiciones. La validación de StatsBomb no valida capturas de ESPN; `dist/laliga.js` comprueba estas últimas.
+
+## Understat · LaLiga 2026/27
+
+La [integración Understat](UNDERSTAT.md) conserva su modelo de xG/xA y minutos como fuente independiente. Los xG recibidos de equipos no se atribuyen a porteros. El agregado de un jugador con varios equipos se conserva como lo entrega el proveedor. El JSON y SQLite se generan desde la misma respuesta validada.

@@ -53,3 +53,7 @@ Un push es una operación de Git, un workflow es una ejecución y una URL public
 ## Consulta de LaLiga 2026/27
 
 `dist/metrics.js` contiene la normalización y las tasas; `dist/laliga.js`, la consulta/validación y adaptación de ESPN. `scripts/import_laliga.py` genera una captura real atómica para Sites, reutilizando ese adaptador. El botón actualiza la copia del navegador. Consulta [LALIGA.md](LALIGA.md) para campos, cobertura y límites. El hosting continúa siendo estático.
+
+## Captura de Understat
+
+`scripts/import_understat.py` extrae y valida datos públicos de LaLiga 2026/27, genera JSON y SQLite. `dist/understat.js` valida la captura consumida por la UI; `dist/security.js` restringe enlaces y protege CSV. El selector mantiene los proveedores separados. El botón de Understat recarga la captura publicada, según [UNDERSTAT.md](UNDERSTAT.md).
