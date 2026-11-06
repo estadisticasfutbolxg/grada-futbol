@@ -1,12 +1,12 @@
 # 20261106 · Métricas FotMob de LaLiga y área de radar por posición
 
-- Estado: `active`
+- Estado: `done`
 - Responsable: Codex, a petición de Ivan
 - Revisor: autocontrol; colaborador no asignado
 - Rama: `feat/laliga-midfield-fotmob`
 - Base GitHub: `8e7beb044c76321276193da7ea0818017389f5f9`
 - Base Sites: `6542817f74ba5e817ff95feaca1e28fcf22b552d`
-- PR: pendiente
+- PR: [#9 integrado](https://github.com/estadisticasfutbolxg/grada-futbol/pull/9)
 - Entrega: descarga real, código generador, integración y publicación pública
 
 ## Alcance y aceptación
@@ -15,7 +15,7 @@
 - [x] Extraer y validar temporada, identidad, unidades y cobertura; no derivar totales de tasas redondeadas ni inventar ausencias.
 - [x] Añadir FotMob al combinado con prioridad Understat/ESPN ya vigente y coincidencias inequívocas de nombre y club.
 - [x] Mostrar métricas en centrocampistas, filtros, fichas, CSV y radar, con denominadores de origen y tasas publicadas identificadas.
-- [ ] Checks, prueba real de navegador, PR/merge y despliegue confirmados.
+- [x] Checks, prueba real de navegador, PR/merge y despliegue confirmados.
 
 Ampliaciones expresas del usuario: añadir más métricas reales de otras fuentes, entre ellas tiros a puerta y progresión de pase; escoger prioridad en conflictos; adaptar radares a la posición y mostrar un área relativa máxima 1 **en las tablas de jugadores**, ordenable y filtrable.
 
@@ -42,4 +42,12 @@ FotMob temporada 38843, LaLiga 87, 2026/2027: 488 registros con minutos; 366 con
 - Navegador Chromium con capturas reales: tabla MED, unidades, fechas/minutos de origen, JSON FotMob y combinado, CSV con área y procedencia, orden/filtro de área, ficha/comparador, radar POR sin goles/xG/xA, vistas históricas, actualización ESPN válida/fallida y ausencia de FotMob, móvil 390×844 sin desbordamiento de página. Los datos de SQLite se verificaron mediante fetch desde su enlace en el navegador y con Python; la descarga automática de ese enlace bajo el enrutamiento de QA se canceló, aunque las descargas Blob JSON/CSV funcionaron. No se atribuye ese límite de QA a una prueba de descarga nativa completada.
 - Autocontrol sin revisión independiente del colaborador. Los rasgos físicos o capacidades sin datos no se estiman.
 
-Pendientes: subir fuente, abrir/fusionar PR y confirmar despliegue; registrar sus identificadores reales.
+## Integración y publicación confirmadas
+
+- Commit local y fuente Sites: `292cc182ef9c0b3d949f66fd0e22a7f046ad2c6f`.
+- Fuente subida a GitHub en `feat/laliga-midfield-fotmob`, commit `92d8b79cdba03f2ef3aac775f3aae01b45878669`; PR #9 comprobado sin conflictos y fusionado con cabeza esperada. Commit integrado: `19eece583d6051b88734938ee3d740057fee14cb`.
+- Push a la rama fuente Sites confirmado por `ls-remote`; 13 archivos de código del archivo de publicación cotejados byte a byte con el commit. El paquete incluye los datos reales generados, sin datos en el PR de GitHub.
+- Versión Sites **6**, `appgprj_6ae0b8b2eb1881918601230d00603255~appgver_cf3848c26a08819181f1e0bc5495490a`.
+- Despliegue `appgdep_6aedf82aacd881918982fbf2aa7ed099`, estado nativo **succeeded**, 6 de noviembre de 2026, 15:54 UTC.
+- URL pública: https://grada-futbol-analitica.ivanmatema2.chatgpt.site. Audiencia pública conservada, sin invitaciones ni cambios de permisos de edición. No se repitió una comprobación de estado después del éxito nativo.
+- Este cierre modifica solo documentación; los archivos servidos son los de la versión 6 verificada.
