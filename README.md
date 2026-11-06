@@ -87,3 +87,7 @@ La web permite actualizar LaLiga 2026/27 desde ESPN con su botón. Para generar 
 ## Descargar xG de Understat · LaLiga 2026/27
 
 Ejecuta `python scripts/import_understat.py` con Python 3.11+ para generar JSON y SQLite comprimido. Incluye xG y xA de jugadores, minutos, goles, tiros y xG a favor/en contra de equipos. Consulta [UNDERSTAT.md](docs/UNDERSTAT.md) para cobertura, actualización y métricas ausentes. Los datos generados se conservan fuera de GitHub.
+
+## Vista combinada, radar y filtros
+
+La vista combinada autorizada da prioridad a Understat y complementa coincidencias inequívocas con ESPN, conservando origen, fecha y denominadores por métrica. Añade descargas explícitas, radar por posición y filtros numéricos. Consulta [definiciones y límites](docs/COMBINED.md).

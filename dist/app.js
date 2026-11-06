@@ -2,9 +2,9 @@
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
 const baseline = window.GRADA_DATA;
 let data = baseline, loaded = !!(data?.metadata && Array.isArray(data.players) && data.players.length && Array.isArray(data.teams));
-let liveData = null, understatData = null, view = 'overview', pos = 'Todos', unit = 'total', sort = 'goals', direction = -1, choices = [], refreshing = false, interaction = 0;
+let liveData = null, understatData = null, combinedData = null, view = 'overview', pos = 'Todos', unit = 'total', sort = 'goals', direction = -1, choices = [], refreshing = false, interaction = 0;
 const CACHE = 'grada:espn:laliga:2026-27:v1';
-const labels = {name:'Jugador',team:'Equipo',pos:'Posición',matches:'PJ',minutes:'Min',goals:'Goles',assists:'Asist.',xg:'xG',xa:'xA derivada',conversion:'Conv. %',delta:'Goles − xG',passes:'Pases',completed:'Completados',accuracy:'Pases %',shots:'Tiros',saves:'Paradas',savepct:'Paradas %',conceded:'Goles rec.',xga:'xG recibidos',xga90:'xG recibidos /90',xgaPerMatch:'xG rec. / partido',goalsPerXg:'Goles / xG',assistsPerXa:'Asist. / xA',conceded90:'Goles rec. /90',psxg:'PSxG',prevented:'Goles evitados',clean:'Porterías a 0',tackles:'Entradas',interceptions:'Intercepc.',keypasses:'Pases clave',progressive:'Pases progres.'};
+const labels = {name:'Jugador',team:'Equipo',pos:'Posición',matches:'PJ',minutes:'Min',goals:'Goles',assists:'Asist.',xg:'xG',xa:'xA derivada',conversion:'Conv. %',delta:'Goles − xG',passes:'Pases',completed:'Completados',accuracy:'Pases %',shots:'Tiros',saves:'Paradas',savepct:'Paradas %',conceded:'Goles rec.',xga:'xG recibidos',xga90:'xG recibidos /90',xgaPerMatch:'xG rec. / partido',goalsPerXg:'Goles / xG',assistsPerXa:'Asist. / xA',conceded90:'Goles rec. /90',psxg:'PSxG',prevented:'Goles evitados',clean:'Porterías a 0',savesPerMatch:'Paradas / partido',concededPerMatch:'Goles rec. / partido',cleanPerMatch:'Porterías a 0 / partido',tackles:'Entradas',interceptions:'Intercepc.',keypasses:'Pases clave',progressive:'Pases progres.'};
 const descriptions = {
   rank:'Puesto dentro de los resultados visibles y del orden seleccionado. No es una clasificación oficial.',
   name:'Nombre del jugador. Selecciónalo para abrir su ficha.',team:'Equipo al que corresponden estas estadísticas.',pos:'Posición: POR portero, DEF defensa, MED centrocampista y DEL delantero.',
@@ -29,6 +29,9 @@ const descriptions = {
   conceded90:'Tasa de goles recibidos por 90 minutos = goles encajados × 90 ÷ minutos jugados. Incluye autogoles recibidos. Sin minutos válidos se muestra —.',
   psxg:'Goles esperados después del tiro: modelo que considera cómo llegó el balón a portería. No está disponible en estas fuentes y se muestra —.',
   prevented:'Goles evitados: requiere un modelo PSxG adecuado. No se calcula restando goles recibidos al xG previo al tiro; aquí se muestra —.',
+  savesPerMatch:'Paradas divididas entre los partidos del portero en la fuente que proporciona las paradas.',
+  concededPerMatch:'Goles recibidos divididos entre los partidos del portero en la misma fuente. Menos es mejor en el radar, con el contexto del equipo.',
+  cleanPerMatch:'Porterías a cero divididas entre los partidos de la fuente que publica ese dato.',
   clean:'Partidos sin encajar del portero con al menos 60 minutos en portería, según la definición de la importación StatsBomb.',
   tackles:'Duelos de tipo Tackle en StatsBomb. El volumen depende del tiempo defendiendo y del sistema de juego.',
   interceptions:'Eventos de intercepción de pases rivales.',keypasses:'Pases que generan un tiro: pass.shot_assist en StatsBomb.',
@@ -36,7 +39,7 @@ const descriptions = {
 };
 const rates = GradaMetrics.rates;
 const playerkeys = ['matches','minutes','goals','assists','xg','xa','shots','goalsPerXg','assistsPerXa','conversion','delta','passes','accuracy','keypasses','progressive','tackles','interceptions'];
-const keeperkeys = ['matches','minutes','saves','savepct','conceded','conceded90','xga','xga90','xgaPerMatch','psxg','prevented','clean','passes','accuracy'];
+const keeperkeys = ['matches','minutes','saves','savesPerMatch','savepct','conceded','concededPerMatch','conceded90','xga','xga90','xgaPerMatch','psxg','prevented','clean','passes','accuracy'];
 const teamkeys = ['matches','shots','goals','xg','goalsPerXg','delta','conceded','xga','passes','accuracy'];
 function esc(v) { return String(v ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function initials(s) { return String(s).split(' ').map(w=>w[0]).slice(0,2).join(''); }
@@ -44,20 +47,25 @@ function players() { return loaded ? data.players : []; }
 function teams() { return loaded ? data.teams : []; }
 function isLive() { return data?.metadata?.source === 'ESPN'; }
 function isUnderstat() { return data?.metadata?.source === 'Understat'; }
-function isSeason() { return isLive() || isUnderstat(); }
+function isCombined() { return data?.metadata?.source === GradaCombined.SOURCE; }
+function usesUnderstatModels() { return isUnderstat() || isCombined(); }
+function isSeason() { return isLive() || isUnderstat() || isCombined(); }
+function sourceSlug() { return isCombined()?'understat-espn':source().toLowerCase(); }
+function selectedSource() { return isCombined()?'combined':isUnderstat()?'understat':isLive()?'laliga':'statsbomb'; }
 function source() { return loaded ? data.metadata.source : 'Sin datos'; }
 function metric(p,k) { return GradaMetrics.metric(p,k,unit); }
 function columnLabel(k,isTeam = view === 'teams') {
-  return (k === 'name' && isTeam ? 'Equipo' : k === 'xa' && isUnderstat() ? 'xA' : labels[k]) + (unit === '90' && rates.has(k) ? ' /90' : '');
+  return (k === 'name' && isTeam ? 'Equipo' : k === 'xa' && usesUnderstatModels() ? 'xA' : labels[k]) + (unit === '90' && rates.has(k) ? ' /90' : '');
 }
 function description(k,isTeam = view === 'teams') {
   let text = k === 'name' && isTeam ? 'Nombre del equipo. Selecciónalo para abrir su ficha.' : descriptions[k];
-  if (isUnderstat() && k === 'xg') text = 'Goles esperados según el modelo Understat: suma de las probabilidades de gol de los tiros, incluidos penaltis de partido.';
-  if (isUnderstat() && k === 'xa') text = 'xA de Understat: goles esperados de los tiros generados por los pases del jugador, según el modelo de este proveedor.';
-  if (isUnderstat() && k === 'minutes') text = 'Minutos publicados por Understat. Para equipos se usan 90 minutos por partido de liga.';
+  if (usesUnderstatModels() && k === 'xg') text = 'Goles esperados según el modelo Understat: suma de las probabilidades de gol de los tiros, incluidos penaltis de partido.';
+  if (usesUnderstatModels() && k === 'xa') text = 'xA de Understat: goles esperados de los tiros generados por los pases del jugador, según el modelo de este proveedor.';
+  if (usesUnderstatModels() && k === 'minutes') text = 'Minutos publicados por Understat. Para equipos se usan 90 minutos por partido de liga.';
   if (isUnderstat() && ['saves','savepct','conceded','conceded90','xga','xga90','xgaPerMatch','clean','passes','completed','accuracy','tackles','interceptions','progressive'].includes(k) && !(view === 'teams' && ['conceded','xga'].includes(k))) text += ' No disponible para este registro en la descarga de Understat; no se usa el dato de equipo como si fuera de un portero.';
   if (unit === '90' && rates.has(k)) text += ' Se muestra por 90 minutos: total × 90 ÷ minutos; sin minutos válidos, —.';
   if (isLive() && ['minutes','xg','xa','xga','xga90','xgaPerMatch','goalsPerXg','assistsPerXa','conceded90','passes','completed','accuracy','progressive','keypasses','tackles','interceptions','clean','delta'].includes(k)) text += ' No disponible en la consulta de ESPN de LaLiga 2026/27.';
+  if (isCombined()) text += ' Vista combinada: Understat tiene prioridad. La fuente y sus PJ aparecen junto a cada valor; las tasas por 90 usan minutos de esa misma fuente. ESPN no aporta minutos ni xG recibidos de porteros.';
   return text + ' Un guion (—) significa que el dato no está disponible.';
 }
 function val(p,k) {
@@ -79,7 +87,7 @@ function keysFor(p,isTeam = false) { return (isTeam ? teamkeys : p.pos === 'POR'
 function columns() {
   let base;
   if (view === 'teams') base = ['name',...teamkeys];
-  else if (pos === 'POR') base = ['name','team','matches','minutes','saves','savepct','conceded',...(unit === 'total' ? ['conceded90'] : []),'xga','xgaPerMatch',...(unit === 'total' ? ['xga90'] : []),'clean'];
+  else if (pos === 'POR') base = ['name','team','matches','minutes','saves','savesPerMatch','savepct','conceded','concededPerMatch',...(unit === 'total' ? ['conceded90'] : []),'xga','xgaPerMatch',...(unit === 'total' ? ['xga90'] : []),'clean'];
   else if (pos === 'DEF') base = ['name','team','minutes','tackles','interceptions','passes','accuracy','progressive'];
   else if (pos === 'MED') base = ['name','team','minutes','shots','goals','assists','xg','xa','goalsPerXg','assistsPerXa','keypasses','accuracy'];
   else base = ['name','team','pos','minutes','shots','goals','assists','xg','xa','goalsPerXg','assistsPerXa','conversion'];
@@ -90,9 +98,28 @@ function columns() {
   return base;
 }
 
+function numericRules() {
+  const rules = [];
+  for (const [id,key] of [['min-minutes','minutes'],['min-goals','goals']]) if ($('#'+id).value !== '') rules.push({key,op:'>=',value:$('#'+id).value});
+  $$('#metric-rules .metric-rule').forEach(row=>rules.push({key:row.querySelector('[data-rule-key]').value,op:row.querySelector('[data-rule-op]').value,value:row.querySelector('[data-rule-value]').value}));
+  return rules;
+}
+function addMetricRule() {
+  if ($$('#metric-rules .metric-rule').length >= 6) return;
+  const row = document.createElement('div'); row.className = 'metric-rule';
+  row.innerHTML = '<select data-rule-key aria-label="Métrica del filtro">'+Object.entries(labels).filter(([k])=>!['name','team','pos'].includes(k)).map(([k,v])=>'<option value="'+k+'">'+esc(v)+'</option>').join('')+'</select><select data-rule-op aria-label="Comparación"><option value=">=">≥</option><option value=">">&gt;</option><option value="<=">≤</option><option value="<">&lt;</option></select><input data-rule-value type="number" step="any" aria-label="Valor del filtro" placeholder="Valor"><button data-rule-remove class="linkbtn" aria-label="Eliminar filtro">×</button>';
+  $('#metric-rules').append(row); $('#add-rule').disabled = $$('#metric-rules .metric-rule').length >= 6;
+}
+function originMark(record,key) { return isCombined()?GradaComponents.sourceMark(record,key,data.metadata):''; }
+function combinationNote(record) {
+  if (!isCombined()) return '';
+  const text = !record.combination?.matched?'Sin coincidencia única en ESPN: se conservan los datos de Understat.':record.combination.conflicting_fields.length?'Hay discrepancias entre las fuentes; Understat tiene prioridad. Cada cifra indica su origen.':'Registro completado con ESPN. Understat mantiene la prioridad.';
+  return '<p class="sub combination-note">'+text+'</p>';
+}
+function radarFor(record) { return GradaComponents.radar(record,players(),data.metadata); }
 function rows() {
-  const search = $('#search').value.trim().toLocaleLowerCase('es'), tf = $('#teamfilter').value;
-  return (view === 'teams' ? teams() : players().filter(p=>(pos === 'Todos' || p.pos === pos) && (!tf || p.team === tf))).filter(p=>(p.name+' '+(p.team || '')).toLocaleLowerCase('es').includes(search)).sort((a,b)=>compare(a,b));
+  const search = $('#search').value.trim().toLocaleLowerCase('es'), tf = $('#teamfilter').value, rules = numericRules();
+  return (view === 'teams' ? teams() : players().filter(p=>(pos === 'Todos' || p.pos === pos) && (!tf || p.team === tf))).filter(p=>(p.name+' '+(p.team || '')).toLocaleLowerCase('es').includes(search) && GradaFilters.matches(p,rules)).sort((a,b)=>compare(a,b));
 }
 // A body-level tooltip stays visible outside the horizontally scrolling table.
 let helpAnchor = null, helpTimer;
@@ -131,7 +158,7 @@ function renderTable() {
   hideHelp(true);
   const cols = columns(), a = rows();
   $('#thead').innerHTML = '<tr><th scope="col"><button class="column-info" data-help="rank" aria-label="Descripción del puesto" aria-describedby="column-tooltip">#</button></th>'+cols.map(k=>'<th scope="col" aria-sort="'+(sort === k ? direction < 0 ? 'descending' : 'ascending' : 'none')+'"><div class="column-head"><button data-sort="'+k+'" data-help="'+k+'" aria-describedby="column-tooltip">'+columnLabel(k)+(sort === k ? direction < 0 ? ' ↓' : ' ↑' : '')+'</button><button class="column-info" data-help="'+k+'" aria-label="Descripción: '+esc(columnLabel(k))+'" aria-describedby="column-tooltip">ⓘ</button></div></th>').join('')+'</tr>';
-  $('#tbody').innerHTML = a.map((p,i)=>'<tr><td>'+String(i+1).padStart(2,'0')+'</td>'+cols.map(k=>'<td class="'+(['goals','xg','saves'].includes(k)?'highlight':'')+'">'+(k === 'name' ? '<button class="namebtn" data-detail="'+esc(p.id)+'"><span class="initials">'+esc(initials(p.name))+'</span>'+esc(p.name)+'</button>' : k === 'pos' ? '<span class="pos">'+esc(p.pos)+'</span>' : k === 'team' ? esc(p.team) : val(p,k))+'</td>').join('')+'</tr>').join('') || '<tr><td colspan="'+(cols.length+1)+'" class="empty">'+(loaded ? 'No hay resultados con estos filtros.' : 'Aún no hay datos importados.')+'</td></tr>';
+  $('#tbody').innerHTML = a.map((p,i)=>'<tr><td>'+String(i+1).padStart(2,'0')+'</td>'+cols.map(k=>'<td class="'+(['goals','xg','saves'].includes(k)?'highlight':'')+'">'+(k === 'name' ? '<button class="namebtn" data-detail="'+esc(p.id)+'"><span class="initials">'+esc(initials(p.name))+'</span>'+esc(p.name)+'</button>' : k === 'pos' ? '<span class="pos">'+esc(p.pos)+'</span>' : k === 'team' ? esc(p.team) : val(p,k)+originMark(p,k))+'</td>').join('')+'</tr>').join('') || '<tr><td colspan="'+(cols.length+1)+'" class="empty">'+(loaded ? 'No hay resultados con estos filtros.' : 'Aún no hay datos importados.')+'</td></tr>';
   $('#count').textContent = a.length+' '+(view === 'teams'?'equipos':'jugadores')+' · '+source()+(isLive()?' · plantillas actuales':'')+(unit === '90'?' · volumen por 90 min':'');
   $$('[data-sort]').forEach(b=>b.onclick=()=>{ direction = sort === b.dataset.sort ? -direction : -1; sort = b.dataset.sort; renderTable(); });
   $$('[data-detail]').forEach(b=>b.onclick=()=>detail(b.dataset.detail,view === 'teams'));
@@ -139,10 +166,10 @@ function renderTable() {
   $('#export').disabled = !loaded || !a.length;
 }
 function renderLeaders() {
-  const categories = [['Goles','goals'],['Asistencias','assists'],['Goles esperados','xg'],[isUnderstat()?'xA · Understat':'xA derivada de tiros','xa'],['Precisión de pase','accuracy'],['Paradas','saves']];
+  const categories = [['Goles','goals'],['Asistencias','assists'],['Goles esperados','xg'],[usesUnderstatModels()?'xA · Understat':'xA derivada de tiros','xa'],['Precisión de pase','accuracy'],['Paradas','saves']];
   $('#leaders').innerHTML = categories.map(([title,key])=>{
     const list = players().filter(p=>(key === 'saves'?p.pos === 'POR':p.pos !== 'POR') && metric(p,key) !== null && (key !== 'accuracy' || p.passes >= 30)).sort((a,b)=>(metric(b,key)-metric(a,key)) || a.name.localeCompare(b.name)).slice(0,5);
-    return '<article class="leadercard"><h3>'+title+(unit === '90' && rates.has(key)?' / 90 min':'')+'</h3>'+list.map((p,i)=>'<div class="leaderrow"><span class="leaderplace">'+(i+1)+'</span><button class="namebtn" data-leader-profile="'+esc(p.id)+'"><span class="initials">'+esc(initials(p.name))+'</span><span>'+esc(p.name)+'<small>'+esc(p.team)+'</small></span></button><strong>'+val(p,key)+(key === 'accuracy'?'%':'')+'</strong></div>').join('')+(list.length?'':'<p class="empty">'+(loaded?'Métrica no disponible en esta fuente o unidad.':'Sin datos importados')+'</p>')+'<button class="leaderlink" data-leader-sort="'+key+'">Ver ranking →</button></article>';
+    return '<article class="leadercard"><h3>'+title+(unit === '90' && rates.has(key)?' / 90 min':'')+'</h3>'+list.map((p,i)=>'<div class="leaderrow"><span class="leaderplace">'+(i+1)+'</span><button class="namebtn" data-leader-profile="'+esc(p.id)+'"><span class="initials">'+esc(initials(p.name))+'</span><span>'+esc(p.name)+'<small>'+esc(p.team)+'</small></span></button><strong>'+val(p,key)+(key === 'accuracy'?'%':'')+originMark(p,key)+'</strong></div>').join('')+(list.length?'':'<p class="empty">'+(loaded?'Métrica no disponible en esta fuente o unidad.':'Sin datos importados')+'</p>')+'<button class="leaderlink" data-leader-sort="'+key+'">Ver ranking →</button></article>';
   }).join('');
   $$('[data-leader-profile]').forEach(b=>b.onclick=()=>detail(b.dataset.leaderProfile,false));
   $$('[data-leader-sort]').forEach(b=>b.onclick=()=>{ sort = b.dataset.leaderSort; pos = sort === 'saves'?'POR':'Todos'; direction = -1; $('#search').value = ''; $('#teamfilter').value = ''; syncPositions(); navigate('players'); });
@@ -175,14 +202,14 @@ function renderCompare() {
   if (!choices.length || choices.some(id=>!a.find(p=>String(p.id) === String(id)))) choices = a.slice(0,2).map(p=>String(p.id));
   $('#comparegrid').innerHTML = choices.map((id,i)=>{
     const p = a.find(p=>String(p.id) === String(id));
-    return '<div class="panel"><p class="sub">JUGADOR '+(i+1)+'</p><select class="compareselect" data-compare="'+i+'" aria-label="Jugador '+(i+1)+'">'+a.map(q=>'<option value="'+esc(q.id)+'" '+(String(q.id) === String(id)?'selected':'')+'>'+esc(q.name)+' · '+esc(q.team)+'</option>').join('')+'</select><h2>'+esc(p.name)+'</h2><p class="sub">'+esc(p.team)+' · '+esc(p.pos)+'</p>'+keysFor(p).map(k=>'<div class="comparestat"><span>'+columnLabel(k,false)+'</span><b>'+val(p,k)+'</b></div>').join('')+'</div>';
+    return '<div class="panel"><p class="sub">JUGADOR '+(i+1)+'</p><select class="compareselect" data-compare="'+i+'" aria-label="Jugador '+(i+1)+'">'+a.map(q=>'<option value="'+esc(q.id)+'" '+(String(q.id) === String(id)?'selected':'')+'>'+esc(q.name)+' · '+esc(q.team)+'</option>').join('')+'</select><h2>'+esc(p.name)+'</h2><p class="sub">'+esc(p.team)+' · '+esc(p.pos)+'</p>'+combinationNote(p)+radarFor(p)+keysFor(p).map(k=>'<div class="comparestat"><span>'+columnLabel(k,false)+'</span><b>'+val(p,k)+originMark(p,k)+'</b></div>').join('')+'</div>';
   }).join('');
   $$('[data-compare]').forEach(e=>e.onchange=()=>{ choices[+e.dataset.compare] = e.value; renderCompare(); });
 }
 function detail(id,isTeam) {
   const p = (isTeam?teams():players()).find(p=>String(p.id) === String(id));
   if (!p) return;
-  $('#detailbody').innerHTML = '<span class="badge">'+esc(source())+'</span><h1 class="detailtitle">'+esc(p.name)+'</h1><p class="sub">'+esc(p.team || data.metadata.competition)+' · '+esc(data.metadata.season)+(unit === '90'?' · volumen por 90 min':'')+'</p><div class="detailstats">'+keysFor(p,isTeam).map(k=>'<div class="comparestat"><span>'+columnLabel(k,isTeam)+'</span><b>'+val(p,k)+'</b></div>').join('')+'</div><p class="sub note">'+(isSeason()?esc(data.metadata.notes):'— = no disponible. Las tasas /90 usan los minutos de juego. PSxG y goles evitados no se incluyen. xA derivada del xG de tiros asistidos.')+'</p>';
+  $('#detailbody').innerHTML = '<span class="badge">'+esc(source())+'</span><h1 class="detailtitle">'+esc(p.name)+'</h1><p class="sub">'+esc(p.team || data.metadata.competition)+' · '+esc(data.metadata.season)+(unit === '90'?' · volumen por 90 min':'')+'</p>'+combinationNote(p)+(isTeam?'':radarFor(p))+'<div class="detailstats">'+keysFor(p,isTeam).map(k=>'<div class="comparestat"><span>'+columnLabel(k,isTeam)+'</span><b>'+val(p,k)+originMark(p,k)+'</b></div>').join('')+'</div><p class="sub note">'+(isSeason()?esc(data.metadata.notes):'— = no disponible. Las tasas /90 usan los minutos de juego. PSxG y goles evitados no se incluyen. xA derivada del xG de tiros asistidos.')+'</p>';
   $('#detail').showModal();
 }
 function navigate(v,scroll = true) {
@@ -201,20 +228,31 @@ function syncPositions() { $$('[data-pos]').forEach(b=>b.classList.toggle('on',b
 function applyData(next) {
   data = next; loaded = !!(data?.metadata && data.players?.length && Array.isArray(data.teams)); choices = [];
   $('#search').value = ''; $('#teamfilter').innerHTML = '<option value="">Todos los equipos</option>'+[...new Set(players().map(p=>p.team))].sort().map(t=>'<option>'+esc(t)+'</option>').join('');
-  $('#league').value = isUnderstat()?'understat':isLive()?'laliga':'statsbomb'; $('#season').innerHTML = '<option>'+esc(loaded?data.metadata.season:'2022 · pendiente')+'</option>';
+  $('#league').value = selectedSource(); $('#season').innerHTML = '<option>'+esc(loaded?data.metadata.season:'2022 · pendiente')+'</option>';
   $$('[data-source]').forEach(e=>e.textContent = source()); $('.sidefoot').textContent = 'GRADA / '+(isSeason()?'LALIGA 2026/27':'MUNDIAL 2022');
   $('.status').textContent = source();
   if (loaded) {
     const m = data.metadata, when = new Intl.DateTimeFormat('es-ES',{dateStyle:'medium',timeStyle:'short',timeZone:'Europe/Madrid'}).format(new Date(m.imported_at));
     $('.scope').textContent = m.imported_matches+'/'+m.available_matches+' partidos · '+(m.complete?'cobertura completa':'cobertura parcial');
     $('#data-status').textContent = m.competition+' '+m.season+' · '+m.source+' · '+m.imported_matches+'/'+m.available_matches+' partidos. Captura: '+when+' (Madrid). '+(isSeason()?m.notes:m.complete?'Cobertura completa de la competición.':'Cobertura parcial: los rankings no representan toda la competición.');
-    $('#active-source').textContent = m.source; $('#active-source').href = GradaSecurity.sourceURL(m.source);
+    $('#active-source').textContent = isCombined()?'Understat':m.source; $('#active-source').href = GradaSecurity.sourceURL(isCombined()?'Understat':m.source); $('#secondary-source').hidden = !isCombined();
+    $('#coverage-details').hidden = !isCombined(); $('#coverage-notes').textContent = isCombined()?m.notes:'';
+    if (isCombined()) $('#data-status').textContent = m.competition+' '+m.season+' · '+m.source+' · '+m.imported_matches+'/'+m.available_matches+' partidos. '+m.combination.matched_players+'/'+data.players.length+' jugadores combinados. Prioridad Understat; ESPN completa coincidencias inequívocas. Capturas: '+Object.entries(m.sources).map(([name,meta])=>name+' '+new Intl.DateTimeFormat('es-ES',{dateStyle:'medium',timeStyle:'short',timeZone:'Europe/Madrid'}).format(new Date(meta.imported_at))+' (Madrid)').join('; ')+'.';
   } else { $('.scope').textContent = 'Sin datos importados'; $('#data-status').textContent = 'Aún no hay datos de StatsBomb importados. Puedes actualizar LaLiga 2026/27 o ejecutar el importador incluido.'; }
-  $('#database').classList.toggle('hidden',!loaded || isLive()); $('#jsondownload').classList.toggle('hidden',!loaded);
+  $('#database').classList.toggle('hidden',!loaded || isLive() || isCombined()); $('#jsondownload').classList.toggle('hidden',!loaded);
   $('#database').href = isUnderstat()?'downloads/understat-laliga-2026-27.sqlite.gz':'downloads/statsbomb.sqlite.gz';
   $('#jsondownload').href = isSeason()?'#':'downloads/statsbomb.json';
-  $('#refresh').textContent = isUnderstat()?'↻ Recargar captura Understat':'↻ Actualizar LaLiga · ESPN';
+  $('#refresh').textContent = isCombined()?'↻ Actualizar ESPN y combinar':isUnderstat()?'↻ Recargar captura Understat':'↻ Actualizar LaLiga · ESPN';
   dashboard(); renderLeaders(); navigate(view,false);
+}
+function updateDownloads() {
+  $('#espn-download').disabled = !liveData;
+  $('#combined-download').disabled = !combinedData;
+  $('#league option[value="combined"]').disabled = !combinedData;
+}
+function rebuildCombined() {
+  combinedData = understatData && liveData ? GradaCombined.combine(understatData,liveData) : null;
+  updateDownloads(); return combinedData;
 }
 function saveCache(next) {
   try { localStorage.setItem(CACHE,JSON.stringify(next)); return true; } catch (_) { return false; }
@@ -222,16 +260,18 @@ function saveCache(next) {
 async function refreshLaLiga(forceESPN = false) {
   if (isUnderstat() && !forceESPN) return reloadUnderstat();
   if (refreshing) return;
+  const preserveCombined = isCombined();
   refreshing = true; $('#refresh').disabled = true; $('#league').disabled = true; $('#refresh').textContent = 'Actualizando…'; $('#refresh-status').textContent = 'Consultando ESPN para LaLiga 2026/27…';
   try {
     const next = await GradaLaLiga.fetchSeason({onProgress:(done,total)=>{ $('#refresh-status').textContent = 'LaLiga 2026/27 · descargando plantillas: '+done+'/'+total; }});
-    liveData = next;
+    const joined = understatData ? GradaCombined.combine(understatData,next) : null;
+    liveData = next; combinedData = joined; updateDownloads();
     const saved = saveCache(next);
-    applyData(next);
-    $('#refresh-status').textContent = 'LaLiga 2026/27 actualizada desde ESPN. '+(saved?'Captura guardada en este navegador.':'Captura disponible en esta sesión; el navegador no permite guardar la caché.');
+    applyData(preserveCombined && joined ? joined : next);
+    $('#refresh-status').textContent = 'LaLiga 2026/27 actualizada desde ESPN. '+(saved?'Captura guardada en este navegador.'+(preserveCombined?' Combinación recalculada; Understat conserva su fecha de captura.':''):'Captura disponible en esta sesión; el navegador no permite guardar la caché.');
   } catch (e) {
     $('#refresh-status').textContent = 'No se pudo actualizar LaLiga: '+(e.name === 'AbortError'?'la fuente tardó demasiado en responder.':e.message)+' Se conserva la captura anterior y su fecha.';
-  } finally { refreshing = false; $('#refresh').disabled = false; $('#league').disabled = false; $('#refresh').textContent = isUnderstat()?'↻ Recargar captura Understat':'↻ Actualizar LaLiga · ESPN'; }
+  } finally { refreshing = false; $('#refresh').disabled = false; $('#league').disabled = false; $('#refresh').textContent = isCombined()?'↻ Actualizar ESPN y combinar':isUnderstat()?'↻ Recargar captura Understat':'↻ Actualizar LaLiga · ESPN'; }
 }
 async function reloadUnderstat() {
   if (refreshing) return;
@@ -240,41 +280,60 @@ async function reloadUnderstat() {
     const response = await fetch('downloads/understat-laliga-2026-27.json',{cache:'no-store',signal:AbortSignal.timeout(15000)});
     if (!response.ok) throw new Error('No hay una captura publicada disponible.');
     const next = GradaUnderstat.validate(await response.json());
-    understatData = next; applyData(next);
+    const joined = liveData ? GradaCombined.combine(next,liveData) : null;
+    understatData = next; combinedData = joined; updateDownloads(); applyData(next);
     $('#refresh-status').textContent = 'Cargada la última captura publicada de Understat. La fecha de consulta se indica arriba. Se renueva al publicar GRADA.';
-  } catch (_) { $('#league').value = isUnderstat()?'understat':isLive()?'laliga':'statsbomb'; $('#refresh-status').textContent = 'No se pudo recargar Understat. Se conservan la captura anterior y su fecha.'; }
+  } catch (_) { $('#league').value = selectedSource(); $('#refresh-status').textContent = 'No se pudo recargar Understat. Se conservan la captura anterior y su fecha.'; }
   finally { refreshing = false; $('#refresh').disabled = false; $('#league').disabled = false; }
 }
 const terms = [
-  ['Fuentes y cobertura','Mundial 2022: StatsBomb Open Data. LaLiga 2026/27: Understat para xG, xA y minutos, en una captura con fecha; también clasificación y plantillas actuales de ESPN; temporada en curso y cobertura parcial de jugadores. Cada consulta conserva su fuente y fecha. No se mezclan proveedores.'],
+  ['Fuentes y cobertura','Mundial 2022: StatsBomb Open Data. LaLiga 2026/27: Understat para xG, xA y minutos, en una captura con fecha; también clasificación y plantillas actuales de ESPN; temporada en curso y cobertura parcial de jugadores. Las vistas individuales conservan su fuente. La combinada prioriza Understat y complementa coincidencias inequívocas con ESPN, indicando fecha y PJ de cada campo.'],
   ['xG · Goles esperados',descriptions.xg+' Los endpoints de ESPN usados aquí no lo incluyen.'],['xA derivada de tiros',descriptions.xa],['Conversión y goles − xG',descriptions.conversion+' '+descriptions.delta],
   ['Paradas y xG recibidos',descriptions.saves+' '+descriptions.xga],['Goles/xG y asistencias/xA',descriptions.goalsPerXg+' '+descriptions.assistsPerXa],['xG recibidos por partido',descriptions.xgaPerMatch],['Tasas de porteros por 90',descriptions.xga90+' '+descriptions.conceded90],['PSxG y goles evitados',descriptions.psxg+' '+descriptions.prevented],
   ['Precisión de pase',descriptions.accuracy+' El panel de líderes exige al menos 30 intentos.'],['Pases clave y progresivos',descriptions.keypasses+' '+descriptions.progressive],['Minutos y por 90',descriptions.minutes+' Volumen × 90 ÷ minutos. Los porcentajes conservan su denominador. ESPN no proporciona minutos en esta consulta: las tasas se muestran —.'],
   ['Entradas e intercepciones',descriptions.tackles+' '+descriptions.interceptions],['Portería a cero y porcentaje de paradas',descriptions.clean+' '+descriptions.savepct],
+  ['Vista combinada y filtros','Se conserva el catálogo Understat y sus valores cuando hay discrepancias. Solo se añaden métricas ESPN con coincidencia inequívoca de nombre y equipo. Las tasas usan los denominadores de la fuente original. Los filtros de tabla se aplican a totales y se combinan con Y; un dato ausente no satisface un filtro. El CSV incluye procedencia en la vista combinada.'],
+  ['Radar estadístico','Percentiles frente a jugadores de la misma posición: mínimo 450 minutos, o 180 para porteros (2 PJ si no hay minutos). Cada eje exige al menos cinco referencias; el gráfico necesita tres ejes. Los volúmenes usan /90 o /PJ según su etiqueta. En goles recibidos menos es mejor; el resto de ejes aumenta con el valor. Son estadísticas disponibles, no una valoración física.'],
   ['Actualizar LaLiga','El botón consulta la API pública de ESPN desde tu navegador: clasificación y plantillas de los 20 equipos. Solo sustituye la captura al validar todas las respuestas y la temporada. La copia se guarda en este navegador; no actualiza la de otros visitantes. Si falla, conserva los datos anteriores. No se eluden restricciones de FBref.']
 ];
 $('#terms').innerHTML = terms.map((t,i)=>'<article class="panel"><span class="badge">'+String(i+1).padStart(2,'0')+'</span><h2 class="detailtitle">'+esc(t[0])+'</h2><p>'+esc(t[1])+'</p></article>').join('');
 $$('nav button').forEach(b=>b.onclick=()=>navigate(b.dataset.view));
 $$('[data-pos]').forEach(b=>b.onclick=()=>{ pos = b.dataset.pos; sort = pos === 'POR'?'saves':pos === 'DEF'?'tackles':pos === 'MED'?'assists':'goals'; direction = -1; syncPositions(); renderTable(); });
 $$('[data-unit]').forEach(b=>b.onclick=()=>{ unit = b.dataset.unit; if (unit === '90' && GradaMetrics.fixedRates[sort]) sort = GradaMetrics.fixedRates[sort]; $$('[data-unit]').forEach(q=>q.classList.toggle('on',q === b)); dashboard(); renderTable(); renderLeaders(); renderCompare(); });
+$('#min-minutes').oninput = renderTable; $('#min-goals').oninput = renderTable;
+$('#add-rule').onclick = addMetricRule;
+$('#metric-rules').oninput = renderTable; $('#metric-rules').onchange = renderTable;
+$('#metric-rules').onclick = e=>{ const button = e.target.closest('[data-rule-remove]'); if (button) { button.closest('.metric-rule').remove(); $('#add-rule').disabled = false; renderTable(); } };
+$('#clear-metrics').onclick = ()=>{ $('#min-minutes').value = ''; $('#min-goals').value = ''; $('#metric-rules').innerHTML = ''; $('#add-rule').disabled = false; renderTable(); };
 $('#search').oninput = renderTable; $('#teamfilter').onchange = renderTable; $('#allplayers').onclick = ()=>navigate('players'); $('.close').onclick = ()=>$('#detail').close();
 $('#refresh').onclick = () => refreshLaLiga();
 $('#league').onchange = ()=>{
   $('#refresh-status').textContent = '';
-  if ($('#league').value === 'statsbomb') applyData(baseline);
+  if ($('#league').value === 'combined') { if (rebuildCombined()) applyData(combinedData); }
+  else if ($('#league').value === 'statsbomb') applyData(baseline);
   else if ($('#league').value === 'understat') { if (understatData) applyData(understatData); else reloadUnderstat(); }
   else if (liveData) applyData(liveData);
-  else { $('#league').value = isUnderstat()?'understat':isLive()?'laliga':'statsbomb'; refreshLaLiga(true); }
+  else { $('#league').value = selectedSource(); refreshLaLiga(true); }
 };
 function download(content,type,name) {
   const url = URL.createObjectURL(new Blob([content],{type})), a = document.createElement('a');
   a.href = url; a.download = name; a.click(); setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
-$('#jsondownload').onclick = e=>{ if (isSeason()) { e.preventDefault(); download(JSON.stringify(data,null,2),'application/json','grada-'+source().toLowerCase()+'-laliga-2026-27.json'); } };
+$('#jsondownload').onclick = e=>{ if (isSeason()) { e.preventDefault(); download(JSON.stringify(data,null,2),'application/json','grada-'+sourceSlug()+'-laliga-2026-27.json'); } };
+$('#espn-download').onclick = ()=>{ if (liveData) download(JSON.stringify(liveData,null,2),'application/json','grada-espn-laliga-2026-27.json'); };
+$('#combined-download').onclick = ()=>{ if (rebuildCombined()) download(JSON.stringify(combinedData,null,2),'application/json','grada-understat-espn-laliga-2026-27.json'); };
 $('#export').onclick = ()=>{
   const cols = columns(), m = data.metadata, head = [m.source,m.competition,m.season,m.imported_matches+'/'+m.available_matches+' partidos',m.imported_at,m.complete?'cobertura completa':'cobertura parcial',isLive()?'plantillas actuales':'',unit === '90'?'POR 90 MIN':'TOTALES'];
-  const csv = '\uFEFF'+[head,cols.map(k=>columnLabel(k)),...rows().map(p=>cols.map(k=>['name','team','pos'].includes(k)?p[k]??'':metric(p,k)??''))].map(r=>r.map(GradaSecurity.csvCell).join(';')).join('\r\n');
-  download(csv,'text/csv;charset=utf-8;','grada-'+(isSeason()?source().toLowerCase()+'-laliga-2026-27':'statsbomb-2022')+'-'+(view === 'teams'?'equipos':'jugadores')+'.csv');
+  if (isCombined()) head.push(...Object.entries(m.sources).map(([name,meta])=>name+' '+meta.imported_at));
+  const headers = cols.flatMap(k=>isCombined()?[columnLabel(k),'Fuente · '+columnLabel(k),'PJ origen · '+columnLabel(k),'Fecha fuente · '+columnLabel(k)]:[columnLabel(k)]);
+  const records = rows().map(p=>cols.flatMap(k=>{
+    const value = ['name','team','pos'].includes(k)?p[k]??'':metric(p,k)??'';
+    if (!isCombined()) return [value];
+    const origin = GradaComponents.provenance(p,k,m);
+    return [value,origin?.source??'',origin?.matches??'',origin?.date??''];
+  }));
+  const csv = '\uFEFF'+[head,headers,...records].map(r=>r.map(GradaSecurity.csvCell).join(';')).join('\r\n');
+  download(csv,'text/csv;charset=utf-8;','grada-'+(isSeason()?sourceSlug()+'-laliga-2026-27':'statsbomb-2022')+'-'+(view === 'teams'?'equipos':'jugadores')+'.csv');
 };
 document.addEventListener('pointerdown',()=>interaction++,true);
 document.addEventListener('keydown',()=>interaction++,true);
@@ -293,7 +352,8 @@ async function start() {
       if (!liveData || Date.parse(snapshot.metadata.imported_at) > Date.parse(liveData.metadata.imported_at)) liveData = snapshot;
     }
   } catch (_) { /* Source-only checkouts can still use the refresh button. */ }
+  rebuildCombined();
   // Preserve any choice the visitor made while the initial snapshot was loading.
-  if ((understatData || liveData) && interaction === initialInteraction && !refreshing && view === 'overview' && $('#league').value === 'statsbomb' && !$('#search').value) applyData(understatData || liveData);
+  if ((combinedData || understatData || liveData) && interaction === initialInteraction && !refreshing && view === 'overview' && $('#league').value === 'statsbomb' && !$('#search').value) applyData(combinedData || understatData || liveData);
 }
 start();
