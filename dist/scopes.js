@@ -11,7 +11,9 @@
       function copy(row){
         const metricContexts=Object.fromEntries(Object.entries(row.metricContexts||{}).map(([key,c])=>[key,{...c,captured_at:c.captured_at||m.sources[c.source]?.imported_at||m.imported_at,league_key:id}]));
         for(const [key,source] of Object.entries(row.fieldSources||{}))if(!metricContexts[key])metricContexts[key]={source,captured_at:m.sources[source]?.imported_at||m.imported_at,league_key:id};
-        return {...row,id:id+':'+row.id,...(row.team_id!==undefined?{team_id:id+':'+row.team_id}:{}),league:m.competition,league_key:id,metricContexts};
+        const copy={...row,id:id+':'+row.id,...(row.team_id!==undefined?{team_id:row.team_id===null?null:id+':'+row.team_id}:{}),league:m.competition,league_key:id,metricContexts};
+        delete copy.teamArea;delete copy.teamAreaCoverage;delete copy.teamAreaContributions;
+        return copy;
       }
       players.push(...d.players.map(copy));teams.push(...d.teams.map(copy));
     }

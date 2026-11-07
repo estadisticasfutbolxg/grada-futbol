@@ -73,7 +73,7 @@
       values.push({key,label,value,percentile:percentile(value,sample,lower),lowerBetter:!!lower,referenceCount:sample.length,source:metrics.context(player,key)?.source||null});
     }
     const visible=values.length>=3?values:[],area=relativeArea(visible.map(a=>a.percentile));
-    return {axes:visible,area,comparableArea:values.length===plan.keys.length?area:null,expectedAxes:plan.keys,minimumMinutes:plan.definition.kind==='team'?null:plan.minimum,minimumMatches:plan.definition.kind==='team'?plan.minimum:null,kind:plan.definition.kind,profileKey:plan.definition.key,profileLabel:plan.definition.label,peerCount:plan.peerCount,availableAxes:values.length,
+    return {axes:visible,area,comparableArea:values.length===plan.keys.length?area:null,expectedAxes:plan.keys,missingAxes:plan.keys.filter(k=>!values.some(a=>a.key===k)),minimumMinutes:plan.definition.kind==='team'?null:plan.minimum,minimumMatches:plan.definition.kind==='team'?plan.minimum:null,kind:plan.definition.kind,profileKey:plan.definition.key,profileLabel:plan.definition.label,peerCount:plan.peerCount,availableAxes:values.length,
       referenceRule:plan.definition.kind==='team'?'equipos del ámbito seleccionado, mínimo 5 PJ de la fuente de cada eje':player.pos==='POR'?'misma posición, mínimo 180 min o 2 PJ del proveedor de cada eje':'misma posición y perfil, mínimo 450 minutos'};
   }
   function profiles(all,{profileKey=null,kind='player'}={}){
