@@ -3,6 +3,10 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
+    paths:
+      - 'dist/**'
+      - 'scripts/**'
+      - '.github/workflows/pages.yml'
 permissions:
   contents: read
   pages: write
