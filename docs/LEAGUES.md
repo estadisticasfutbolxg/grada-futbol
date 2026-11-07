@@ -88,3 +88,11 @@ El usuario eligió mantener los índices específicos de ataque y defensa separa
 Diagnóstico real: Racing Santander está unido entre Understat 293, ESPN 87 y FotMob 8696. Su ausencia en los antiguos rankings defensivo/global se debía a clean ausente, no a un nombre de equipo distinto. Se mantiene ese dato desconocido. LaLiga: suma 4,185619726674771 (4,186 visible), 16/25 áreas válidas y 9 pendientes. En Todas: 3,941190924696183, por recalcular la referencia conjunta. La búsqueda acepta «Racing de Santander» además del nombre publicado.
 
 El inicio muestra bloques independientes de equipos ofensivos, mejores defensas de equipos y ambos perfiles de centrocampistas, con cinco candidatos válidos y accesos a cada ranking completo. Esos accesos limpian filtros anteriores para mostrar la clasificación completa del ámbito seleccionado.
+
+## Defensas individuales y centros del campo por equipo
+
+El inicio añade los mejores defensas individuales según DEF, área entre 0 y 1 y mínimo inicial 450 minutos, y dos bloques de equipos por centro del campo ofensivo y defensivo. Los rankings TEAM_MED_ATT/TEAM_MED_DEF suman las áreas válidas de MED_ATT/MED_DEF de todos los jugadores clasificados MED asignados al club por ID. No se incluyen DEF/DEL, no se infiere una posición táctica más detallada y un MED puede contribuir a ambos perfiles.
+
+Las sumas pueden superar 1, no se ponderan ni limitan a titulares y muestran válidos/total MED, pendientes y contribuciones. Sin ninguna área válida el resultado es null; un área cero real cuenta. La referencia de cada perfil usa MED con 450 minutos propios por eje; el ranking de equipos empieza con 5 PJ y ese filtro no modifica la suma. Cambiar de liga a Todas recalcula los percentiles antes de sumar. Las áreas ofensiva/defensiva y sus coberturas aparecen también en la tabla Equipos y sus fichas; los índices de ataque/defensa/global se conservan.
+
+Por nueva petición del usuario se retiran los controles CSV y JSON, tanto globales como por proveedor/combinado. Los JSON siguen generándose para cargar la web y reproducir los cálculos; no se han borrado datos. La interfaz conserva las descargas SQLite por liga. Las referencias a exportaciones CSV/JSON en secciones históricas describen las versiones anteriores.
