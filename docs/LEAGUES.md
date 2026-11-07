@@ -47,7 +47,7 @@ La pestaña **Rankings por área** muestra inicialmente el área descendente, co
 
 Los dos perfiles de centrocampistas evalúan las acciones de los jugadores clasificados como MED. No inventan una posición detallada: un centrocampista puede aparecer en ambos. La posición amplia procede del proveedor; si falta en la fuente principal, se completa con ESPN solo cuando la identidad y el club coinciden de forma única y el rol portero/campo es coherente.
 
-Se requieren al menos cinco referencias por eje y tres ejes. Los ejes se fijan por perfil y ámbito; el ranking solo admite candidatos con todos los ejes comunes. Las muestras mínimas se comprueban también en los denominadores de origen de los ejes. Cuando una fuente de portero no ofrece minutos, exige al menos dos PJ propios. Las áreas incompletas pueden verse en una ficha como radar parcial, pero no reciben puesto en el ranking.
+Se requieren al menos cinco referencias por eje y tres ejes. Los ejes se fijan por perfil y ámbito; los rankings de jugadores solo admiten candidatos con todos los ejes comunes. En equipos se mantienen visibles los índices pendientes, sin puesto al ordenar por ese índice. Las muestras mínimas se comprueban también en los denominadores de origen de los ejes. Cuando una fuente de portero no ofrece minutos, exige al menos dos PJ propios. Los índices incompletos pueden verse en una ficha como radar parcial; la tabla los muestra pendientes y el equipo conserva su área general de plantilla.
 
 El área relativa es `sum(r[i] * r[(i+1) % n]) / n`, con `r = percentil / 100`. Su máximo es 1; todos los radios en P50 dan 0,25. Depende del orden y número de ejes. Los rangos de empate usan media; la ordenación utiliza precisión completa y muestra tres decimales.
 
@@ -76,3 +76,15 @@ El proceso prepara cada liga en un directorio temporal, genera JSON/SQLite y val
 Se puede repetir una descarga real sin red mediante `--input-root /ruta/capturas`: cada subdirectorio `<liga>/` contiene los HTML con los nombres de `SPECS`, `CORE` y `TEAM_SPECS`; `<liga>/espn/` contiene `standings.json` y `roster-<id>.json`. Deben conservarse los tiempos originales de consulta. También se pueden ejecutar los importadores por separado con `--league`; el constructor `scripts/build_combined.cjs` admite `--league` y `--data-dir`.
 
 Los datos y las bases están ignorados por GitHub. El repositorio distribuye su generador, validadores y pruebas. [FOTMOB.md](FOTMOB.md) y [COMBINED.md](COMBINED.md) detallan el origen y la unión inicial.
+
+## Área general de equipo: suma de jugadores
+
+Por petición expresa del usuario, **Área equipo (suma)** es la suma, a precisión completa, de las áreas válidas de posición (POR/DEF/MED/DEL) de todos los jugadores asignados al equipo por ID. No se promedian ni ponderan por minutos, ni se aplican los mínimos del ranking a esta suma. Cada área individual sigue entre 0 y 1; la suma de plantilla puede superar 1. La referencia corresponde a la liga o Todas seleccionadas. Cambiar de perfil, búsqueda o filtros no cambia la suma.
+
+Se informa **Jugadores con área** como válidos/plantilla asignada y se conservan los pendientes. Un equipo sin ninguna área válida queda desconocido, no cero. Un área individual realmente cero sí se suma y cuenta como válida. No se asignan fichas agregadas de traspasos a un club por su nombre; los IDs duplicados se rechazan. La ficha y el JSON combinado incluyen las contribuciones exactas y su cobertura. El CSV conserva los valores y el origen derivado GRADA.
+
+El usuario eligió mantener los índices específicos de ataque y defensa separados de la suma general. El ranking global y la tabla Equipos se ordenan inicialmente por la suma de plantilla; ataque y defensa se ordenan por su índice 0–1. Los equipos con índice incompleto permanecen visibles con — y el motivo, sin puesto al ordenar por ese índice. El radar de equipos llama **Índice del perfil** a su área normalizada.
+
+Diagnóstico real: Racing Santander está unido entre Understat 293, ESPN 87 y FotMob 8696. Su ausencia en los antiguos rankings defensivo/global se debía a clean ausente, no a un nombre de equipo distinto. Se mantiene ese dato desconocido. LaLiga: suma 4,185619726674771 (4,186 visible), 16/25 áreas válidas y 9 pendientes. En Todas: 3,941190924696183, por recalcular la referencia conjunta. La búsqueda acepta «Racing de Santander» además del nombre publicado.
+
+El inicio muestra bloques independientes de equipos ofensivos, mejores defensas de equipos y ambos perfiles de centrocampistas, con cinco candidatos válidos y accesos a cada ranking completo. Esos accesos limpian filtros anteriores para mostrar la clasificación completa del ámbito seleccionado.

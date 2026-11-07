@@ -9,5 +9,9 @@
       return Object.hasOwn(operators,rule.op) && Number.isFinite(threshold) && value !== null && operators[rule.op](value,threshold);
     });
   }
-  if (typeof module === 'object' && module.exports) module.exports = {matches}; else root.GradaFilters = {matches};
+  function textMatches(record,query){
+    const fold=value=>String(value??'').normalize('NFKD').replace(/\p{M}/gu,'').toLocaleLowerCase('es').replace(/\bracing\s+de\s+santander\b/g,'racing santander').replace(/\s+/g,' ').trim();
+    return fold([record.name,record.team,record.league].filter(Boolean).join(' ')).includes(fold(query));
+  }
+  if (typeof module === 'object' && module.exports) module.exports = {matches,textMatches}; else root.GradaFilters = {matches,textMatches};
 })(typeof window === 'object' ? window : globalThis);

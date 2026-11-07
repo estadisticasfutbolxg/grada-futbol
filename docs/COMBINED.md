@@ -71,3 +71,5 @@ Los valores desconocidos no satisfacen un filtro, ni siquiera uno de «menor que
 ## Ampliación a ligas y rankings
 
 El selector actual ofrece únicamente las cinco ligas combinadas y Todas las ligas. Se añadieron perfiles defensivo/ofensivo de centrocampistas y rankings de ataque, defensa y rendimiento global de equipos, con sus propios ejes y muestras. La unión, los modelos y el recálculo de referencias del ámbito conjunto se describen en [LEAGUES.md](LEAGUES.md). Las descargas originales siguen accesibles por liga; las vistas individuales y el Mundial ya no se incluyen en el selector.
+
+El área general de equipo suma las áreas de toda su plantilla asignada, con cobertura visible y contribuciones; puede superar 1. Los índices específicos mantienen su escala 0–1 y los equipos con índice pendiente siguen visibles. Consulta [la definición de plantilla](LEAGUES.md#área-general-de-equipo-suma-de-jugadores).

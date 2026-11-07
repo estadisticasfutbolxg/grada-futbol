@@ -32,7 +32,8 @@ Una fuente no disponible no se sustituye por datos ficticios. El proceso `--all`
 - Rankings de delanteros, porteros, defensas y perfiles defensivo/ofensivo de centrocampistas.
 - Rankings de equipos por ataque, defensa y rendimiento global.
 - Filtros por minutos, goles y otras métricas, búsqueda, ordenación, perfiles y comparador.
-- Área del radar entre 0 y 1 en tablas, fichas y CSV, con unidades y referencia del perfil.
+- Áreas individuales e índices de perfil entre 0 y 1; área general de equipo como suma de jugadores, con cobertura y contribuciones en ficha/CSV/JSON.
+- Inicio con bloques de equipos ofensivos, defensas y centrocampistas ofensivos/defensivos; Racing de Santander aparece también con su nombre completo de búsqueda.
 - Descargas JSON/SQLite por proveedor y CSV/JSON combinado. Todas añade Liga y fechas por campo.
 
 El botón de ESPN actualiza la copia del navegador para una liga o todas; mantiene las otras capturas. Sites aloja archivos estáticos y no ejecuta Python. La web compartida se actualiza al regenerar y publicar una versión.

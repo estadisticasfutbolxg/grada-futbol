@@ -12,7 +12,7 @@
   function teamKey(name) {
     const key = normalize(name);
     // Public names in the validated league snapshots; no fuzzy matching.
-    return ({deportivo:'deportivolacoruna',deportivoacoruna:'deportivolacoruna',deportivoalaves:'alaves',
+    return ({deportivo:'deportivolacoruna',deportivoacoruna:'deportivolacoruna',deportivoalaves:'alaves',racingdesantander:'racingsantander',
       internazionale:'inter',acmilan:'milan',asroma:'roma',bayernmunich:'bayernmunchen',scfreiburg:'freiburg',svelversberg:'elversberg',hamburgsv:'hamburgersv',mainz:'mainz05',fcaugsburg:'augsburg',tsghoffenheim:'hoffenheim',fccologne:'1fckoln',scpaderborn07:'paderborn','1fcunionberlin':'unionberlin',staderennais:'rennes',asmonaco:'monaco',ajauxerre:'auxerre',lehavreac:'lehavre'})[key] || key;
   }
   // Reviewed source identities. IDs, club and original name must all agree.
