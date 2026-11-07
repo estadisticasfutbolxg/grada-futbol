@@ -1,5 +1,6 @@
 (function(root) {
   'use strict';
+  const leagues=typeof module==='object'&&module.exports?require('./leagues.js'):root.GradaLeagues;
   const counts=['lineBreakingPasses','clearances','blocks','highClaims','sweeperActions','saves','conceded','chancesCreated','bigChancesCreated','bigChancesMissed','yellowCards','redCards','penaltiesSaved','penaltiesFaced','clean'];
   const publishedRates=['shotsOnTargetPer90','longBallsPer90','dribblesPer90','finalThirdRecoveriesPer90','midfieldRecoveriesPer90','foulsPer90'];
   const percentages=['shotsOnTargetPct','longBallAccuracy','dribbleSuccess','savepct'];
@@ -22,12 +23,17 @@
     xgot:'Goles esperados de los tiros a puerta realizados (xGOT), considerando su colocación. Es una métrica ofensiva de FotMob; no representa el xG recibido por el portero.'
   };
   function validate(data) {
-    const m=data?.metadata,numeric=n=>typeof n==='number'&&Number.isFinite(n)&&n>=0;
-    if(m?.source!=='FotMob'||m.competition!=='LaLiga'||m.season!=='2026/27'||m.season_id!==38843||m.league_id!==87||!Number.isFinite(Date.parse(m.imported_at))||
-       !Array.isArray(data.teams)||data.teams.length!==20||!Array.isArray(data.players)||!data.players.length||data.players.length>1500)throw new Error('Captura FotMob inválida.');
+    const m=data?.metadata,numeric=n=>typeof n==='number'&&Number.isFinite(n)&&n>=0,league=leagues.resolve(m);
+    if(m?.source!=='FotMob'||m.season_id!==league.fotmobSeason||m.league_id!==league.fotmobId||!Number.isFinite(Date.parse(m.imported_at))||
+       !Array.isArray(data.teams)||data.teams.length!==league.teams||!Array.isArray(data.players)||!data.players.length||data.players.length>1500)throw new Error('Captura FotMob inválida.');
     const teams=new Set(data.teams.map(t=>String(t.id)));
-    if(teams.size!==20||new Set(data.players.map(p=>String(p.id))).size!==data.players.length)throw new Error('Identidades FotMob duplicadas.');
+    if(teams.size!==league.teams||new Set(data.players.map(p=>String(p.id))).size!==data.players.length)throw new Error('Identidades FotMob duplicadas.');
     if(data.teams.some(t=>!/^\d+$/.test(t.id)||typeof t.name!=='string'||!t.name.trim()||t.name.length>250))throw new Error('Equipo FotMob inválido.');
+    for(const t of data.teams){
+      for(const k of ['matches','minutes','goals','conceded','xg','xga','clean','bigChances','shotsOnTargetPerMatch'])if(t[k]!==undefined&&t[k]!==null&&!numeric(t[k]))throw new Error('Métrica de equipo FotMob inválida.');
+      if(t.points!==undefined&&t.points!==null&&(!Number.isInteger(t.points)))throw new Error('Puntos de equipo inválidos.');
+      if(t.possession!==undefined&&t.possession!==null&&(!numeric(t.possession)||t.possession>100))throw new Error('Posesión inválida.');
+    }
     for(const p of data.players){
       if(!/^\d+$/.test(p.id)||!teams.has(String(p.team_id))||typeof p.name!=='string'||!p.name.trim()||p.name.length>250||!numeric(p.minutes)||!Number.isInteger(p.matches)||p.matches<0)throw new Error('Registro FotMob inválido.');
       for(const k of ['tackles','interceptions','recoveries'])if(p[k]!==null&&(!Number.isInteger(p[k])||p[k]<0))throw new Error('Conteo FotMob inválido.');
@@ -38,6 +44,15 @@
         if(typeof value!=='number'||!Number.isFinite(value)||(k!=='prevented'&&value<0)||(counts.includes(k)&&!Number.isInteger(value))||(percentages.includes(k)&&value>100))throw new Error('Métrica FotMob inválida: '+k);
       }
       for(const c of Object.values(p.metricContexts||{}))if(c.source!=='FotMob'||!Number.isFinite(Date.parse(c.captured_at))||!numeric(c.minutes)||!Number.isInteger(c.matches)||c.matches<0||('reportedPer90'in c&&!numeric(c.reportedPer90)))throw new Error('Contexto FotMob inválido.');
+      if(m.profile==='full'){
+        for(const k of ['goals','assists','shots','xg','xa','shotsPer90','conversion'])if(p[k]!==null&&(!numeric(p[k])||(['goals','assists','shots'].includes(k)&&!Number.isInteger(p[k]))))throw new Error('Métrica principal FotMob inválida.');
+        if(p.xga!==null||p.psxg!==null||p.conversion>100)throw new Error('Modelo FotMob inválido.');
+      }
+    }
+    if(league.primary==='FotMob'&&(m.profile!=='full'||!data.teams.every(t=>numeric(t.xg)&&numeric(t.xga)&&Number.isInteger(t.matches)&&t.matches<=2*(league.teams-1)&&t.minutes===t.matches*90)))throw new Error('Faltan métricas principales de esta liga.');
+    if(m.profile==='full'){
+      const played=data.teams.reduce((s,t)=>s+t.matches,0)/2;
+      if(!Number.isInteger(played)||played<0||played>league.matches||m.imported_matches!==played||m.available_matches!==league.matches||data.teams.reduce((s,t)=>s+t.goals,0)!==data.teams.reduce((s,t)=>s+t.conceded,0))throw new Error('Cobertura FotMob incoherente.');
     }
     return data;
   }

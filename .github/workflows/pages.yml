@@ -1,4 +1,4 @@
-name: Publicar GRADA con StatsBomb
+name: Publicar GRADA con ligas verificadas
 on:
   workflow_dispatch:
   push:
@@ -18,8 +18,12 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Descargar datos reales y generar SQLite
-        run: python scripts/import_statsbomb.py
+      - name: Comprobar adaptadores y métricas
+        run: |
+          node --test tests/*.test.cjs
+          python -m unittest discover -s tests -p 'test_*.py'
+      - name: Descargar ligas reales y generar SQLite
+        run: python scripts/import_leagues.py --all
       - name: Comprobar JavaScript
         run: node --check dist/app.js
       - uses: actions/upload-pages-artifact@v3

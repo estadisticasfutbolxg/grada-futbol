@@ -1,6 +1,6 @@
 # 20261107 · Identidad de Mbappé entre proveedores
 
-- Estado: `active`
+- Estado: `done`
 - Responsable: Codex a petición del usuario
 - Revisor: autocontrol, sin revisión independiente
 - Rama: `fix/mbappe-source-identity`
@@ -18,10 +18,10 @@ Revisión de otros registros sin unión: existen variantes de nombre, registros 
 - [x] Unir Mbappé por identidad verificada conservando nombres y valores originales, fechas y denominadores.
 - [x] Rechazar identificador, club o nombre distintos, duplicados y roles incompatibles.
 - [x] Área en ficha, tabla, filtro y CSV con los seis ejes comunes; sin inventar ausencias.
-- [ ] Pruebas, PR/merge y publicación confirmados.
+- [x] Pruebas, PR/merge y publicación confirmados.
 
 La ampliación a otras ligas y el selector solo combinado se desarrollarán en otro incremento, según las nuevas peticiones del usuario.
 
 ## Validación local
 
-Node pruebas y validador StatsBomb correctos; Chromium con captura real: Mbappé muestra 0,756 en tabla y ficha, con seis ejes, tiros a puerta 2,7/90 y regates 3,2/90. Pasó también regresión de unidades, filtros/CSV/descargas, fuentes individuales, actualización y fallos, y móvil. Combinado regenerado: 449 complementados, ESPN 412 y FotMob 430. Se conservan las fechas originales. Pendientes integración y publicación.
+Node pruebas y validador StatsBomb correctos; Chromium con captura real: Mbappé muestra 0,756 en tabla y ficha, con seis ejes, tiros a puerta 2,7/90 y regates 3,2/90. Pasó también regresión de unidades, filtros/CSV/descargas, fuentes individuales, actualización y fallos, y móvil. Combinado regenerado: 449 complementados, ESPN 412 y FotMob 430. Se conservan las fechas originales. Integrado mediante PR #11: `7412a018578b8a1aba186bd0ff5e432798f19ed6`. Fuente Sites `444b5241622c81834cadbc7d933498037536db8b`, versión 7 `appgprj_6ae0b8b2eb1881918601230d00603255~appgver_fe6bc2245b7c819192ed74e9a37ec0fe`, despliegue `appgdep_6aeed10470848191b0033416a057d764` con resultado nativo succeeded, 7 de noviembre a las 08:19 Madrid. URL pública conservada: https://grada-futbol-analitica.ivanmatema2.chatgpt.site. No se repitió el sondeo después del éxito.
