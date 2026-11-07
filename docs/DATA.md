@@ -84,3 +84,7 @@ La vista combinada autorizada da prioridad a Understat y complementa coincidenci
 ## FotMob y área del radar
 
 La [captura FotMob](FOTMOB.md) añade métricas de pase, defensa, ataque, disciplina y portería a LaLiga, con tasa publicada, minutos, PJ, URL y fecha por campo. `completedPer90` puede existir sin `completed`; no se infieren totales redondeados. `lineBreakingPasses` no sustituye `progressive`. `xgot` ofensivo no sustituye `xga` de portero; `prevented` conserva el valor publicado, incluso negativo. El área del radar se deriva en memoria de percentiles con ejes comunes por posición, entre 0 y 1, según [COMBINED.md](COMBINED.md); no modifica JSON ni SQLite de las fuentes.
+
+## Ámbito de varias ligas y equipos
+
+El catálogo y las diferencias de modelos están en [LEAGUES.md](LEAGUES.md). Se conservan fechas y denominadores por campo al concatenar fichas; no se unen personas por nombre entre ligas. Los rankings requieren todos los ejes y mínimos por origen. Los equipos usan PJ propios, con signo en diferencias de goles/xG y escala invertida en goles/xG recibidos. Los tiros a puerta totales ESPN y las tasas publicadas FotMob son campos distintos. No se infieren recuentos ni se llama pases clave a las ocasiones creadas de otra definición.

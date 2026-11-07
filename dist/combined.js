@@ -4,14 +4,16 @@
   const understat = node ? require('./understat.js') : root.GradaUnderstat;
   const espn = node ? require('./laliga.js') : root.GradaLaLiga;
   const fotmob = node ? require('./fotmob.js') : root.GradaFotmob;
+  const leagues = node ? require('./leagues.js') : root.GradaLeagues;
   const SOURCE = 'Understat + ESPN';
-  const fields = [...new Set(['matches','minutes','goals','assists','xg','xa','shots','passes','completed','accuracy','conversion','delta','saves','savepct','conceded','xga','clean','tackles','interceptions','recoveries','keypasses','progressive','psxg','prevented',...fotmob.fields])];
+  const fields = [...new Set(['matches','minutes','goals','assists','xg','xa','shots','shotsOnTarget','shotsPer90','passes','completed','accuracy','conversion','delta','saves','savepct','conceded','xga','clean','tackles','interceptions','recoveries','keypasses','progressive','psxg','prevented','points','bigChances','shotsOnTargetPerMatch','possession',...fotmob.fields])];
   const numeric = n => typeof n === 'number' && Number.isFinite(n);
   function normalize(value) { return String(value ?? '').normalize('NFKD').replace(/\p{M}/gu,'').toLowerCase().replace(/[^a-z0-9]/g,''); }
   function teamKey(name) {
     const key = normalize(name);
     // Public names in the validated league snapshots; no fuzzy matching.
-    return ({deportivo:'deportivolacoruna',deportivoacoruna:'deportivolacoruna',deportivoalaves:'alaves'})[key] || key;
+    return ({deportivo:'deportivolacoruna',deportivoacoruna:'deportivolacoruna',deportivoalaves:'alaves',
+      internazionale:'inter',acmilan:'milan',asroma:'roma',bayernmunich:'bayernmunchen',scfreiburg:'freiburg',svelversberg:'elversberg',hamburgsv:'hamburgersv',mainz:'mainz05',fcaugsburg:'augsburg',tsghoffenheim:'hoffenheim',fccologne:'1fckoln',scpaderborn07:'paderborn','1fcunionberlin':'unionberlin',staderennais:'rennes',asmonaco:'monaco',ajauxerre:'auxerre',lehavreac:'lehavre'})[key] || key;
   }
   // Reviewed source identities. IDs, club and original name must all agree.
   // Evidence and maintenance rules: docs/COMBINED.md#identidades-verificadas.
@@ -33,12 +35,19 @@
     return map;
   }
   function combine(u,e,f=null) {
-    understat.validate(u); espn.validate(e); if(f) fotmob.validate(f);
+    const primarySource=u?.metadata?.source;
+    if(primarySource==='Understat')understat.validate(u);
+    else if(primarySource==='FotMob'&&u.metadata.profile==='full')fotmob.validate(u);
+    else throw new Error('Falta la fuente principal completa.');
+    espn.validate(e); if(f) fotmob.validate(f);
+    const league=leagues.resolve(u.metadata);
+    if(primarySource!==league.primary)throw new Error('Fuente principal no admitida para esta liga.');
     if (u.metadata.competition !== e.metadata.competition || u.metadata.season !== e.metadata.season) throw new Error('Las fuentes no corresponden a la misma competición y temporada.');
+    if(f&&(f.metadata.competition!==u.metadata.competition||f.metadata.season!==u.metadata.season||primarySource==='FotMob'))throw new Error('Combinación de fuentes o ligas inválida.');
     const uTeams = new Map(u.teams.map(t=>[String(t.id),teamKey(t.name)]));
     const eTeams = new Map(e.teams.map(t=>[String(t.id),teamKey(t.name)]));
     // An aggregated transfer row has no single team_id; keep it solely Understat.
-    const uKey = p => playerKey(p,'Understat',uTeams.get(String(p.team_id)));
+    const uKey = p => playerKey(p,primarySource,uTeams.get(String(p.team_id)));
     const eKey = p => playerKey(p,'ESPN',eTeams.get(String(p.team_id)));
     const uTeamIndex = index(u.teams,t=>teamKey(t.name)), eTeamIndex = index(e.teams,t=>teamKey(t.name));
     const ui = index(u.players.filter(p=>uTeams.has(String(p.team_id))),uKey), ei = index(e.players,eKey);
@@ -48,12 +57,13 @@
     const matchedIDs = new Set(), matchedFotmobIDs = new Set();
     const stats = {matched_players:0,understat_only_players:0,ambiguous_players:0,conflicting_players:0,espn_matched_players:0,fotmob_matched_players:0};
     function merge(primary,other,kind,additional=null) {
-      const row = {...primary,id:(kind === 'player'?'combined:':'')+primary.id,fieldSources:{name:'Understat',team:'Understat',pos:'Understat'},metricContexts:{},sourceRecords:{Understat:{...primary}}};
+      const row = {...primary,id:(kind === 'player'?'combined:':'')+primary.id,fieldSources:{name:primarySource,team:primarySource,pos:primarySource},metricContexts:{},sourceRecords:{[primarySource]:{...primary}}};
       if (other) row.sourceRecords.ESPN = {...other};
       if(additional) row.sourceRecords.FotMob = {...additional};
+      if(kind==='player'&&row.pos==='—'&&other&&['POR','DEF','MED','DEL'].includes(other.pos)){row.pos=other.pos;row.fieldSources.pos='ESPN';}
       const differences = [];
       for (const key of fields) {
-        const chosen = [['Understat',primary],['ESPN',other],['FotMob',additional]].find(([,r])=>r&&(numeric(r[key])||numeric(r.metricContexts?.[key]?.reportedPer90)));
+        const chosen = [[primarySource,primary],['ESPN',other],['FotMob',additional]].find(([,r])=>r&&(numeric(r[key])||numeric(r.metricContexts?.[key]?.reportedPer90)));
         const source = chosen?.[0], sourceRow = chosen?.[1];
         row[key] = sourceRow && numeric(sourceRow[key]) ? sourceRow[key] : null;
         if (source) {
@@ -90,8 +100,8 @@
       const extra = fUnique?fc[0]:null;
       const row = merge(p,other,'player',extra);
       row.combination.match_methods={};
-      if(other)row.combination.match_methods.ESPN=identity(p,'Understat',club)?'verified_identity':'name_team';
-      if(extra)row.combination.match_methods.FotMob=identity(p,'Understat',club)?'verified_identity':'name_team';
+      if(other)row.combination.match_methods.ESPN=identity(p,primarySource,club)?'verified_identity':'name_team';
+      if(extra)row.combination.match_methods.FotMob=identity(p,primarySource,club)?'verified_identity':'name_team';
       row.combination.ambiguous = (candidates.length > 0 && !unique)||(fc.length>0&&!fUnique);
       if (other||extra) stats.matched_players++; else stats.understat_only_players++;
       if(other){stats.espn_matched_players++;matchedIDs.add(other.id);}
@@ -103,16 +113,26 @@
     const et = index(e.teams,t=>teamKey(t.name)), ut = index(u.teams,t=>teamKey(t.name));
     const teams = u.teams.map(t=>{
       const club = teamKey(t.name), candidates = et.get(club) || [];
-      return merge(t,club && candidates.length === 1 && ut.get(teamKey(t.name)).length === 1 ? candidates[0] : null,'team');
+      const fc=fTeamIndex.get(club)||[],extra=fc.length===1&&ut.get(club)?.length===1?fc[0]:null;
+      return merge(t,club && candidates.length === 1 && ut.get(teamKey(t.name)).length === 1 ? candidates[0] : null,'team',extra);
     });
-    const sources = {Understat:{...u.metadata},ESPN:{...e.metadata}};
+    const sources = {[primarySource]:{...u.metadata},ESPN:{...e.metadata}};
     if(f) sources.FotMob={...f.metadata};
-    return {metadata:{...u.metadata,kind:'combined',source:SOURCE+(f?' + FotMob':''),url:u.metadata.url,complete:false,sources,combination:{...stats,espn_players_not_joined:e.players.length-matchedIDs.size,fotmob_players_not_joined:f?f.players.length-matchedFotmobIDs.size:0},
+    return {metadata:{...u.metadata,league_key:league.id,primary_source:primarySource,kind:'combined',source:primarySource+' + ESPN'+(f?' + FotMob':''),url:u.metadata.url,complete:false,sources,combination:{...stats,understat_only_players:primarySource==='Understat'?stats.understat_only_players:0,primary_only_players:stats.understat_only_players,espn_players_not_joined:e.players.length-matchedIDs.size,fotmob_players_not_joined:f?f.players.length-matchedFotmobIDs.size:0},
       imported_at:new Date(Math.min(...Object.values(sources).map(m=>Date.parse(m.imported_at)))).toISOString(),
-      notes:'Catálogo y valores prioritarios de Understat. ESPN y, cuando está disponible, FotMob complementan coincidencias inequívocas de nombre y equipo. '+stats.matched_players+'/'+players.length+' jugadores combinados. Las capturas pueden cubrir distintos partidos; cada campo conserva su fuente y PJ. Los casos dudosos mantienen Understat. Las tasas usan minutos y PJ de la fuente de su numerador; no se infieren minutos de ESPN ni xG recibidos de porteros.'},
+      notes:'Catálogo y valores prioritarios de '+primarySource+'. ESPN'+(f?' y FotMob':'')+' complementan coincidencias inequívocas de nombre y equipo o identidad revisada. '+stats.matched_players+'/'+players.length+' jugadores complementados. Las capturas pueden cubrir distintos partidos; cada campo conserva su fuente y PJ. Los casos dudosos mantienen la fuente principal. Las tasas usan minutos y PJ de la fuente de su numerador o su tasa publicada; no se infieren minutos de ESPN ni xG recibidos de porteros.'},
       players,teams,matches:u.matches.map(m=>({...m}))};
   }
   function isCombined(data){return data?.metadata?.kind==='combined'||data?.metadata?.source===SOURCE;}
-  const api = {combine,normalize,SOURCE,isCombined};
+  function coverage(data){
+    const metrics=node?require('./metrics.js'):root.GradaMetrics;
+    const keys=['goals','assists','shots','xg','xa','minutes','completedPer90','accuracy','lineBreakingPasses','tackles','interceptions','recoveries','clearances','blocks','shotsOnTargetPer90','dribblesPer90','longBallsPer90','chancesCreated','bigChancesCreated','bigChancesMissed','yellowCards','redCards','saves','savepct','conceded','prevented','clean','highClaims','sweeperActions','penaltiesSaved'];
+    const counts=Object.fromEntries(keys.map(k=>[k,data.players.filter(p=>metrics.metric(p,k,'total')!==null).length]));
+    const teamKeys=['goals','conceded','xg','xga','matches','points','clean','shotsOnTargetPerMatch','bigChances'];
+    const team_counts=Object.fromEntries(teamKeys.map(k=>[k,data.teams.filter(t=>metrics.metric(t,k,'total')!==null).length]));
+    const missing=[...keys.filter(k=>!counts[k]),...teamKeys.filter(k=>!team_counts[k]).map(k=>'equipos: '+k)];
+    return {counts,team_counts,missing,complete:!missing.length};
+  }
+  const api = {combine,normalize,SOURCE,isCombined,coverage};
   if (node) module.exports = api; else root.GradaCombined = api;
 })(typeof window === 'object' ? window : globalThis);

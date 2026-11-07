@@ -10,7 +10,7 @@ Cada unión exige un nombre y club únicos en ambas fuentes de esa pareja, y coh
 
 **Prioridad: Understat → ESPN → FotMob**, incluidos los ceros conocidos. Cada proveedor posterior solo completa campos desconocidos. Las discrepancias quedan en `combination.conflicting_fields`; los registros originales están en `sourceRecords`. `metadata.sources` conserva la captura de cada proveedor. El combinado usa como fecha general la más antigua, no la hora de calcular la unión.
 
-La captura actual complementa 449 de los 487 registros Understat: 412 coinciden con ESPN y 430 con FotMob (hay solapamiento). Los 38 restantes conservan solo Understat. Understat y ESPN mantienen sus capturas del 1 de noviembre; FotMob incorpora la consulta del 6 de noviembre. Los 58 registros FotMob no unidos siguen en sus descargas; no se añaden al catálogo combinado mediante identidades dudosas. Si falta FotMob, se conserva el combinado de dos fuentes.
+La captura actual complementa 449 de los 487 registros Understat: 411 coinciden con ESPN y 430 con FotMob (hay solapamiento). Los 38 restantes conservan solo Understat. Understat mantiene su captura del 1 de noviembre; ESPN se actualizó el 7 de noviembre. FotMob conserva jugadores del 6 de noviembre y añade equipos del 7. Los 58 registros FotMob no unidos siguen en sus descargas; no se añaden al catálogo combinado mediante identidades dudosas. Si falta FotMob, se conserva el combinado de dos fuentes.
 
 ## Identidades verificadas
 
@@ -67,3 +67,7 @@ Cada gráfico muestra su área dividida por el área del polígono máximo, con 
 Minutos mínimos y goles mínimos se combinan mediante Y con los filtros adicionales, hasta seis. Se permiten ≥, >, ≤ y < sobre otras métricas y ratios. Los umbrales se aplican a **totales**, aunque la tabla muestre volúmenes por 90; las métricas explícitas /90 o /partido conservan su denominador propio.
 
 Los valores desconocidos no satisfacen un filtro, ni siquiera uno de «menor que». Cero sí es un valor válido. «Limpiar métricas» mantiene los filtros de búsqueda, equipo y posición. El radar compara contra la referencia de posición completa, sin alterar los percentiles por la búsqueda o los filtros de tabla.
+
+## Ampliación a ligas y rankings
+
+El selector actual ofrece únicamente las cinco ligas combinadas y Todas las ligas. Se añadieron perfiles defensivo/ofensivo de centrocampistas y rankings de ataque, defensa y rendimiento global de equipos, con sus propios ejes y muestras. La unión, los modelos y el recálculo de referencias del ámbito conjunto se describen en [LEAGUES.md](LEAGUES.md). Las descargas originales siguen accesibles por liga; las vistas individuales y el Mundial ya no se incluyen en el selector.

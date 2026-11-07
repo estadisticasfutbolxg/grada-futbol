@@ -17,7 +17,7 @@ GRADA es una web de estadísticas de fútbol en español. Usa HTML/CSS/JavaScrip
 
 ## Datos y producto
 
-- Los datos visibles deben proceder de StatsBomb Open Data o de las integraciones de ESPN, Understat y FotMob autorizadas para LaLiga 2026/27; declarar fuente, competición, temporada y cobertura. La vista combinada autorizada por el usuario da prioridad a Understat y complementa solo coincidencias inequívocas con ESPN y FotMob. Conservar la fuente y cobertura de cada campo; no calcular tasas con denominadores de otra fuente.
+- Los datos visibles deben proceder de StatsBomb Open Data o de las integraciones autorizadas de ESPN, Understat y FotMob para las ligas 2026/27 de `dist/leagues.json`; declarar fuente, competición, temporada y cobertura. LaLiga da prioridad a Understat → ESPN → FotMob; las otras ligas a FotMob → ESPN. Solo se unen coincidencias inequívocas o identidades revisadas por ID, nombre y club. Todas las ligas concatena fichas con IDs propios y recalcula referencias; no une personas por nombre entre competiciones. Conservar la fuente y cobertura de cada campo; no calcular tasas con denominadores de otra fuente.
 - Nunca inventes cifras, extrapoles una temporada con un multiplicador ni completes métricas ausentes con cero. Conserva `null` y muestra `—`.
 - Excluye las tandas de las métricas; conserva la distinción entre goles de jugadores y marcadores con autogoles.
 - Mantén explícitas las definiciones de xA derivada, minutos y paradas. PSxG y goles evitados siguen no disponibles hasta que exista una fuente adecuada.

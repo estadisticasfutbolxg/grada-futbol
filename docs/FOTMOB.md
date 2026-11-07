@@ -45,3 +45,7 @@ El navegador carga la captura publicada; el botón de actualización de ESPN no 
 ## Validación
 
 `python -m unittest discover -s tests -p 'test_*.py'` comprueba extracción, temporada, formatos, ausencia frente a cero, cifras negativas y concordancia SQLite. `node --test tests/*.test.cjs` comprueba prioridad, denominadores, tasas originales, uniones dudosas y geometría del radar. Las fixtures aisladas de prueba no se publican.
+
+## Ampliación del 7 de noviembre
+
+`--league` admite el catálogo compartido: LaLiga, Premier League, Serie A, Bundesliga y Ligue 1. LaLiga añade clasificación y rankings de equipos (35 páginas en total); las otras ligas añaden también los campos principales de xG/xA, goles, asistencias y tiros/90 (42 páginas por liga). La clasificación aporta puntos y GP; los tiros a puerta/PJ son una tasa publicada y las grandes ocasiones, un total. SQLite incluye las métricas y el registro íntegro de equipos en `teams.stats_json`. Los detalles de cobertura y rankings están en [LEAGUES.md](LEAGUES.md).

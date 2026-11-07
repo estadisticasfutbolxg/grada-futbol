@@ -65,3 +65,9 @@ La vista combinada autorizada da prioridad a Understat y complementa coincidenci
 ## FotMob y perfiles por posición
 
 `scripts/import_fotmob.py` extrae rankings públicos de HTML y genera JSON/SQLite con contexto por campo. `dist/fotmob.js` valida la captura y declara sus métricas; `dist/combined.js` aplica prioridad Understat → ESPN → FotMob. `dist/metrics.js` conserva tasas publicadas y denominadores propios. `dist/radar.js` calcula referencias compartidas por posición, percentiles y área relativa; `dist/app.js` guarda perfiles derivados en memoria, sin mutar las capturas originales. `dist/filters.js` permite un lector de métricas para filtrar el área derivada. Consulta [FOTMOB.md](FOTMOB.md) y [COMBINED.md](COMBINED.md).
+
+## Catálogo de ligas y ámbitos
+
+`dist/leagues.json` es la configuración compartida por Python y `dist/leagues.js`. Los validadores comprueban la competición y temporada específicas, incluidos 18/20 clubes y 306/380 partidos. `scripts/import_leagues.py` prepara cada conjunto en un directorio temporal y valida cobertura antes de promover sus archivos.
+
+`dist/scopes.js` concatena combinados por liga con IDs propios, fechas por campo y columna Liga. `dist/radar.js` fija referencias por perfil y ámbito y admite jugadores y equipos; sus perfiles de centrocampistas describen acciones, sin inventar posiciones detalladas. `dist/app.js` mantiene una caché por liga y recalcula áreas al cambiar de ámbito; los filtros solo cambian candidatos. El botón de actualización limita concurrencia y conserva cada liga fallida. Consulta [LEAGUES.md](LEAGUES.md).

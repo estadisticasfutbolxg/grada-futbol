@@ -28,6 +28,7 @@ docs/
   ARCHITECTURE.md                  Estructura y puntos de coordinación
   DATA.md                         Contrato, cálculos y límites
   FBREF.md                        Origen y límites de LaLiga 2025/26
+  LEAGUES.md                      Ligas, ámbito conjunto y ocho perfiles de ranking
   FOTMOB.md                       Pase, defensa, ataque y portería LaLiga 2026/27
   COMBINED.md                     Fuentes, perfiles por posición, área y filtros
   fbref-source.json               Commit y SHA fijados del snapshot

@@ -1,97 +1,59 @@
 # GRADA · Estadísticas de fútbol
 
-Web en español de líderes, tablas por equipo y jugador, perfiles, comparación y CSV. HTML, CSS y JavaScript en `dist/`; importación y generación de bases SQLite con Python de biblioteca estándar.
+Web en español de estadísticas, perfiles y rankings por área del radar de jugadores y equipos. El selector ofrece **LaLiga, Premier League, Serie A, Bundesliga, Ligue 1** combinadas y **Todas las ligas**, temporada 2026/27. HTML/CSS/JavaScript en `dist/`, Python estándar para descargar datos reales y generar SQLite gratuitos.
 
-## Qué incluye el repositorio
+## Datos reales y fuentes
 
-- El código de la web y un arranque vacío (`dist/data.js`). No hay cifras de demostración.
-- `scripts/import_statsbomb.py`: descarga los 64 partidos del Mundial masculino 2022, agrega métricas y genera los datos de la web y SQLite.
-- `scripts/import_fbref.py`: descarga una copia pública identificada como procedente de FBref, fijada por commit y SHA; extrae LaLiga 2025/26 y genera CSV y SQLite separados.
-- Skills, loop, plantillas y validadores para trabajar entre dos personas.
+LaLiga prioriza Understat → ESPN → FotMob. Las otras ligas priorizan FotMob → ESPN, incluidos xG/xA FotMob, tras comprobar las mismas familias de métricas de pase, ataque, defensa y portería. Los modelos, capturas, PJ y minutos de cada campo se conservan. No hay datos de demostración; las ausencias siguen `null`.
 
-**Las bases y los datos generados no se incluyen en Git.** La web muestra que faltan los datos hasta ejecutar la importación de StatsBomb. FBref se conserva aparte: no se mezcla automáticamente con los rankings del Mundial.
+Las capturas verificadas reúnen 2.284 fichas jugador/liga y 96 equipos. En Todas las ligas se recalculan los percentiles sobre el conjunto seleccionado. Hay cinco perfiles de jugadores y tres de equipos, con muestras mínimas y áreas comparables solo con todos los ejes comunes. Consulta [ligas y rankings](docs/LEAGUES.md), [combinación](docs/COMBINED.md) y [estado publicado](docs/STATUS.md).
 
-## Generar los datos de la web y la base
+## Generar la web y las bases
 
-Requiere Python 3.10 o posterior y acceso a Internet. Desde la raíz del proyecto:
+Requiere Python 3.11+, Node 18+ e Internet, sin instalar paquetes ni contratar una base:
 
 ```sh
-python scripts/import_statsbomb.py
-python scripts/validate_data.py
+python scripts/import_leagues.py --all
 python -m http.server 8000 --directory dist
 ```
 
-Abre http://localhost:8000. No necesitas instalar paquetes de Python, npm ni contratar una base de datos. El CSV del navegador respeta los filtros, el orden y el modo por 90 minutos.
-
-El importador genera:
-
-- `dist/data.js`: estadísticas reales que consume la web.
-- `dist/downloads/statsbomb.json`: payload de jugadores, equipos y partidos.
-- `dist/downloads/statsbomb.sqlite.gz`: base descargable comprimida.
-- `dist/downloads/SHA256SUMS`: integridad del archivo anterior.
-- `data/statsbomb.sqlite` y caché original en `data/raw/`.
-
-El `data.js` versionado es solo el arranque vacío. Al importar se modifica localmente: conserva ese cambio para explorar los datos, pero no añadas el payload generado a un commit de código. Las descargas y la caché están ignoradas por Git.
-
-Para una importación parcial explícita:
+Abre http://localhost:8000. También puedes generar una liga:
 
 ```sh
-python scripts/import_statsbomb.py --limit 3
+python scripts/import_leagues.py --league premier-league
 ```
 
-La web indica esa cobertura y no presenta sus rankings como los totales del Mundial. Las salidas de una importación se validan juntas; el importador todavía no promociona todo el conjunto de manera atómica, según GRADA-003.
+El proceso genera JSON de cada proveedor, JSON combinado y SQLite FotMob comprimido. LaLiga mantiene además su JSON/SQLite Understat. Los archivos se sirven como descargas; **las bases y los datos generados no se incluyen en GitHub**. Los importadores separados aceptan `--league`: `scripts/import_fotmob.py`, `scripts/import_laliga.py` y `scripts/build_combined.cjs`.
 
-## Descargar FBref · LaLiga 2025/26
+Una fuente no disponible no se sustituye por datos ficticios. El proceso `--all` continúa con las ligas que pasan los controles e informa de las omitidas; falla si no puede generar ninguna. Understat puede reutilizar su captura existente con su fecha original. Si está en mantenimiento y no hay captura local, LaLiga no se habilita hasta disponer de ella. El selector solo ofrece combinados validados. [LEAGUES.md](docs/LEAGUES.md) describe reproducción desde cachés reales y todos los campos.
 
-```sh
-python scripts/import_fbref.py
-```
+## Navegación y descargas
 
-Salida: `data/fbref/laliga-2025-26/`, con 22 CSV, `metadata.json` y `fbref_laliga_2025_26.sqlite`. La copia usada declara 38 partidos por cada uno de los 20 equipos, 611 registros jugador-equipo y 39 de porteros. Los traspasos pueden producir varias filas de un jugador.
+- Rankings de delanteros, porteros, defensas y perfiles defensivo/ofensivo de centrocampistas.
+- Rankings de equipos por ataque, defensa y rendimiento global.
+- Filtros por minutos, goles y otras métricas, búsqueda, ordenación, perfiles y comparador.
+- Área del radar entre 0 y 1 en tablas, fichas y CSV, con unidades y referencia del perfil.
+- Descargas JSON/SQLite por proveedor y CSV/JSON combinado. Todas añade Liga y fechas por campo.
 
-La descarga directa de FBref devolvió 403 desde el entorno de preparación. El script usa la copia pública `m-mahadi/top5-football-dataset` identificada como FBref, fijada en [docs/fbref-source.json](docs/fbref-source.json). No descarga su tabla combinada con otros proveedores. [FBREF.md](docs/FBREF.md) documenta origen, cobertura y limitaciones.
+El botón de ESPN actualiza la copia del navegador para una liga o todas; mantiene las otras capturas. Sites aloja archivos estáticos y no ejecuta Python. La web compartida se actualiza al regenerar y publicar una versión.
 
-Esta captura tiene goles, asistencias, tiros, minutos y paradas. Pases, xG y PSxG no están disponibles en las tablas seleccionadas; las celdas ausentes quedan vacías en CSV y `NULL` en SQLite. No se completan con datos ficticios ni se presentan como métricas de StatsBomb.
-
-## Publicación opcional en GitHub Pages
-
-El workflow `.github/workflows/pages.yml` importa StatsBomb, comprueba el código y publica `dist/` si el propietario configura **Settings → Pages → Source → GitHub Actions**. Las bases se generan durante el workflow y se sirven como artefactos de la web; no se guardan en el historial Git.
-
-La presencia de ese archivo no confirma un despliegue. Revisa el estado y la URL reales después de ejecutarlo. También puedes servir `dist/` en otro alojamiento estático tras generar los datos.
-
-## Métricas y colaboración
-
-Las definiciones de goles, tandas, xA derivada, minutos nominales y porteros están en [DATA.md](docs/DATA.md). PSxG y goles evitados no se calculan en la importación StatsBomb.
-
-Para trabajar entre dos personas, empieza por [CONTRIBUTING.md](CONTRIBUTING.md), [AGENTS.md](AGENTS.md) y [el loop](loop/README.md). Skills: `$grada-loop`, `$grada-data` y `$grada-review`.
-
-Comprobaciones sin red:
+## Comprobaciones
 
 ```sh
-python scripts/check_collaboration_docs.py
 node --check dist/app.js
-python -m py_compile scripts/import_statsbomb.py scripts/import_fbref.py
+node --test tests/*.test.cjs
+python -m unittest discover -s tests -p 'test_*.py'
+python scripts/check_collaboration_docs.py
 ```
 
-Después de generar StatsBomb, ejecuta `python scripts/validate_data.py`. Los datos y bases actuales se conservan localmente; este repositorio distribuye su código generador.
+Las pruebas aisladas nunca se publican como estadísticas. Al cambiar los datos se comprueban sus JSON/SQLite y unidades; los controles históricos de StatsBomb siguen en `python scripts/validate_data.py` cuando se hayan generado esos artefactos.
 
-## Fuentes
+## Colaboración y publicación
 
-- [StatsBomb Open Data](https://github.com/hudl/open-data) y [licencia de datos](https://github.com/hudl/open-data/blob/master/LICENSE.pdf).
-- [Copia pública atribuida a FBref](https://github.com/m-mahadi/top5-football-dataset), su aviso de datos y los términos de Sports Reference. La licencia MIT de ese repositorio cubre su código, no concede derechos sobre los datos.
+Empieza por [CONTRIBUTING.md](CONTRIBUTING.md), [AGENTS.md](AGENTS.md), [arquitectura](docs/ARCHITECTURE.md) y [el loop](loop/README.md). Skills del repositorio: `$grada-loop`, `$grada-data` y `$grada-review`.
 
-## LaLiga 2026/27 y ayuda de métricas
+La web pública y sus versiones confirmadas están en [STATUS.md](docs/STATUS.md). El workflow opcional de GitHub Pages genera datos sin guardarlos en el historial; requiere que el propietario configure Settings → Pages → GitHub Actions. Su existencia no demuestra que esté activado o desplegado. El alojamiento principal actual es Sites.
 
-La web permite actualizar LaLiga 2026/27 desde ESPN con su botón. Para generar la captura que se sirve en Sites, ejecuta `python scripts/import_laliga.py`; no se versionan los datos generados. Consulta [fuente, campos y límites](docs/LALIGA.md). En porteros se muestran xG y goles recibidos por 90 cuando existen minutos y xG; las cabeceras explican cada métrica con cursor, teclado o el botón ⓘ.
+## Herramientas de archivo
 
-## Descargar xG de Understat · LaLiga 2026/27
-
-Ejecuta `python scripts/import_understat.py` con Python 3.11+ para generar JSON y SQLite comprimido. Incluye xG y xA de jugadores, minutos, goles, tiros y xG a favor/en contra de equipos. Consulta [UNDERSTAT.md](docs/UNDERSTAT.md) para cobertura, actualización y métricas ausentes. Los datos generados se conservan fuera de GitHub.
-
-## Vista combinada, radar y filtros
-
-La vista combinada autorizada da prioridad a Understat y complementa coincidencias inequívocas con ESPN y FotMob, conservando origen, fecha y denominadores por métrica. Añade descargas explícitas, radar por posición y filtros numéricos. Consulta [definiciones y límites](docs/COMBINED.md).
-
-## Pase, defensa y ataque de FotMob · LaLiga 2026/27
-
-Ejecuta `python scripts/import_fotmob.py` con Python 3.11+ y después `node scripts/build_combined.cjs`. Descarga rankings HTML reales y genera JSON/SQLite, con pases precisos/90, pases rompelíneas, entradas, intercepciones, recuperaciones, tiros a puerta, regates y métricas de porteros, entre otras. Consulta [FOTMOB.md](docs/FOTMOB.md) para unidades y cobertura. La tabla de jugadores añade un área normalizada del radar (0–1), ordenable y filtrable, comparable dentro de la misma posición y ejes.
+Se conservan `scripts/import_statsbomb.py` para el Mundial 2022 y `scripts/import_fbref.py` para la captura FBref 2025/26. No son opciones del selector combinado actual. Consulta [StatsBomb y sus métricas](docs/DATA.md), [FBref](docs/FBREF.md), [ESPN](docs/LALIGA.md), [Understat](docs/UNDERSTAT.md) y [FotMob](docs/FOTMOB.md). Los artefactos de archivo se generan aparte y no se cargan como estadísticas actuales.
