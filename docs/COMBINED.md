@@ -10,7 +10,15 @@ Cada unión exige un nombre y club únicos en ambas fuentes de esa pareja, y coh
 
 **Prioridad: Understat → ESPN → FotMob**, incluidos los ceros conocidos. Cada proveedor posterior solo completa campos desconocidos. Las discrepancias quedan en `combination.conflicting_fields`; los registros originales están en `sourceRecords`. `metadata.sources` conserva la captura de cada proveedor. El combinado usa como fecha general la más antigua, no la hora de calcular la unión.
 
-La captura actual complementa 448 de los 487 registros Understat: 411 coinciden con ESPN y 429 con FotMob (hay solapamiento). Los 39 restantes conservan solo Understat. Understat y ESPN mantienen sus capturas del 1 de noviembre; FotMob incorpora la consulta del 6 de noviembre. Los 59 registros FotMob no unidos siguen en sus descargas; no se añaden al catálogo combinado mediante identidades dudosas. Si falta FotMob, se conserva el combinado de dos fuentes.
+La captura actual complementa 449 de los 487 registros Understat: 412 coinciden con ESPN y 430 con FotMob (hay solapamiento). Los 38 restantes conservan solo Understat. Understat y ESPN mantienen sus capturas del 1 de noviembre; FotMob incorpora la consulta del 6 de noviembre. Los 58 registros FotMob no unidos siguen en sus descargas; no se añaden al catálogo combinado mediante identidades dudosas. Si falta FotMob, se conserva el combinado de dos fuentes.
+
+## Identidades verificadas
+
+Además del nombre normalizado y club, se admiten equivalencias revisadas con identificadores exactos de los proveedores. El registro en `dist/combined.js` exige identificador, nombre de origen y club, y conserva las guardas de unicidad y rol. No compara por similitud ni elimina apellidos de forma general. `combination.match_methods` distingue `verified_identity` y `name_team`.
+
+Caso comprobado en las capturas reales: [Understat 3423](https://understat.com/player/3423), «Kylian Mbappe-Lottin»; ESPN `86:231388`, «Kylian Mbappé»; [FotMob 701154](https://www.fotmob.com/players/701154/kylian-mbappe), «Kylian Mbappé», todos Real Madrid. La unión mantiene goles/xG de Understat y añade tiros a puerta/90 y regates FotMob, con sus propios 984 minutos y 11 PJ, frente a 898 minutos/10 PJ Understat. El área comparable pasa de ausente por 4/6 ejes a 0,756 (redondeo) con los seis ejes.
+
+Nuevas equivalencias necesitan evidencia por proveedor antes de incorporarse. Un área puede seguir ausente aunque el nombre coincida si faltan métricas o una posición válida.
 
 ## Fuentes y denominadores por campo
 
