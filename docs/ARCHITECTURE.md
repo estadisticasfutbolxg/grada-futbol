@@ -12,7 +12,7 @@ StatsBomb Open Data (JSON de partidos, alineaciones y eventos)
                     ↓
              dist/app.js + index.html + style.css
                     ↓
-          líderes, filtros, perfiles, comparación y CSV
+          líderes, filtros, perfiles y comparación
 ```
 
 El navegador usa los datos de `dist/data.js` ya cargados. SQLite se ofrece como descarga, no como una base que el navegador consulte en tiempo real. No hay backend, autenticación propia ni sincronización multiusuario de datos de visitantes.
@@ -23,7 +23,7 @@ El navegador usa los datos de `dist/data.js` ya cargados. SQLite se ofrece como 
 | --- | --- |
 | `dist/index.html` | Estructura, navegación y contenedores |
 | `dist/style.css` | Apariencia y adaptación a pantallas |
-| `dist/app.js` | Filtros, métricas por 90, rankings, fichas, comparador y CSV |
+| `dist/app.js` | Filtros, métricas por 90, rankings, fichas y comparador |
 | `scripts/import_statsbomb.py` | Descarga, agregación y creación de artefactos |
 | `scripts/validate_data.py` | Coherencia de las salidas incluidas, sin red |
 | `.github/workflows/pages.yml` | Importación y despliegue en GitHub Pages, si el propietario lo configura |
@@ -73,3 +73,5 @@ La vista combinada autorizada da prioridad a Understat y complementa coincidenci
 `dist/scopes.js` concatena combinados por liga con IDs propios, fechas por campo y columna Liga. `dist/radar.js` fija referencias por perfil y ámbito y admite jugadores y equipos; sus perfiles de centrocampistas describen acciones, sin inventar posiciones detalladas. `dist/app.js` mantiene una caché por liga y recalcula áreas al cambiar de ámbito; los filtros solo cambian candidatos. El botón de actualización limita concurrencia y conserva cada liga fallida. Consulta [LEAGUES.md](LEAGUES.md).
 
 `dist/squads.js` calcula áreas de plantilla desde los perfiles generales por posición y pertenencia por ID, separado del perfil activo de ranking. No modifica las capturas. `withTeamAreas` enriquece los JSON derivados, y `scopes.js` descarta sumas locales antes de recalcular Todas. Los índices específicos de equipos se mantienen en `radar.js`; los pendientes permanecen visibles. `filters.js` aplica alias de búsqueda sin modificar la identidad de datos.
+
+`midfieldSummaries` suma exclusivamente los MED asignados usando sus perfiles MED_ATT/MED_DEF. Sus dos definiciones de ranking de equipo declaran aggregateProfile y no pasan por el radar de métricas de equipo. Las sumas y coberturas tienen campos propios; el detalle muestra las contribuciones. Los botones y handlers CSV/JSON se han retirado por petición del usuario; los JSON siguen sirviendo la carga interna y el generador. Se conservan SQLite y el refresco ESPN.

@@ -44,10 +44,10 @@
       '<p class="sub">Referencia: '+esc(profile.referenceRule)+'. Volúmenes por 90 o por PJ, según el eje.'+(axes.some(a=>a.lowerBetter)?' En goles y xG recibidos, menos es mejor.':'')+' Es rendimiento estadístico, no una valoración física.</p>'+
       '<details><summary>Ver valores y procedencia</summary><ul>'+axes.map(a=>{const info = provenance(record,a.key,metadata);return '<li>'+esc(a.label)+': <b>'+format(a.value)+'</b> · P'+Math.round(a.percentile)+' · '+a.referenceCount+' referencias · '+esc(info?.source || metadata.source)+'</li>';}).join('')+'</ul></details></figure>';
   }
-  function squadArea(summary){
+  function squadArea(summary,{title='Área general del equipo · suma de jugadores',population='jugadores',note='Toda la plantilla asignada, sin mínimo adicional ni ponderación. La suma puede superar 1.'}={}){
     if(!summary)return '';
     const fixed=new Intl.NumberFormat('es-ES',{minimumFractionDigits:3,maximumFractionDigits:3}),value=n=>n===null?'—':fixed.format(n);
-    return '<section class="squad-area"><h2>Área general del equipo · suma de jugadores</h2><strong>'+value(summary.area)+'</strong><p>'+summary.validPlayers+' / '+summary.totalPlayers+' jugadores con área válida · '+summary.missingPlayers+' pendientes. Toda la plantilla asignada, sin mínimo adicional ni ponderación. La suma puede superar 1.</p><details><summary>Ver contribuciones de los jugadores</summary><p>Se suma con precisión completa; se muestran tres decimales.</p><ul class="squad-contributions">'+summary.players.map(p=>'<li><span>'+esc(p.name)+' <small>'+esc(p.pos)+'</small></span><b>'+value(p.area)+'</b></li>').join('')+'</ul></details></section>';
+    return '<section class="squad-area"><h2>'+esc(title)+'</h2><strong>'+value(summary.area)+'</strong><p>'+summary.validPlayers+' / '+summary.totalPlayers+' '+esc(population)+' con área válida · '+summary.missingPlayers+' pendientes. '+esc(note)+'</p><details><summary>Ver contribuciones de los jugadores</summary><p>Se suma con precisión completa; se muestran tres decimales.</p><ul class="squad-contributions">'+summary.players.map(p=>'<li><span>'+esc(p.name)+' <small>'+esc(p.pos)+'</small></span><b>'+value(p.area)+'</b></li>').join('')+'</ul></details></section>';
   }
   root.GradaComponents = {provenance,sourceMark,radar,squadArea};
 })(window);

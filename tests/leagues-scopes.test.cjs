@@ -44,5 +44,5 @@ test('team defense inverts conceded metrics and differences retain signed values
  assert(p.get(d.teams[0]).comparableArea>p.get(d.teams[1]).comparableArea);assert.equal(p.get(d.teams[0]).axes.length,3);
  assert.equal(metrics.metric(d.teams[1],'goalDifferencePerMatch'),-6/6);assert.equal(metrics.metric(d.teams[1],'xgDifferencePerMatch'),-3/6);
  const team=d.teams[1];team.metricContexts.conceded.source='ESPN';assert.equal(metrics.metric(team,'goalDifferencePerMatch'),null);
- assert(radar.rankingDefinitions.filter(d=>d.kind==='team').length===3);assert(radar.rankingDefinitions.filter(d=>d.kind==='player').length===5);
+ assert.equal(radar.rankingDefinitions.filter(d=>d.kind==='team'&&!d.aggregateProfile).length,3);assert.equal(radar.rankingDefinitions.filter(d=>d.aggregateProfile).length,2);assert.equal(radar.rankingDefinitions.filter(d=>d.kind==='player').length,5);
 });

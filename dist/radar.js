@@ -34,6 +34,8 @@
     {key:'MED_ATT',label:'Centrocampistas · perfil ofensivo',position:'MED',kind:'player',minimum:450},
     {key:'TEAM_ATTACK',label:'Equipos · mejores ataques',kind:'team',minimum:5},
     {key:'TEAM_DEFENSE',label:'Equipos · mejores defensas',kind:'team',minimum:5},
+    {key:'TEAM_MED_ATT',label:'Equipos · centro del campo ofensivo',kind:'team',minimum:5,aggregateProfile:'MED_ATT'},
+    {key:'TEAM_MED_DEF',label:'Equipos · centro del campo defensivo',kind:'team',minimum:5,aggregateProfile:'MED_DEF'},
     {key:'TEAM_OVERALL',label:'Equipos · rendimiento global',kind:'team',minimum:5}
   ];
   function definition(key){return rankingDefinitions.find(d=>d.key===key)||{key,label:key==='MED'?'Centrocampistas':key,position:key,kind:'player',minimum:450};}
@@ -50,6 +52,7 @@
   }
   function reference(all,key) {
     const def=definition(key),position=def.position,minimum=def.minimum,team=def.kind==='team';
+    if(def.aggregateProfile)throw new Error('El perfil de centro del campo de equipo se calcula sumando jugadores en GradaSquads.');
     const samePosition = team?all:all.filter(p=>p.pos === position);
     function eligible(record,key) {
       const ctx = metrics.context(record,key);
