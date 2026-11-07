@@ -61,3 +61,16 @@ test('FotMob rejects season mismatches, invented counts, and ambiguous matches',
  f.players[0].name='Otro nombre';assert.equal(combine(u,e,f).players[0].tackles,null);
  f.players[0].name=u.players[0].name;f.players.push({...f.players[0],id:'9999'});assert.equal(combine(u,e,f).players[0].tackles,null);
 });
+
+test('reviewed Mbappe identities bridge full-name variants and retain primary values and own coverage',()=>{
+ const {u,e}=fixture();u.teams[0].name=e.teams[0].name='Real Madrid';
+ Object.assign(u.players[0],{id:'3423',name:'Kylian Mbappe-Lottin',team:'Real Madrid',pos:'DEL'});
+ Object.assign(e.players[0],{id:'86:231388',name:'Kylian Mbappé',team:'Real Madrid',pos:'DEL'});
+ const f=fotmobFixture(u);Object.assign(f.players[0],{id:'701154',name:'Kylian Mbappé',pos:'—'});
+ let p=combine(u,e,f).players[0];assert.equal(p.goals,1);assert.equal(p.tackles,20);assert.equal(p.sourceRecords.FotMob.id,'701154');assert.equal(p.metricContexts.tackles.minutes,700);
+ assert.deepEqual(p.combination.match_methods,{ESPN:'verified_identity',FotMob:'verified_identity'});
+ f.players[0].id='701155';assert.equal(combine(u,e,f).players[0].tackles,null);f.players[0].id='701154';
+ f.players[0].name='Otro Mbappé';assert.equal(combine(u,e,f).players[0].tackles,null);f.players[0].name='Kylian Mbappé';
+ f.players[0].team_id='2';assert.equal(combine(u,e,f).players[0].tackles,null);f.players[0].team_id='1';
+ f.players[0].pos='POR';assert.equal(combine(u,e,f).players[0].tackles,null);
+});

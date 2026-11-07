@@ -13,6 +13,16 @@
     // Public names in the validated league snapshots; no fuzzy matching.
     return ({deportivo:'deportivolacoruna',deportivoacoruna:'deportivolacoruna',deportivoalaves:'alaves'})[key] || key;
   }
+  // Reviewed source identities. IDs, club and original name must all agree.
+  // Evidence and maintenance rules: docs/COMBINED.md#identidades-verificadas.
+  const identities = [{club:'realmadrid',Understat:{id:'3423',name:'Kylian Mbappe-Lottin'},ESPN:{id:'86:231388',name:'Kylian Mbappé'},FotMob:{id:'701154',name:'Kylian Mbappé'}}];
+  function identity(record,provider,club){
+    return identities.find(entry=>entry.club===club&&entry[provider]?.id===String(record.id)&&normalize(entry[provider].name)===normalize(record.name));
+  }
+  function playerKey(record,provider,club){
+    const known=identity(record,provider,club);
+    return club+'|'+(known?'@'+known.Understat.id:normalize(record.name));
+  }
   function index(rows,key) {
     const map = new Map();
     for (const row of rows) {
@@ -28,12 +38,12 @@
     const uTeams = new Map(u.teams.map(t=>[String(t.id),teamKey(t.name)]));
     const eTeams = new Map(e.teams.map(t=>[String(t.id),teamKey(t.name)]));
     // An aggregated transfer row has no single team_id; keep it solely Understat.
-    const uKey = p => uTeams.get(String(p.team_id))+'|'+normalize(p.name);
-    const eKey = p => eTeams.get(String(p.team_id))+'|'+normalize(p.name);
+    const uKey = p => playerKey(p,'Understat',uTeams.get(String(p.team_id)));
+    const eKey = p => playerKey(p,'ESPN',eTeams.get(String(p.team_id)));
     const uTeamIndex = index(u.teams,t=>teamKey(t.name)), eTeamIndex = index(e.teams,t=>teamKey(t.name));
     const ui = index(u.players.filter(p=>uTeams.has(String(p.team_id))),uKey), ei = index(e.players,eKey);
     const fTeams = new Map((f?.teams||[]).map(t=>[String(t.id),teamKey(t.name)]));
-    const fi = index(f?.players||[],p=>fTeams.get(String(p.team_id))+'|'+normalize(p.name));
+    const fi = index(f?.players||[],p=>playerKey(p,'FotMob',fTeams.get(String(p.team_id))));
     const fTeamIndex = index(f?.teams||[],t=>teamKey(t.name));
     const matchedIDs = new Set(), matchedFotmobIDs = new Set();
     const stats = {matched_players:0,understat_only_players:0,ambiguous_players:0,conflicting_players:0,espn_matched_players:0,fotmob_matched_players:0};
@@ -79,6 +89,9 @@
       const fUnique = !!club&&!!normalize(p.name)&&own.length===1&&fc.length===1&&fRole&&uTeamIndex.get(club)?.length===1&&fTeamIndex.get(club)?.length===1;
       const extra = fUnique?fc[0]:null;
       const row = merge(p,other,'player',extra);
+      row.combination.match_methods={};
+      if(other)row.combination.match_methods.ESPN=identity(p,'Understat',club)?'verified_identity':'name_team';
+      if(extra)row.combination.match_methods.FotMob=identity(p,'Understat',club)?'verified_identity':'name_team';
       row.combination.ambiguous = (candidates.length > 0 && !unique)||(fc.length>0&&!fUnique);
       if (other||extra) stats.matched_players++; else stats.understat_only_players++;
       if(other){stats.espn_matched_players++;matchedIDs.add(other.id);}
