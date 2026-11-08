@@ -6,7 +6,9 @@ La web se sirve en el mismo proyecto Sites mediante un Worker. El generador `scr
 
 El botón consulta ESPN, FotMob y, en LaLiga, Understat. Todas las ligas procesa las cinco competiciones con concurrencia limitada. ESPN conserva su adaptador de clasificación/plantillas. El servidor consulta los rankings HTML y las fichas de FotMob y los datos públicos de Understat, sin ejecutar JavaScript de las fuentes.
 
-Solo se aceptan rutas, competiciones y jugadores de plantillas verificadas. Las consultas son GET de lectura, no admiten URLs arbitrarias, rechazan orígenes cruzados y métodos de escritura, limitan tamaño/tiempo y permiten redirecciones únicamente dentro del mismo host HTTPS. Caché compartida: 5 minutos para consultas de fuente, 1 hora para fichas y 2 minutos para fallos, con deduplicación. La última respuesta válida se conserva separada de los fallos.
+Solo se aceptan rutas, competiciones y jugadores de plantillas verificadas. Las consultas son GET de lectura, no admiten URLs arbitrarias, rechazan orígenes cruzados y métodos de escritura, limitan tamaño/tiempo y permiten redirecciones únicamente dentro del mismo host HTTPS. Caché: 5 minutos para consultas de fuente, 1 hora para fichas y 2 minutos para fallos, con deduplicación. La última respuesta válida se conserva separada de los fallos.
+
+La caché de servidor con nombre es opcional; Sites puede denegar Cache API. No se consulta caches.default. Ante una denegación se usa memoria por instancia, limitada a 16 MiB/256 entradas, con caducidad y descarte de entradas antiguas. Una instancia nueva puede perder esa memoria y volver a las capturas publicadas. La lectura de esas capturas no depende de disponer de caché.
 
 El navegador valida fuente, ID, club, temporada, fechas y cobertura antes de combinar. Guarda capturas válidas en IndexedDB; conserva los datos de las fuentes y fichas que fallen, con sus fechas y denominadores originales. La clasificación y los filtros siguen utilizables durante la consulta. Los datos individuales publicados permanecen como capturas de respaldo. La copia de cada navegador puede contener una actualización más reciente que la del paquete inicial.
 
