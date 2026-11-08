@@ -8,7 +8,7 @@
     clearances:['Despejes /90','90'],blocks:['Bloqueos /90','90'],
     prevented:['Goles evitados /90','90'],highClaims:['Balones aéreos atrapados /90','90'],sweeperActions:['Acciones de líbero /90','90'],longBallsPer90:['Pases largos precisos /90','total'],
     conversion:['Conversión %','total'],tackles:['Entradas /90','90'],interceptions:['Intercepciones /90','90'],progressive:['Pases progresivos /90','90'],
-    passes:['Pases /90','90'],accuracy:['Pases completados %','total'],savepct:['Paradas %','total'],savesPerMatch:['Paradas /PJ','total'],
+    passes:['Pases /90','90'],accuracy:['Pases completados %','total'],psxgEfficiency:['Eficacia vs xGOT %','total'],savepct:['Paradas %','total'],savesPerMatch:['Paradas /PJ','total'],
     concededPerMatch:['Goles recibidos /PJ','total',true],cleanPerMatch:['Porterías a cero /PJ','total'],
     lineBreakingPasses:['Pases rompelíneas /90','90'],chancesCreated:['Ocasiones creadas /90','90'],bigChancesCreated:['Grandes ocasiones /90','90'],
     goalsPerMatch:['Goles /PJ','total'],xgPerMatch:['xG /PJ','total'],xgaPerMatch:['xG recibidos /PJ','total',true],goalsPerXg:['Goles /xG','total'],
@@ -19,7 +19,7 @@
     DEL:['goals','xg','shotsOnTargetPer90','xa','dribblesPer90','conversion','shots','keypasses'],
     MED:['completedPer90','accuracy','xa','recoveries','tackles','interceptions','keypasses','assists','progressive','passes','xg','goals','shots'],
     DEF:['tackles','interceptions','clearances','blocks','recoveries','completedPer90','accuracy','progressive','passes'],
-    POR:['savepct','savesPerMatch','concededPerMatch','prevented','highClaims','sweeperActions','cleanPerMatch','longBallsPer90','accuracy','completedPer90','passes'],
+    POR:['savepct','savesPerMatch','concededPerMatch','psxgEfficiency','prevented','highClaims','sweeperActions','cleanPerMatch','longBallsPer90','accuracy','completedPer90','passes'],
     MED_DEF:['completedPer90','accuracy','recoveries','tackles','interceptions','lineBreakingPasses'],
     MED_ATT:['xa','chancesCreated','bigChancesCreated','shotsOnTargetPer90','dribblesPer90','goals'],
     TEAM_ATTACK:['goalsPerMatch','xgPerMatch','shotsOnTargetPerMatch','bigChancesPerMatch','goalsPerXg'],
@@ -33,6 +33,7 @@
     {key:'MED_DEF',label:'Centrocampistas · perfil defensivo',position:'MED',kind:'player',minimum:450},
     {key:'MED_ATT',label:'Centrocampistas · perfil ofensivo',position:'MED',kind:'player',minimum:450},
     {key:'TEAM_ATTACK',label:'Equipos · mejores ataques',kind:'team',minimum:5},
+    {key:'TEAM_STRIKERS',label:'Equipos · mejor delantera',kind:'team',minimum:5,aggregateProfile:'DEL'},
     {key:'TEAM_DEFENSE',label:'Equipos · mejores defensas',kind:'team',minimum:5},
     {key:'TEAM_MED_ATT',label:'Equipos · centro del campo ofensivo',kind:'team',minimum:5,aggregateProfile:'MED_ATT'},
     {key:'TEAM_MED_DEF',label:'Equipos · centro del campo defensivo',kind:'team',minimum:5,aggregateProfile:'MED_DEF'},
@@ -52,7 +53,7 @@
   }
   function reference(all,key) {
     const def=definition(key),position=def.position,minimum=def.minimum,team=def.kind==='team';
-    if(def.aggregateProfile)throw new Error('El perfil de centro del campo de equipo se calcula sumando jugadores en GradaSquads.');
+    if(def.aggregateProfile)throw new Error('El score por posición del equipo se calcula en GradaSquads.');
     const samePosition = team?all:all.filter(p=>p.pos === position);
     function eligible(record,key) {
       const ctx = metrics.context(record,key);
@@ -66,7 +67,7 @@
       const values=samePosition.filter(p=>eligible(p,key)).map(p=>metrics.metric(p,key,axes[key][1])).filter(Number.isFinite);
       if(values.length>=5)samples.set(key,values);
     }
-    return {definition:def,minimum,samples,keys:[...samples.keys()].slice(0,6),peerCount:samePosition.filter(p=>candidates.some(key=>eligible(p,key)&&Number.isFinite(metrics.metric(p,key,axes[key][1])))).length};
+    return {definition:def,minimum,samples,keys:[...samples.keys()].filter(k=>!(position==='POR'&&samples.has('psxgEfficiency')&&k==='prevented')).slice(0,6),peerCount:samePosition.filter(p=>candidates.some(key=>eligible(p,key)&&Number.isFinite(metrics.metric(p,key,axes[key][1])))).length};
   }
   function profile(player,all,plan=reference(all,player.pos)) {
     const values=[];

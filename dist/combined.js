@@ -6,7 +6,7 @@
   const fotmob = node ? require('./fotmob.js') : root.GradaFotmob;
   const leagues = node ? require('./leagues.js') : root.GradaLeagues;
   const SOURCE = 'Understat + ESPN';
-  const fields = [...new Set(['matches','minutes','goals','assists','xg','xa','shots','shotsOnTarget','shotsPer90','passes','completed','accuracy','conversion','delta','saves','savepct','conceded','xga','clean','tackles','interceptions','recoveries','keypasses','progressive','psxg','prevented','points','bigChances','shotsOnTargetPerMatch','possession',...fotmob.fields])];
+  const fields = [...new Set(['matches','minutes','goals','assists','xg','xa','shots','shotsOnTarget','shotsPer90','passes','completed','accuracy','conversion','delta','saves','savepct','conceded','xga','xgaOnTarget','clean','tackles','interceptions','recoveries','keypasses','progressive','psxg','prevented','points','bigChances','shotsOnTargetPerMatch','possession',...fotmob.fields])];
   const numeric = n => typeof n === 'number' && Number.isFinite(n);
   function normalize(value) { return String(value ?? '').normalize('NFKD').replace(/\p{M}/gu,'').toLowerCase().replace(/[^a-z0-9]/g,''); }
   function teamKey(name) {
@@ -61,6 +61,7 @@
       if (other) row.sourceRecords.ESPN = {...other};
       if(additional) row.sourceRecords.FotMob = {...additional};
       if(kind==='player'&&row.pos==='—'&&other&&['POR','DEF','MED','DEL'].includes(other.pos)){row.pos=other.pos;row.fieldSources.pos='ESPN';}
+      if(kind==='player'&&row.pos==='—'&&additional&&['POR','DEF','MED','DEL'].includes(additional.pos)){row.pos=additional.pos;row.fieldSources.pos='FotMob';}
       const differences = [];
       for (const key of fields) {
         const chosen = [[primarySource,primary],['ESPN',other],['FotMob',additional]].find(([,r])=>r&&(numeric(r[key])||numeric(r.metricContexts?.[key]?.reportedPer90)));
@@ -68,7 +69,8 @@
         row[key] = sourceRow && numeric(sourceRow[key]) ? sourceRow[key] : null;
         if (source) {
           row.fieldSources[key] = source;
-          row.metricContexts[key] = {...sourceRow.metricContexts?.[key],source,matches:sourceRow.matches ?? null,minutes:sourceRow.minutes ?? null};
+          const original=sourceRow.metricContexts?.[key];
+          row.metricContexts[key] = {...original,source,matches:original&&Object.hasOwn(original,'matches')?original.matches:sourceRow.matches??null,minutes:original&&Object.hasOwn(original,'minutes')?original.minutes:sourceRow.minutes??null};
         }
         if (new Set([primary,other,additional].filter(Boolean).map(r=>r[key]).filter(numeric)).size>1) differences.push(key);
       }

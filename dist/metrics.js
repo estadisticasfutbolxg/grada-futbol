@@ -1,9 +1,9 @@
 (function (root) {
   'use strict';
-  const rates = new Set(['goals','assists','xg','xa','delta','passes','completed','shots','shotsOnTarget','saves','conceded','xga','tackles','interceptions','recoveries','keypasses','progressive','lineBreakingPasses','clearances','blocks','highClaims','sweeperActions','chancesCreated','bigChancesCreated','bigChancesMissed','yellowCards','redCards','penaltiesSaved','penaltiesFaced','xgot','prevented']);
-  const fixedRates = {xga90:'xga',conceded90:'conceded',completedPer90:'completed'};
+  const rates = new Set(['goals','assists','xg','xa','delta','passes','completed','shots','shotsOnTarget','saves','conceded','xga','tackles','interceptions','recoveries','keypasses','progressive','lineBreakingPasses','clearances','blocks','highClaims','sweeperActions','chancesCreated','bigChancesCreated','bigChancesMissed','yellowCards','redCards','penaltiesSaved','penaltiesFaced','xgot','prevented','psxg','xgaOnTarget']);
+  const fixedRates = {xga90:'xga',conceded90:'conceded',completedPer90:'completed',psxg90:'psxg',xgaOnTarget90:'xgaOnTarget'};
   const ratios = {goalsPerXg:['goals','xg'],assistsPerXa:['assists','xa']};
-  const perMatch = {xgaPerMatch:'xga',xgPerMatch:'xg',goalsPerMatch:'goals',pointsPerMatch:'points',bigChancesPerMatch:'bigChances',savesPerMatch:'saves',concededPerMatch:'conceded',cleanPerMatch:'clean'};
+  const perMatch = {psxgPerMatch:'psxg',xgaOnTargetPerMatch:'xgaOnTarget',xgaPerMatch:'xga',xgPerMatch:'xg',goalsPerMatch:'goals',pointsPerMatch:'points',bigChancesPerMatch:'bigChances',savesPerMatch:'saves',concededPerMatch:'conceded',cleanPerMatch:'clean'};
   const differences={goalDifferencePerMatch:['goals','conceded'],xgDifferencePerMatch:['xg','xga']};
   const number = n => typeof n === 'number' && Number.isFinite(n);
   function ratio(numerator, denominator) {
@@ -16,6 +16,7 @@
     const result=value/minutes*90;return number(result)?result:null;
   }
   function context(record,key) {
+    if(key==='psxgEfficiency')return record.metricContexts?.psxg||null;
     if(key==='shotsPer90'&&!number(record.shotsPer90))return record.metricContexts?.shots||null;
     if(Object.hasOwn(differences,key)){
       const [a,b]=differences[key],ca=record.metricContexts?.[a],cb=record.metricContexts?.[b];
@@ -23,7 +24,7 @@
     }
     if (Object.hasOwn(ratios,key) && record.metricContexts) {
       const [a,b] = ratios[key];
-      if (record.metricContexts[a]?.source !== record.metricContexts[b]?.source) return null;
+      const ca=record.metricContexts[a],cb=record.metricContexts[b];if(!ca||!cb||ca.source!==cb.source||ca.minutes!==cb.minutes||ca.matches!==cb.matches)return null;
     }
     const original = fixedRates[key] || perMatch[key] || (Object.hasOwn(ratios,key) ? ratios[key][0] : key);
     return record.metricContexts?.[original] || null;
@@ -37,6 +38,7 @@
     return number(reported)?reported:per90(record[key],denominator(record,key,'minutes'));
   }
   function metric(record, key, unit = 'total') {
+    if(key==='psxgEfficiency'){const c=context(record,key),expected=record.psxg,conceded=c?.pairedConceded;if(!number(expected)||expected<=0||!number(conceded)||conceded<0)return null;const value=(1-conceded/expected)*100;return number(value)?value:null;}
     if(key==='shotsPer90')return number(record.shotsPer90)?record.shotsPer90:normalized(record,'shots');
     if(Object.hasOwn(differences,key)){
       const [a,b]=differences[key],ctx=context(record,key),matches=ctx?ctx.matches:record.metricContexts?null:record.matches;
@@ -45,7 +47,7 @@
     }
     if (Object.hasOwn(ratios,key)) {
       const [numerator,denominator] = ratios[key];
-      if (record.metricContexts && record.metricContexts[numerator]?.source !== record.metricContexts[denominator]?.source) return null;
+      if(record.metricContexts&&!context(record,key))return null;
       return ratio(record[numerator],record[denominator]);
     }
     if (Object.hasOwn(perMatch,key)) {const value=record[perMatch[key]],matches=denominator(record,key,'matches');if(key==='pointsPerMatch'&&number(value)&&number(matches)&&matches>0){const result=value/matches;return number(result)?result:null;}return ratio(value,matches);}

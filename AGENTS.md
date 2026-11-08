@@ -2,7 +2,7 @@
 
 ## Contexto
 
-GRADA es una web de estadísticas de fútbol en español. Usa HTML/CSS/JavaScript en `dist/`, Python de biblioteca estándar para importar StatsBomb y SQLite como descarga. Consulta [README.md](README.md), [la arquitectura](docs/ARCHITECTURE.md) y [el estado](docs/STATUS.md) antes de cambiar supuestos del proyecto.
+GRADA es una web de estadísticas de fútbol en español. Usa HTML/CSS/JavaScript en `dist/`, Python estándar para importar datos y generar SQLite, y un Worker de lectura para actualización general. Consulta también docs/REFRESH.md. Consulta [README.md](README.md), [la arquitectura](docs/ARCHITECTURE.md) y [el estado](docs/STATUS.md) antes de cambiar supuestos del proyecto.
 
 ## Colaboración
 
@@ -20,7 +20,7 @@ GRADA es una web de estadísticas de fútbol en español. Usa HTML/CSS/JavaScrip
 - Los datos visibles deben proceder de StatsBomb Open Data o de las integraciones autorizadas de ESPN, Understat y FotMob para las ligas 2026/27 de `dist/leagues.json`; declarar fuente, competición, temporada y cobertura. LaLiga da prioridad a Understat → ESPN → FotMob; las otras ligas a FotMob → ESPN. Solo se unen coincidencias inequívocas o identidades revisadas por ID, nombre y club. Todas las ligas concatena fichas con IDs propios y recalcula referencias; no une personas por nombre entre competiciones. Conservar la fuente y cobertura de cada campo; no calcular tasas con denominadores de otra fuente.
 - Nunca inventes cifras, extrapoles una temporada con un multiplicador ni completes métricas ausentes con cero. Conserva `null` y muestra `—`.
 - Excluye las tandas de las métricas; conserva la distinción entre goles de jugadores y marcadores con autogoles.
-- Mantén explícitas las definiciones de xA derivada, minutos y paradas. PSxG y goles evitados siguen no disponibles hasta que exista una fuente adecuada.
+- Mantén explícitas las definiciones de xA derivada, minutos y paradas. PSxG/xGOT recibido usa únicamente muestras de FotMob verificadas: goles evitados + goles sin autogoles comprobados o mapa completo. La eficacia vs xGOT del score utiliza goles emparejados de esa misma ficha; nunca el dato de equipo ni goles de otro proveedor.
 - `dist/data.js` y los archivos de datos en `dist/downloads/` son generados. Cambia el importador y regenera el conjunto coherente; no edites cifras a mano.
 - La caché `data/raw/`, las credenciales y los archivos `.env` quedan fuera de Git. `dist/` contiene también el código fuente de la web: no lo borres como si todo fuese una salida de build.
 

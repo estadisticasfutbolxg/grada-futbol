@@ -1,5 +1,8 @@
 # Contrato de datos y métricas
 
+> Actualización del 8 de noviembre: la interfaz usa Score de jugador; los scores de equipo/delantera/centrocampo son promedios ponderados por minutos. Se añade xGOT al score del portero y se retiran todos los enlaces de descarga. [Fórmulas, actualización general y fuentes actuales](REFRESH.md). Las descripciones de sumas y descargas de versiones anteriores que siguen abajo son históricas.
+
+
 ## Fuente y cobertura
 
 Fuente: [StatsBomb Open Data](https://github.com/hudl/open-data). Consulta la [licencia](https://github.com/hudl/open-data/blob/master/LICENSE.pdf). La importación actual usa competición `43`, temporada `106`: Mundial masculino 2022.

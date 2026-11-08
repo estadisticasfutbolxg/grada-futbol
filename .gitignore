@@ -17,3 +17,6 @@ dist/downloads/*
 # Herramientas locales de esta preparación
 publish-source.py
 qa.cjs
+
+# Worker generado: incluye capturas reales, nunca se versiona
+dist/server/

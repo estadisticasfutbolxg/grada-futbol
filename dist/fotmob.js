@@ -35,18 +35,19 @@
       if(t.possession!==undefined&&t.possession!==null&&(!numeric(t.possession)||t.possession>100))throw new Error('Posesión inválida.');
     }
     for(const p of data.players){
-      if(!/^\d+$/.test(p.id)||!teams.has(String(p.team_id))||typeof p.name!=='string'||!p.name.trim()||p.name.length>250||!numeric(p.minutes)||!Number.isInteger(p.matches)||p.matches<0)throw new Error('Registro FotMob inválido.');
+      if(!['POR','DEF','MED','DEL','—'].includes(p.pos)||!/^\d+$/.test(p.id)||!teams.has(String(p.team_id))||typeof p.name!=='string'||!p.name.trim()||p.name.length>250||!numeric(p.minutes)||!Number.isInteger(p.matches)||p.matches<0)throw new Error('Registro FotMob inválido.');
       for(const k of ['tackles','interceptions','recoveries'])if(p[k]!==null&&(!Number.isInteger(p[k])||p[k]<0))throw new Error('Conteo FotMob inválido.');
-      if(p.passes!==null||p.completed!==null)throw new Error('No se infieren totales de pases a partir de tasas.');
+      for(const key of ['passes','completed'])if(p[key]!==null&&(!Number.isInteger(p[key])||p[key]<0||p.metricContexts?.[key]?.profileVerified!==true||p.metricContexts[key].reportedValue!==true))throw new Error('Totales de pases sin una ficha verificada.');
+      for(const key of ['xga','psxg','xgaOnTarget'])if(p[key]!==undefined&&p[key]!==null&&(!numeric(p[key])||p.metricContexts?.[key]?.profileVerified!==true||(key!=='xga'&&!['keeper_shotmap',...(key==='psxg'?['goals_prevented_identity']:[])].includes(p.metricContexts[key].derived))))throw new Error('Métrica recibida sin atribución verificada.');
       if(p.accuracy!==null&&(!numeric(p.accuracy)||p.accuracy>100))throw new Error('Porcentaje FotMob inválido.');
       for(const k of fields){
         const value=p[k];if(value===null)continue;
         if(typeof value!=='number'||!Number.isFinite(value)||(k!=='prevented'&&value<0)||(counts.includes(k)&&!Number.isInteger(value))||(percentages.includes(k)&&value>100))throw new Error('Métrica FotMob inválida: '+k);
       }
-      for(const c of Object.values(p.metricContexts||{}))if(c.source!=='FotMob'||!Number.isFinite(Date.parse(c.captured_at))||!numeric(c.minutes)||!Number.isInteger(c.matches)||c.matches<0||('reportedPer90'in c&&!numeric(c.reportedPer90)))throw new Error('Contexto FotMob inválido.');
+      for(const [contextKey,c] of Object.entries(p.metricContexts||{}))if(c.source!=='FotMob'||!Number.isFinite(Date.parse(c.captured_at))||!numeric(c.minutes)||!Number.isInteger(c.matches)||c.matches<0||('reportedPer90'in c&&(!Number.isFinite(c.reportedPer90)||(contextKey!=='prevented'&&c.reportedPer90<0))))throw new Error('Contexto FotMob inválido.');
       if(m.profile==='full'){
         for(const k of ['goals','assists','shots','xg','xa','shotsPer90','conversion'])if(p[k]!==null&&(!numeric(p[k])||(['goals','assists','shots'].includes(k)&&!Number.isInteger(p[k]))))throw new Error('Métrica principal FotMob inválida.');
-        if(p.xga!==null||p.psxg!==null||p.conversion>100)throw new Error('Modelo FotMob inválido.');
+        if(p.conversion>100)throw new Error('Modelo FotMob inválido.');
       }
     }
     if(league.primary==='FotMob'&&(m.profile!=='full'||!data.teams.every(t=>numeric(t.xg)&&numeric(t.xga)&&Number.isInteger(t.matches)&&t.matches<=2*(league.teams-1)&&t.minutes===t.matches*90)))throw new Error('Faltan métricas principales de esta liga.');

@@ -15,7 +15,7 @@ StatsBomb Open Data (JSON de partidos, alineaciones y eventos)
           líderes, filtros, perfiles y comparación
 ```
 
-El navegador usa los datos de `dist/data.js` ya cargados. SQLite se ofrece como descarga, no como una base que el navegador consulte en tiempo real. No hay backend, autenticación propia ni sincronización multiusuario de datos de visitantes.
+El navegador usa los datos de `dist/data.js` ya cargados. SQLite se genera como artefacto y ya no tiene enlace en la interfaz. El Worker sirve las capturas y permite consultas de lectura a proveedores; el navegador conserva las actualizaciones en IndexedDB. No hay autenticación propia ni datos de visitantes escritos públicamente. El diagrama anterior describe el archivo histórico StatsBomb; el flujo actual está en [REFRESH.md](REFRESH.md).
 
 ## Responsabilidades
 
@@ -74,4 +74,8 @@ La vista combinada autorizada da prioridad a Understat y complementa coincidenci
 
 `dist/squads.js` calcula áreas de plantilla desde los perfiles generales por posición y pertenencia por ID, separado del perfil activo de ranking. No modifica las capturas. `withTeamAreas` enriquece los JSON derivados, y `scopes.js` descarta sumas locales antes de recalcular Todas. Los índices específicos de equipos se mantienen en `radar.js`; los pendientes permanecen visibles. `filters.js` aplica alias de búsqueda sin modificar la identidad de datos.
 
-`midfieldSummaries` suma exclusivamente los MED asignados usando sus perfiles MED_ATT/MED_DEF. Sus dos definiciones de ranking de equipo declaran aggregateProfile y no pasan por el radar de métricas de equipo. Las sumas y coberturas tienen campos propios; el detalle muestra las contribuciones. Los botones y handlers CSV/JSON se han retirado por petición del usuario; los JSON siguen sirviendo la carga interna y el generador. Se conservan SQLite y el refresco ESPN.
+`midfieldSummaries` suma exclusivamente los MED asignados usando sus perfiles MED_ATT/MED_DEF. Sus dos definiciones de ranking de equipo declaran aggregateProfile y no pasan por el radar de métricas de equipo. Las sumas y coberturas tienen campos propios; el detalle muestra las contribuciones. Los botones y handlers CSV/JSON se han retirado por petición del usuario; los JSON siguen sirviendo la carga interna y el generador. Se conservan los generadores de SQLite. La actualización general, los scores ponderados, el eje xGOT y el empaquetado Worker actuales están en [REFRESH.md](REFRESH.md).
+
+## Worker y actualización general
+
+`worker/providers.cjs` conserva los formatos del importador Python. `dist/profiles.js` verifica identidad/club y temporada de las fichas; `dist/refresh.js` combina éxitos parciales y conserva las fuentes fallidas. `worker/app.cjs` limita rutas, host, origen, método y caché. `scripts/build_worker.py` empaqueta una lista explícita de archivos y capturas en un único Worker sin dependencias. La aplicación no muestra enlaces de descarga.

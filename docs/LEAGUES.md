@@ -1,5 +1,8 @@
 # Ligas combinadas, ámbito conjunto y rankings
 
+> Actualización del 8 de noviembre: la interfaz usa Score de jugador; los scores de equipo/delantera/centrocampo son promedios ponderados por minutos. Se añade xGOT al score del portero y se retiran todos los enlaces de descarga. [Fórmulas, actualización general y fuentes actuales](REFRESH.md). Las descripciones de sumas y descargas de versiones anteriores que siguen abajo son históricas.
+
+
 El selector ofrece únicamente **LaLiga, Premier League, Serie A, Bundesliga y Ligue 1 combinadas**, más **Todas las ligas**. Las opciones se habilitan al cargar y validar sus fuentes y comprobar cobertura en las mismas familias de métricas de jugadores y equipos. Una competición que no pase ese control no aparece como disponible.
 
 ## Capturas reales y modelos
