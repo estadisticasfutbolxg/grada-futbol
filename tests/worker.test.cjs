@@ -26,3 +26,14 @@ test('provider parsing rejects the wrong season and redirects outside the select
  assert.throws(()=>providers.parseFotmob('<script id="__NEXT_DATA__">'+JSON.stringify(d)+'</script>','accurate_pass',league));let calls=0;
  await assert.rejects(providers.textResponse('https://www.fotmob.com/players/10/player',{fetcher:async()=>{calls++;return new Response('',{status:302,headers:{Location:'https://other.test/private'}});}}));assert.equal(calls,1);
 });
+test('hosting cache denial cannot hide any league or break a source response',async()=>{
+ const previous=globalThis.caches;let defaultReads=0;
+ globalThis.caches={get default(){defaultReads++;throw new Error('Default cache not permitted');},async open(){throw new Error('Cache not permitted');}};
+ try{
+  for(const league of leagues.list()){
+   const path='/downloads/fotmob-'+league.id+'-2026-27.json',body=JSON.stringify({league:league.id}),assets={[path]:{type:'application/json',sha:'fixture',gzip:gzipSync(body).toString('base64')}};
+   const response=await app.handle(new Request('https://cache-denial.test'+path),assets);assert.equal(response.status,200);assert.equal((await response.json()).league,league.id);
+  }
+  const failed=await app.handle(new Request('https://cache-denial.test/api/source/understat?league=laliga'),{},{fetcher:async()=>new Response('',{status:503})});assert.equal(failed.status,503);assert.equal(defaultReads,0);
+ }finally{if(previous===undefined)delete globalThis.caches;else globalThis.caches=previous;}
+});
