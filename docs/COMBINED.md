@@ -1,5 +1,8 @@
 # LaLiga combinada, radar y filtros
 
+> Actualización del 8 de noviembre: la interfaz usa Score de jugador; los scores de equipo/delantera/centrocampo son promedios ponderados por minutos. Se añade xGOT al score del portero y se retiran todos los enlaces de descarga. [Fórmulas, actualización general y fuentes actuales](REFRESH.md). Las descripciones de sumas y descargas de versiones anteriores que siguen abajo son históricas.
+
+
 La vista **LaLiga · Combinado** usa el catálogo de jugadores de Understat y añade las métricas disponibles de ESPN y [FotMob](FOTMOB.md). Es una combinación autorizada expresamente por el usuario y sustituye la regla anterior de mantener siempre los proveedores separados. Las vistas individuales de Understat y ESPN se conservan; FotMob dispone de descargas originales JSON y SQLite.
 
 ## Identidad y prioridad

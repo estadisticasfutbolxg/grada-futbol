@@ -1,5 +1,8 @@
 # FotMob · LaLiga 2026/27
 
+> Actualización del 8 de noviembre: la interfaz usa Score de jugador; los scores de equipo/delantera/centrocampo son promedios ponderados por minutos. Se añade xGOT al score del portero y se retiran todos los enlaces de descarga. [Fórmulas, actualización general y fuentes actuales](REFRESH.md). Las descripciones de sumas y descargas de versiones anteriores que siguen abajo son históricas.
+
+
 `python scripts/import_fotmob.py` descarga 28 páginas públicas de rankings de [FotMob](https://www.fotmob.com/leagues/87/stats/season/38843/players/accurate_pass/laliga), competición 87, temporada 38843 (`2026/2027`). Extrae `__NEXT_DATA__` del HTML con el parser estándar, sin ejecutar JavaScript. No necesita cuenta ni paquetes de Python. Requiere Python 3.11+ por la serialización SQLite.
 
 ## Captura comprobada

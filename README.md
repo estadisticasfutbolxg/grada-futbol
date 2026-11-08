@@ -1,20 +1,21 @@
 # GRADA · Estadísticas de fútbol
 
-Web en español de estadísticas, perfiles y rankings por área del radar de jugadores y equipos. El selector ofrece **LaLiga, Premier League, Serie A, Bundesliga, Ligue 1** combinadas y **Todas las ligas**, temporada 2026/27. HTML/CSS/JavaScript en `dist/`, Python estándar para descargar datos reales y generar SQLite gratuitos.
+Web en español de estadísticas, perfiles y rankings por score del radar de jugadores y equipos. El selector ofrece **LaLiga, Premier League, Serie A, Bundesliga, Ligue 1** combinadas y **Todas las ligas**, temporada 2026/27. HTML/CSS/JavaScript en `dist/`, Python estándar para descargar datos reales y generar SQLite gratuitos.
 
 ## Datos reales y fuentes
 
 LaLiga prioriza Understat → ESPN → FotMob. Las otras ligas priorizan FotMob → ESPN, incluidos xG/xA FotMob, tras comprobar las mismas familias de métricas de pase, ataque, defensa y portería. Los modelos, capturas, PJ y minutos de cada campo se conservan. No hay datos de demostración; las ausencias siguen `null`.
 
-Las capturas verificadas reúnen 2.284 fichas jugador/liga y 96 equipos. En Todas las ligas se recalculan los percentiles sobre el conjunto seleccionado. Hay cinco perfiles de jugadores, tres índices de equipos y dos rankings de equipos por suma de áreas de sus centrocampistas. Las áreas individuales requieren todos los ejes comunes. Consulta [ligas y rankings](docs/LEAGUES.md), [combinación](docs/COMBINED.md) y [estado publicado](docs/STATUS.md).
+Las capturas verificadas reúnen 2.284 fichas jugador/liga y 96 equipos. En Todas las ligas se recalculan los percentiles sobre el conjunto seleccionado. Hay cinco perfiles de jugadores, tres índices de equipos y tres rankings de equipos por scores ponderados de su delantera y centrocampistas. Las scores individuales requieren todos los ejes comunes. Consulta [ligas y rankings](docs/LEAGUES.md), [combinación](docs/COMBINED.md) y [estado publicado](docs/STATUS.md).
 
 ## Generar la web y las bases
 
-Requiere Python 3.11+, Node 18+ e Internet, sin instalar paquetes ni contratar una base:
+Requiere Python 3.11+, Node 22+ e Internet, sin instalar paquetes ni contratar una base:
 
 ```sh
-python scripts/import_leagues.py --all
-python -m http.server 8000 --directory dist
+python scripts/import_leagues.py --all --profiles
+python scripts/build_worker.py
+node scripts/serve.mjs 8000
 ```
 
 Abre http://localhost:8000. También puedes generar una liga:
@@ -23,20 +24,20 @@ Abre http://localhost:8000. También puedes generar una liga:
 python scripts/import_leagues.py --league premier-league
 ```
 
-El proceso genera JSON de cada proveedor, JSON combinado y SQLite FotMob comprimido. LaLiga mantiene además su JSON/SQLite Understat. Los JSON sirven para cargar la web; la interfaz conserva solo las descargas SQLite, sin botones CSV/JSON. **Las bases y los datos generados no se incluyen en GitHub**. Los importadores separados aceptan `--league`: `scripts/import_fotmob.py`, `scripts/import_laliga.py` y `scripts/build_combined.cjs`.
+El proceso genera JSON de cada proveedor, JSON combinado y SQLite FotMob comprimido. LaLiga mantiene además su JSON/SQLite Understat. Los JSON sirven para cargar la web; la interfaz no muestra enlaces de descarga de CSV, JSON o SQLite. **Las bases y los datos generados no se incluyen en GitHub**. Los importadores separados aceptan `--league`: `scripts/import_fotmob.py`, `scripts/import_laliga.py` y `scripts/build_combined.cjs`.
 
 Una fuente no disponible no se sustituye por datos ficticios. El proceso `--all` continúa con las ligas que pasan los controles e informa de las omitidas; falla si no puede generar ninguna. Understat puede reutilizar su captura existente con su fecha original. Si está en mantenimiento y no hay captura local, LaLiga no se habilita hasta disponer de ella. El selector solo ofrece combinados validados. [LEAGUES.md](docs/LEAGUES.md) describe reproducción desde cachés reales y todos los campos.
 
-## Navegación y descargas
+## Navegación y scores
 
 - Rankings de delanteros, porteros, defensas y perfiles defensivo/ofensivo de centrocampistas.
 - Rankings de equipos por ataque, defensa, rendimiento global y centros del campo ofensivos/defensivos.
 - Filtros por minutos, goles y otras métricas, búsqueda, ordenación, perfiles y comparador.
-- Áreas individuales e índices de perfil entre 0 y 1; sumas de plantilla/centrocampistas con cobertura y contribuciones en ficha y JSON generado.
+- Scores individuales e índices de perfil entre 0 y 1; promedios de plantilla/posiciones ponderados por minutos con cobertura y contribuciones en ficha y JSON generado.
 - Inicio con bloques de defensas individuales, equipos ofensivos/defensivos y centrocampistas/centros del campo ofensivos/defensivos. Racing de Santander aparece también con su nombre completo de búsqueda.
-- Descargas SQLite por proveedor y liga. Todas añade Liga y fechas por campo a sus registros.
+- Rankings de jugadores antes que equipos, con campos y fechas de origen. Los guiones explican por qué falta un valor.
 
-El botón de ESPN actualiza la copia del navegador para una liga o todas; mantiene las otras capturas. Sites aloja archivos estáticos y no ejecuta Python. La web compartida se actualiza al regenerar y publicar una versión.
+Actualizar datos consulta todas las fuentes aplicables y conserva cada captura que falle. Las fichas FotMob amplían pases, posiciones, tiros y xGOT del portero; su eficacia frente al xGOT participa en el score. El score de equipo y de posiciones es un promedio ponderado por minutos. Sites ejecuta el Worker de consultas; Python sigue siendo el generador externo de artefactos. Consulta [actualización y fórmulas](docs/REFRESH.md).
 
 ## Comprobaciones
 

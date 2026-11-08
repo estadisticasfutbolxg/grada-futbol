@@ -44,5 +44,9 @@ test('team defense inverts conceded metrics and differences retain signed values
  assert(p.get(d.teams[0]).comparableArea>p.get(d.teams[1]).comparableArea);assert.equal(p.get(d.teams[0]).axes.length,3);
  assert.equal(metrics.metric(d.teams[1],'goalDifferencePerMatch'),-6/6);assert.equal(metrics.metric(d.teams[1],'xgDifferencePerMatch'),-3/6);
  const team=d.teams[1];team.metricContexts.conceded.source='ESPN';assert.equal(metrics.metric(team,'goalDifferencePerMatch'),null);
- assert.equal(radar.rankingDefinitions.filter(d=>d.kind==='team'&&!d.aggregateProfile).length,3);assert.equal(radar.rankingDefinitions.filter(d=>d.aggregateProfile).length,2);assert.equal(radar.rankingDefinitions.filter(d=>d.kind==='player').length,5);
+ assert.equal(radar.rankingDefinitions.filter(d=>d.kind==='team'&&!d.aggregateProfile).length,3);assert.equal(radar.rankingDefinitions.filter(d=>d.aggregateProfile).length,3);assert.equal(radar.rankingDefinitions.filter(d=>d.kind==='player').length,5);
+});
+test('combined fields preserve their own minutes and matches after a later player profile changes the base sample',()=>{
+ const {f,e}=fixtures('premier-league');f.players[0].metricContexts.tackles={source:'FotMob',minutes:100,matches:2,captured_at:f.metadata.imported_at};
+ const p=combined.combine(f,e).players[0];assert.equal(p.minutes,540);assert.equal(p.metricContexts.tackles.minutes,100);assert.equal(p.metricContexts.tackles.matches,2);assert(Math.abs(metrics.metric(p,'tackles','90')-5.4)<1e-12);
 });
