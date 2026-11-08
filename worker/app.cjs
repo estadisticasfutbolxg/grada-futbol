@@ -3,7 +3,30 @@ const providers=require('./providers.cjs'),leagues=require('../dist/leagues.js')
 const profiles=require('../dist/profiles.js');
 const running=new Map(),localCache=new Map();
 const rosters=new Map();
-const sharedCache=()=>typeof caches==='object'?caches.default:{async match(key){return localCache.get(String(key))?.clone();},async put(key,value){localCache.set(String(key),value.clone());}};
+let localBytes=0;
+// Sites can deny the default Cache API. Caching must never gate source assets.
+function sharedCache(){
+ let remote,opened=false;
+ async function named(){if(opened)return remote;opened=true;try{if(typeof caches==='object'&&typeof caches.open==='function')remote=await caches.open('grada-football-v1');}catch(_){remote=null;}return remote;}
+ return {
+  async match(input){
+   const key=String(input),entry=localCache.get(key);
+   if(entry&&entry.expires>Date.now()){localCache.delete(key);localCache.set(key,entry);return new Response(entry.body,{status:entry.status,headers:entry.headers});}
+   if(entry){localBytes-=entry.bytes;localCache.delete(key);}
+   try{return await (await named())?.match(key);}catch(_){return undefined;}
+  },
+  async put(input,response){
+   const key=String(input),body=await response.clone().text(),bytes=new TextEncoder().encode(body).length,maxBytes=16*1024*1024,old=localCache.get(key);
+   if(old){localBytes-=old.bytes;localCache.delete(key);}
+   if(bytes<=maxBytes){
+    while(localCache.size&&(localBytes+bytes>maxBytes||localCache.size>=256)){const first=localCache.keys().next().value;localBytes-=localCache.get(first).bytes;localCache.delete(first);}
+    const seconds=Number(response.headers.get('Cache-Control')?.match(/max-age=(\d+)/)?.[1]||300);
+    localCache.set(key,{body,bytes,status:response.status,headers:Object.fromEntries(response.headers),expires:Date.now()+seconds*1000});localBytes+=bytes;
+   }
+   try{const cache=await named();if(cache)await cache.put(key,response.clone());}catch(_){}
+  }
+ };
+}
 function json(body,status=200,headers={}){return new Response(JSON.stringify(body),{status,headers:{'Content-Type':'application/json; charset=utf-8','X-Content-Type-Options':'nosniff',...headers}});}
 function apiKey(origin,source,league){return origin+'/api/source/'+source+'?league='+league;}
 function validSource(source,league){return Number.isInteger(league.fotmobId)&&['fotmob','understat'].includes(source)&&(source!=='understat'||league.primary==='Understat');}
