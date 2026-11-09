@@ -1,6 +1,13 @@
 # Estado comprobado de GRADA
 
-## Publicación verificada · 9 de noviembre de 2026 · 20:49 Madrid
+## Publicación verificada · 9 de noviembre de 2026 · 21:03 Madrid
+
+- [GRADA pública](https://grada-futbol-analitica.ivanmatema2.chatgpt.site), versión **16**, despliegue nativo `succeeded`. La portada ya no muestra el selector Totales/Por 90 ni su separador, tampoco durante la carga inicial o al volver desde otra vista. Se conserva en jugadores, equipos y comparador. Las tarjetas mantienen su unidad y los enlaces abren su ranking correcto.
+- [PR #27](https://github.com/estadisticasfutbolxg/grada-futbol/pull/27) integrado en `71898e6b27622293ef65887e2f47a6a37c25bc64`, main comprobado. Fuente Sites `491cbf4f327f2dfe46af769af8d4130cd03f149e`; versión `appgprj_6ae0b8b2eb1881918601230d00603255~appgver_b3c41a08d9e8819198bd11885fe0952c`; despliegue `appgdep_6af226ed9b348191a3d60ef8f5da241f`. Worker SHA256 `0bba8a00d44a34fb0e51ba39305dc69494e8fe77c61a6c457790da50abd3d543`.
+- Sintaxis, diff y documentación correctos. Chromium del Worker exacto verifica las cinco ligas/Todas, selector oculto en portada, navegación/unidades de tablas y comparador, enlaces con medida/orden correctos, tarjetas iguales, filtros y móvil sin desbordamiento ni errores JS. Inspección visual de escritorio/móvil. Autocontrol sin revisión independiente.
+- Cambio de visibilidad; sin alterar fórmulas, capturas, permisos ni acceso de propietario. **0 jugadores y 0 partidos descargados**. Detalles en la [tarea de portada](../loop/tasks/20261109-codex-home-unit-selector.md).
+
+## Publicación anterior · 9 de noviembre de 2026 · 20:49 Madrid
 
 - [GRADA pública](https://grada-futbol-analitica.ivanmatema2.chatgpt.site), versión **15**, despliegue nativo `succeeded`, misma audiencia. Se conservan las cinco ligas y los datos actuales mientras el propietario gestiona permisos de las fuentes; no se considera que las licencias estén obtenidas.
 - Portada con nueve líderes: goles/asistencias totales y por 90, pases completados/paradas por 90, xG, xA y precisión. Muestras iniciales editables de 450 minutos para campo y 180 para paradas, tomadas de la propia fuente de cada tasa. Ver ranking abre la misma medida, muestra y orden. Se mantienen los totales de liga y scores de v14.
