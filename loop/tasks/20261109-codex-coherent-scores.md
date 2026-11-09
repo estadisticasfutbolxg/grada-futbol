@@ -1,6 +1,6 @@
 # 20261109 · Scores coherentes y totales por liga
 
-- Estado: `active`
+- Estado: `done`
 - Responsable: Codex, a petición del usuario
 - Revisor: autocontrol; sin revisión independiente
 - Rama: `fix/coherent-position-scores`
@@ -30,7 +30,7 @@ Archivos compartidos: radar, squads, nuevo modelo scores, metrics, app/component
 - [x] Todos los scores de equipos se reproducen con los scores/minutos mostrados; mismo valor en tarjeta, tabla, ficha y radar.
 - [x] Asistencias/paradas visibles con cobertura, también en Todas y cuando haya valores ausentes.
 - [x] Datos originales intactos, derivados reproducibles, pruebas y QA adecuados.
-- [ ] PR integrado, publicación confirmada y resumen de jugadores/partidos afectados.
+- [x] PR integrado, publicación confirmada y resumen de jugadores/partidos afectados.
 
 ## Evidencia y relevo
 
@@ -45,4 +45,8 @@ Evidencia del 9 de noviembre:
 - Auditoría real de 1.390 promedios con datos y 4.826 contribuciones a través de las seis vistas: pesos suman 1, cada contribución usa el score/minutos del jugador, el promedio queda entre mínimo y máximo, score local = score de Todas y los originales no mutan. Raphinha DEL 0,891945 y Olise DEL 0,754147, iguales en liga y Todas. Arsenal DEF 0,191576, frente al antiguo índice independiente 0,978555 en Todas.
 - Totales por liga de asistencias/paradas: LaLiga 218/617; Premier 178/567; Serie A 240/725; Bundesliga 208/567; Ligue 1 185/572. Todas 1.029 asistencias (2.281/2.284 registros) y 3.048 paradas (131/136 registros elegibles). Las ausencias continúan desconocidas y la cobertura parcial queda visible.
 - Chromium sobre el Worker exacto con ambas cachés denegadas: 66 cruces ranking/liga, orden/valores/conteos, asistencias/paradas con cobertura en las seis vistas, mismo MED en ranking/tabla/ficha/comparador, Raphinha/Olise en liga y Todas, Arsenal en ranking/contribuciones/radar, score parcial con guion, móvil sin desbordamiento y refrescos parcial 2/3 y fallido 0/11 sin cambios falsos. Sin errores de JS. Inspección visual de contribuciones, radar de equipo móvil y totales.
-- Worker probado SHA256 `998f4e83d2ea118688597d7dfc80e551e148e8d6b7a058e96da382e70aa5decf`. Solo se enrutan capturas reales aisladas en QA; no se publican como una actualización de datos de hoy. No se ejecuta una actualización de estadísticas en producción. Autocontrol sin revisión independiente ni hallazgos pendientes. Falta registrar PR, merge y despliegue.
+- Worker probado SHA256 `998f4e83d2ea118688597d7dfc80e551e148e8d6b7a058e96da382e70aa5decf`. Solo se enrutan capturas reales aisladas en QA; no se publican como una actualización de datos de hoy. No se ejecuta una actualización de estadísticas en producción. Autocontrol sin revisión independiente ni hallazgos pendientes. [PR #23](https://github.com/estadisticasfutbolxg/grada-futbol/pull/23) integrado en `92add6d01aaf71cc7488162a5690ac6cfbdc0e63`; main comprobado. Commit GitHub de la rama `20c0cab14ad8d90410f99689f69892d2be14aa70`. Sin checks remotos para este commit; mergeable clean y SHA esperado comprobados. Fuente Sites subida y verificada `560ef3f2805b2fa5d5c61d3492fca7e6a495e7f8`.
+
+Versión 14 `appgprj_6ae0b8b2eb1881918601230d00603255~appgver_7de3ac93d0048191b0860cf949258c57`; despliegue `appgdep_6af1ab44745081919f28881053efce61`, succeeded el 9 de noviembre a las 12:15 Madrid. [Web pública](https://grada-futbol-analitica.ivanmatema2.chatgpt.site). Archivo comprobado con solo manifiesto y Worker exacto de QA; permisos/audiencia conservados. La confirmación nativa acredita la publicación y la prueba del artefacto acredita el comportamiento; no se presenta una actualización de estadísticas de producción como ejecutada.
+
+Entrega de datos: 0 jugadores nuevos descargados, 0 partidos nuevos descargados. Se recalculan los derivados de 2.284 registros jugador/liga y 96 equipos con las mismas capturas (452 partidos cubiertos por sus fuentes principales). 967 scores cumplen todos los ejes/muestras y 1.317 quedan pendientes de forma explícita. No hay aprobación pendiente, invitaciones ni procesos en segundo plano.
