@@ -31,20 +31,19 @@ test('all leagues preserve IDs, source dates and immutable original snapshots',(
 });
 
 test('midfield profiles use different axes, complete data and per-source sample limits',()=>{
- const {f,e}=fixtures('premier-league'),d=combined.combine(f,e),a=radar.profiles(d.players,{profileKey:'MED_DEF'}),b=radar.profiles(d.players,{profileKey:'MED_ATT'}),p=d.players[0];
+ const {f,e}=fixtures('premier-league'),d=combined.combine(f,e),indices=radar.midfieldIndices(d.players),a=indices.get('MED_DEF'),b=indices.get('MED_ATT'),p=d.players[0];
  assert(a.get(p).axes.some(a=>a.key==='interceptions'));assert(!b.get(p).axes.some(a=>a.key==='interceptions'));assert(b.get(p).axes.some(a=>a.key==='xa'));
  assert(radar.rankingEligible(p,a.get(p),450));assert(radar.rankingEligible(p,b.get(p),450));
- p.interceptions=null;const partial=radar.profiles(d.players,{profileKey:'MED_DEF'}).get(p);assert.equal(partial.comparableArea,null);
- p.interceptions=3;p.metricContexts.interceptions.minutes=100;const low=radar.profiles(d.players,{profileKey:'MED_DEF'}).get(p);assert(!radar.rankingEligible(p,low,450));
+ p.interceptions=null;const partial=radar.midfieldIndices(d.players).get('MED_DEF').get(p);assert.equal(partial.comparableArea,null);
+ p.interceptions=3;p.metricContexts.interceptions.minutes=100;const low=radar.midfieldIndices(d.players).get('MED_DEF').get(p);assert.equal(low.score,null);assert(!radar.rankingEligible(p,low,450));
 });
 
-test('team defense inverts conceded metrics and differences retain signed values and source coverage',()=>{
+test('team rankings aggregate player scores, while raw team differences retain signed values and source coverage',()=>{
  const {f,e}=fixtures('premier-league');Object.assign(f.teams[0],{conceded:0,xga:1,clean:4});Object.assign(f.teams[1],{conceded:12,xga:10,clean:1});
- const d=combined.combine(f,e),p=radar.profiles(d.teams,{kind:'team',profileKey:'TEAM_DEFENSE'});
- assert(p.get(d.teams[0]).comparableArea>p.get(d.teams[1]).comparableArea);assert.equal(p.get(d.teams[0]).axes.length,3);
+ const d=combined.combine(f,e);assert.throws(()=>radar.profiles(d.teams,{kind:'team',profileKey:'TEAM_DEFENSE'}));
  assert.equal(metrics.metric(d.teams[1],'goalDifferencePerMatch'),-6/6);assert.equal(metrics.metric(d.teams[1],'xgDifferencePerMatch'),-3/6);
  const team=d.teams[1];team.metricContexts.conceded.source='ESPN';assert.equal(metrics.metric(team,'goalDifferencePerMatch'),null);
- assert.equal(radar.rankingDefinitions.filter(d=>d.kind==='team'&&!d.aggregateProfile).length,3);assert.equal(radar.rankingDefinitions.filter(d=>d.aggregateProfile).length,3);assert.equal(radar.rankingDefinitions.filter(d=>d.kind==='player').length,5);
+ assert.equal(radar.rankingDefinitions.filter(d=>d.kind==='team'&&!d.aggregateProfile).length,1);assert.equal(radar.rankingDefinitions.filter(d=>d.aggregateProfile).length,5);assert.equal(radar.rankingDefinitions.filter(d=>d.kind==='player').length,5);
 });
 test('combined fields preserve their own minutes and matches after a later player profile changes the base sample',()=>{
  const {f,e}=fixtures('premier-league');f.players[0].metricContexts.tackles={source:'FotMob',minutes:100,matches:2,captured_at:f.metadata.imported_at};

@@ -24,11 +24,14 @@ El navegador usa los datos de `dist/data.js` ya cargados. SQLite se genera como 
 | `dist/index.html` | Estructura, navegación y contenedores |
 | `dist/style.css` | Apariencia y adaptación a pantallas |
 | `dist/app.js` | Filtros, métricas por 90, rankings, fichas y comparador |
+| `dist/scores.js` | Modelo común: score por posición, candidatos de perfiles y promedios de equipo |
 | `scripts/import_statsbomb.py` | Descarga, agregación y creación de artefactos |
 | `scripts/validate_data.py` | Coherencia de las salidas incluidas, sin red |
 | `.github/workflows/pages.yml` | Importación y despliegue en GitHub Pages, si el propietario lo configura |
 
 El importador usa Python de biblioteca estándar; no existe un build de npm. El código fuente de la web vive en `dist/`, por lo que no se debe vaciar esa carpeta para regenerar datos.
+
+Desde el 9 de noviembre, el modelo de [SCORES.md](SCORES.md) es común a todas las vistas y al generador. La referencia se construye una vez con las ligas cargadas y los modelos se conservan mientras no cambien sus capturas. Ninguna tarjeta o ficha calcula otro score. El HTML empaquetado versiona los módulos por hash para evitar mezclar código de publicaciones diferentes.
 
 ## Puntos de coordinación
 
