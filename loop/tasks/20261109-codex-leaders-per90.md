@@ -1,6 +1,6 @@
 # 20261109 · Líderes de portada por 90 minutos
 
-- Estado: `review`
+- Estado: `done`
 - Responsable: Codex, a petición del usuario
 - Revisor: autocontrol; sin revisión independiente
 - Rama: `feat/leaders-per90`
@@ -21,7 +21,7 @@ Archivos: app, métricas, combinación y procedencia; pruebas, documentación y 
 - [x] Nueve tarjetas: pases/paradas por 90 y pares de goles/asistencias total + /90.
 - [x] Mismos valores/orden al abrir ranking; unidades fijas y procedencia correcta, sin mezclar denominadores ni imputar ceros.
 - [x] Verificación con datos reales en cinco ligas/Todas y móvil, conservando scores y totales.
-- [ ] Código subido, PR integrado y publicación confirmada; resumen de datos al acabar.
+- [x] Código subido, PR integrado y publicación confirmada; resumen de datos al acabar.
 
 ## Plan y evidencia
 
@@ -52,3 +52,13 @@ Revisión propia: corregido el reloj de un test de caché que creaba cookie con 
 Artefacto final validado: Worker SHA256 `c15a8f6e3886bb105481c0bac5cca32f22bc3d4721235083d97e777e7e322c5f`, 9 módulos, 31 assets, 1.566.792 bytes. Doce archivos de pruebas correctos; verificación funcional de 61 casos. Enlaces/sintaxis/diff correctos. PR en borrador [#25](https://github.com/estadisticasfutbolxg/grada-futbol/pull/25), primer incremento remoto `657447a21f0aa7f480f0294a3f0fb2fc7340d252`.
 
 Validación nativa del paquete: Sites especifica que `r2` debe ser una cadena. Se corrige la declaración lógica a `"r2": "BUCKET"` (la referencia de almacenamiento no precisaba la forma). El primer guardado fue rechazado antes de crear versión; no se intentó desplegar ese paquete. Sin cambios en estadísticas ni en el Worker probado.
+
+## Entrega confirmada
+
+PR #25 integrado en `5ac3cc343417dd146d897a8912bf5eae09233493`, main remoto comprobado. Rama final GitHub `e24804738f44edda73c743ffaa95902bfa69ea8a`; fuente Sites `59f17a73f904d6197e41a186d136c442f7c19a13`. GitHub informó mergeable clean, sin checks registrados ni protecciones que impidieran el merge; no se omiten checks pendientes requeridos.
+
+Versión **15** `appgprj_6ae0b8b2eb1881918601230d00603255~appgver_a8a3c9d35d2c8191a47c5be2c7389e7d` y despliegue `appgdep_6af223c17a2481918b7370b0cf1b859e`, `succeeded` el 9 de noviembre a las 19:49:39 UTC (20:49 Madrid), revisión de secretos 1. URL: https://grada-futbol-analitica.ivanmatema2.chatgpt.site. Audiencia pública y propietario comprobados otra vez. El formato R2 corregido se valida al guardar/publicar nativamente. No se crean copias del Site ni se cambian roles.
+
+Worker final conserva SHA256 `c15a8f6e3886bb105481c0bac5cca32f22bc3d4721235083d97e777e7e322c5f`. QA final de acceso vuelve a pasar tras los ajustes de errores/caché. R2/identidad simulados en pruebas, sin contraseña real establecida: el usuario deberá identificarse y elegirla desde el icono. No se puede realizar esa acción por él sin conocer su contraseña. El lector web externo no admite la ruta de estado de producción; publicación confirmada por Sites y comportamiento por QA del artefacto, sin desactivar TLS ni afirmar una prueba de login real. No es un bloqueo de publicación.
+
+Datos: 0 jugadores y 0 partidos descargados; 22 originales intactos, scores de 2.284 registros y 96 equipos conservados. Se respetan las capturas solicitadas mientras tramita permisos. No se han enviado mensajes a proveedores ni cambiado licencias. Cierre documental posterior, sin republicar un Worker idéntico.
