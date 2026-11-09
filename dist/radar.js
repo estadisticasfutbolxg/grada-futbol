@@ -22,9 +22,6 @@
     POR:['savepct','savesPerMatch','concededPerMatch','psxgEfficiency','prevented','highClaims','sweeperActions','cleanPerMatch','longBallsPer90','accuracy','completedPer90','passes'],
     MED_DEF:['completedPer90','accuracy','recoveries','tackles','interceptions','lineBreakingPasses'],
     MED_ATT:['xa','chancesCreated','bigChancesCreated','shotsOnTargetPer90','dribblesPer90','goals'],
-    TEAM_ATTACK:['goalsPerMatch','xgPerMatch','shotsOnTargetPerMatch','bigChancesPerMatch','goalsPerXg'],
-    TEAM_DEFENSE:['concededPerMatch','xgaPerMatch','cleanPerMatch'],
-    TEAM_OVERALL:['pointsPerMatch','goalDifferencePerMatch','xgDifferencePerMatch','goalsPerMatch','concededPerMatch','cleanPerMatch']
   };
   const rankingDefinitions=[
     {key:'DEL',label:'Delanteros',position:'DEL',kind:'player',minimum:450},
@@ -32,9 +29,9 @@
     {key:'DEF',label:'Defensas',position:'DEF',kind:'player',minimum:450},
     {key:'MED_DEF',label:'Centrocampistas · perfil defensivo',position:'MED',kind:'player',minimum:450},
     {key:'MED_ATT',label:'Centrocampistas · perfil ofensivo',position:'MED',kind:'player',minimum:450},
-    {key:'TEAM_ATTACK',label:'Equipos · mejores ataques',kind:'team',minimum:5},
+    {key:'TEAM_ATTACK',label:'Equipos · mejores ataques',kind:'team',minimum:5,aggregateProfile:'ATTACK'},
     {key:'TEAM_STRIKERS',label:'Equipos · mejor delantera',kind:'team',minimum:5,aggregateProfile:'DEL'},
-    {key:'TEAM_DEFENSE',label:'Equipos · mejores defensas',kind:'team',minimum:5},
+    {key:'TEAM_DEFENSE',label:'Equipos · mejores defensas',kind:'team',minimum:5,aggregateProfile:'DEF'},
     {key:'TEAM_MED_ATT',label:'Equipos · centro del campo ofensivo',kind:'team',minimum:5,aggregateProfile:'MED_ATT'},
     {key:'TEAM_MED_DEF',label:'Equipos · centro del campo defensivo',kind:'team',minimum:5,aggregateProfile:'MED_DEF'},
     {key:'TEAM_OVERALL',label:'Equipos · rendimiento global',kind:'team',minimum:5}
@@ -52,14 +49,14 @@
     return percentiles.reduce((sum,p,i)=>sum+p/100*(percentiles[(i+1)%percentiles.length]/100),0)/percentiles.length;
   }
   function reference(all,key) {
-    const def=definition(key),position=def.position,minimum=def.minimum,team=def.kind==='team';
-    if(def.aggregateProfile)throw new Error('El score por posición del equipo se calcula en GradaSquads.');
-    const samePosition = team?all:all.filter(p=>p.pos === position);
+    const def=definition(key),position=def.position,minimum=def.minimum;
+    if(def.kind==='team')throw new Error('Los scores de equipo se calculan con los scores de sus jugadores en GradaScores.');
+    const samePosition = all.filter(p=>p.pos === position);
     function eligible(record,key) {
+      if(!baseEligible(record,position,minimum))return false;
       const ctx = metrics.context(record,key);
       const minutes = ctx && Object.hasOwn(ctx,'minutes') ? ctx.minutes : record.minutes;
       const matches = ctx && Object.hasOwn(ctx,'matches') ? ctx.matches : record.matches;
-      if(team)return Number.isFinite(matches)&&matches>=minimum;
       return Number.isFinite(minutes) ? minutes >= minimum : position === 'POR' && Number.isFinite(matches) && matches >= 2;
     }
     const candidates=priorities[key]||[],samples=new Map();
@@ -69,6 +66,7 @@
     }
     return {definition:def,minimum,samples,keys:[...samples.keys()].filter(k=>!(position==='POR'&&samples.has('psxgEfficiency')&&k==='prevented')).slice(0,6),peerCount:samePosition.filter(p=>candidates.some(key=>eligible(p,key)&&Number.isFinite(metrics.metric(p,key,axes[key][1])))).length};
   }
+  function baseEligible(record,position,minimum){return Number.isFinite(record.minutes)?record.minutes>=minimum:position==='POR'&&Number.isFinite(record.matches)&&record.matches>=2;}
   function profile(player,all,plan=reference(all,player.pos)) {
     const values=[];
     for(const key of plan.keys){
@@ -77,24 +75,41 @@
       values.push({key,label,value,percentile:percentile(value,sample,lower),lowerBetter:!!lower,referenceCount:sample.length,source:metrics.context(player,key)?.source||null});
     }
     const visible=values.length>=3?values:[],area=relativeArea(visible.map(a=>a.percentile));
-    return {axes:visible,area,comparableArea:values.length===plan.keys.length?area:null,expectedAxes:plan.keys,missingAxes:plan.keys.filter(k=>!values.some(a=>a.key===k)),minimumMinutes:plan.definition.kind==='team'?null:plan.minimum,minimumMatches:plan.definition.kind==='team'?plan.minimum:null,kind:plan.definition.kind,profileKey:plan.definition.key,profileLabel:plan.definition.label,peerCount:plan.peerCount,availableAxes:values.length,
-      referenceRule:plan.definition.kind==='team'?'equipos del ámbito seleccionado, mínimo 5 PJ de la fuente de cada eje':player.pos==='POR'?'misma posición, mínimo 180 min o 2 PJ del proveedor de cada eje':'misma posición y perfil, mínimo 450 minutos'};
+    const sampleEnough=baseEligible(player,player.pos,plan.minimum)&&values.every(a=>{
+      const c=metrics.context(player,a.key),minutes=c&&Object.hasOwn(c,'minutes')?c.minutes:player.minutes,matches=c&&Object.hasOwn(c,'matches')?c.matches:player.matches;
+      return Number.isFinite(minutes)?minutes>=plan.minimum:player.pos==='POR'&&Number.isFinite(matches)&&matches>=2;
+    });
+    const score=values.length===plan.keys.length&&sampleEnough?area:null;
+    return {axes:visible,area,score,comparableArea:score,expectedAxes:plan.keys,missingAxes:plan.keys.filter(k=>!values.some(a=>a.key===k)),sampleEnough,minimumMinutes:plan.minimum,minimumMatches:null,kind:'player',profileKey:plan.definition.key,profileLabel:plan.definition.label,peerCount:plan.peerCount,availableAxes:values.length,
+      referenceRule:player.pos==='POR'?'misma posición, mínimo 180 min o 2 PJ del proveedor de cada eje':'misma posición, mínimo 450 minutos'};
   }
-  function profiles(all,{profileKey=null,kind='player'}={}){
-    const keyFor=p=>kind==='team'?(profileKey||'TEAM_OVERALL'):profileKey&&definition(profileKey).position===p.pos?profileKey:p.pos;
-    const plans=new Map([...new Set(all.map(keyFor))].map(key=>[key,reference(all,key)]));
-    return new Map(all.map(p=>[p,profile(p,all,plans.get(keyFor(p)))]));
+  function profiles(all,{referencePlayers=all,kind='player'}={}){
+    if(kind!=='player')throw new Error('Los equipos usan promedios de sus jugadores en GradaScores.');
+    const plans=new Map([...new Set(all.map(p=>p.pos))].map(key=>[key,reference(referencePlayers,key)]));
+    return new Map(all.map(p=>[p,profile(p,referencePlayers,plans.get(p.pos))]));
+  }
+  function midfieldIndices(all,{referencePlayers=all}={}){
+    return new Map(['MED_ATT','MED_DEF'].map(key=>{
+      const plan=reference(referencePlayers,key);
+      return [key,new Map(all.filter(p=>p.pos==='MED').map(p=>[p,{...profile(p,referencePlayers,plan),kind:'index'}]))];
+    }));
+  }
+  function midfieldRole(player,indices){
+    if(player.pos!=='MED')return null;
+    const attack=indices.get('MED_ATT')?.get(player)?.score,defense=indices.get('MED_DEF')?.get(player)?.score;
+    if(!Number.isFinite(attack)||!Number.isFinite(defense))return null;
+    return Math.abs(attack-defense)<1e-12?'MED_BALANCED':attack>defense?'MED_ATT':'MED_DEF';
   }
   function rankingEligible(record,profile,minimum){
     if(!profile||profile.comparableArea===null||!Number.isFinite(minimum)||minimum<0)return false;
     const team=profile.kind==='team',base=team?record.matches:record.minutes;
-    if(!Number.isFinite(base)||base<minimum)return false;
+    if(Number.isFinite(base)?base<minimum:team||record.pos!=='POR'||minimum>180||!Number.isFinite(record.matches)||record.matches<2)return false;
     return profile.axes.every(a=>{
       const ctx=metrics.context(record,a.key),minutes=ctx&&Object.hasOwn(ctx,'minutes')?ctx.minutes:record.minutes,matches=ctx&&Object.hasOwn(ctx,'matches')?ctx.matches:record.matches;
-      return team?Number.isFinite(matches)&&matches>=minimum:Number.isFinite(minutes)?minutes>=minimum:record.pos==='POR'&&Number.isFinite(matches)&&matches>=2;
+      return team?Number.isFinite(matches)&&matches>=minimum:Number.isFinite(minutes)?minutes>=minimum:record.pos==='POR'&&minimum<=180&&Number.isFinite(matches)&&matches>=2;
     });
   }
   const axis=key=>axes[key]?{label:axes[key][0],unit:axes[key][1],lowerBetter:!!axes[key][2]}:null;
-  const api = {profile,profiles,percentile,relativeArea,rankingDefinitions,definition,rankingEligible,axis};
+  const api = {profile,profiles,midfieldIndices,midfieldRole,percentile,relativeArea,rankingDefinitions,definition,rankingEligible,axis};
   if (typeof module === 'object' && module.exports) module.exports = api; else root.GradaRadar = api;
 })(typeof window === 'object' ? window : globalThis);

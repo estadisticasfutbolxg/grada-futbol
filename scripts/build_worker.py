@@ -39,8 +39,18 @@ def build():
 
     entry = include(ROOT / 'worker/app.cjs')
     assets = {}
-    client_files = ['index.html','style.css','leagues.json','leagues.js','metrics.js','security.js','understat.js','laliga.js','fotmob.js','combined.js','scopes.js','filters.js','radar.js','squads.js','components.js','profiles.js','refresh.js','app.js']
+    client_files = ['index.html','style.css','leagues.json','leagues.js','metrics.js','security.js','understat.js','laliga.js','fotmob.js','combined.js','scopes.js','filters.js','radar.js','squads.js','scores.js','components.js','profiles.js','refresh.js','app.js']
     files = [ROOT / 'dist' / filename for filename in client_files]
+    client_bodies = {filename: (ROOT / 'dist' / filename).read_bytes() for filename in client_files}
+    def version_asset(match):
+        filename = match[2]
+        body = client_bodies.get(filename)
+        if body is None:
+            return match[0]
+        return match[1] + filename + '?v=' + hashlib.sha256(body).hexdigest()[:16] + match[3]
+    # A new HTML response must load one coherent set of client modules, even if
+    # the browser still has files from the previous deployment in its cache.
+    client_bodies['index.html'] = re.sub(r'''(\b(?:src|href)=["'])([^"']+)(["'])''', version_asset, client_bodies['index.html'].decode()).encode()
     expected = json.loads((ROOT / 'dist/leagues.json').read_text())
     for league in expected:
         for filename in [league['espnFile'], f"fotmob-{league['id']}-2026-27.json"] + (['understat-laliga-2026-27.json'] if league['primary'] == 'Understat' else []):
@@ -49,7 +59,7 @@ def build():
                 raise ValueError('Missing real source capture: ' + filename)
             files.append(path)
     for path in files:
-        body = path.read_bytes()
+        body = client_bodies.get(path.name) if path.parent == ROOT / 'dist' else path.read_bytes()
         mime = {'.html': 'text/html', '.css': 'text/css', '.js': 'text/javascript', '.json': 'application/json'}[path.suffix]
         assets['/' + path.relative_to(ROOT / 'dist').as_posix()] = {'type': mime + '; charset=utf-8', 'sha': hashlib.sha256(body).hexdigest(), 'gzip': base64.b64encode(gzip.compress(body, mtime=0)).decode()}
     factories = ',\n'.join(json.dumps(k) + ':function(module,exports,require){\n' + v[0] + '\n}' for k, v in modules.items())

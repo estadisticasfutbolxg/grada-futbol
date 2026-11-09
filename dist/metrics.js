@@ -57,7 +57,11 @@
     if (!number(value)) return null;
     return value;
   }
-  const api = {metric,per90,ratio,rates,fixedRates,ratios,perMatch,number,context};
+  function total(records,key){
+    const known=records.filter(record=>number(record[key]));
+    return {value:known.length?known.reduce((sum,record)=>sum+record[key],0):null,known:known.length,total:records.length,complete:records.length>0&&known.length===records.length};
+  }
+  const api = {metric,per90,ratio,rates,fixedRates,ratios,perMatch,number,context,total};
   if (typeof module === 'object' && module.exports) module.exports = api;
   else root.GradaMetrics = api;
 })(typeof window === 'object' ? window : globalThis);

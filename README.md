@@ -1,5 +1,8 @@
 # GRADA · Estadísticas de fútbol
 
+> Definición vigente desde el 9 de noviembre: [score único por posición, referencia común, promedios de equipo y totales con cobertura](docs/SCORES.md). Las definiciones anteriores de subperfiles, índices independientes, referencias por liga o sumas que aparezcan en el registro histórico quedan sustituidas por ese modelo.
+
+
 Web en español de estadísticas, perfiles y rankings por score del radar de jugadores y equipos. El selector ofrece **LaLiga, Premier League, Serie A, Bundesliga, Ligue 1** combinadas y **Todas las ligas**, temporada 2026/27. HTML/CSS/JavaScript en `dist/`, Python estándar para descargar datos reales y generar SQLite gratuitos.
 
 ## Datos reales y fuentes

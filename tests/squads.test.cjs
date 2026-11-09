@@ -25,8 +25,8 @@ test('unit profiles include only their position, keep distinct coverage, and do 
  const player=(id,team,pos)=>({id,team_id:team,name:'Isolated '+id,pos,minutes:540,matches:6,xa:1,chancesCreated:6,bigChancesCreated:3,shotsOnTargetPer90:1,dribblesPer90:1,goals:1,xg:1,conversion:10,completedPer90:40,accuracy:80,recoveries:12,tackles:6,interceptions:3,lineBreakingPasses:12});
  const players=[...Array.from({length:7},(_,i)=>player('m'+i,i<2?'a':'b','MED')),...Array.from({length:6},(_,i)=>player('s'+i,i<5?'a':'b','DEL'))];players[0].xa=null;players.push({...player('defender','a','DEF'),xa:1000,recoveries:1000},player('unassigned',null,'DEL'));
  const d={metadata:{competition:'Isolated test only'},players,teams:[{id:'a'},{id:'b'},{id:'empty'}]},before=JSON.stringify(d),u=squads.unitSummaries(d);
- assert.equal(u.get('MED_ATT').teams.get('a').validPlayers,1);assert.equal(u.get('MED_DEF').teams.get('a').validPlayers,2);assert.equal(u.get('MED_ATT').teams.get('a').area,0.25);
+ assert.equal(u.get('MED_ATT').teams.get('a').validPlayers,1);assert.equal(u.get('MED_DEF').teams.get('a').validPlayers,1);assert.equal(u.get('MED_ATT').teams.get('a').area,0.25);
  assert.equal(u.get('DEL').teams.get('a').area,0.25);assert.equal(u.get('DEL').teams.get('b').area,0.25);assert.equal(u.get('DEL').teams.get('a').validPlayers,5);assert.equal(u.get('DEL').teams.get('b').validPlayers,1);assert.equal(u.get('DEL').teams.get('empty').area,null);
  assert.deepEqual(u.get('DEL').unassignedPlayerIds,['unassigned']);assert(u.get('DEL').teams.get('a').players.every(p=>p.pos==='DEL'));
- const output=squads.withTeamAreas(d);assert.equal(output.teams[0].attackArea.area,0.25);assert.equal(output.teams[0].attackArea.minutes,2700);assert.equal(JSON.stringify(d),before);
+ const output=squads.withTeamAreas(d);assert.equal(output.teams[0].strikerArea,0.25);assert.equal(output.teams[0].unitScores.DEL.minutes,2700);assert.equal(JSON.stringify(d),before);
 });

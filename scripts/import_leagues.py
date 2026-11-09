@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate verified combined league snapshots and free SQLite downloads."""
+"""Generate verified provider snapshots, SQLite and coherent derived scores."""
 import argparse
 import json
 import os
@@ -50,7 +50,7 @@ def main():
                     enrich=[sys.executable,'scripts/enrich_fotmob.py','--league',league['id'],'--output-dir',str(stage)]
                     if args.profiles_root:enrich+=['--input-dir',str(args.profiles_root/league['id'])]
                     run(enrich)
-                run(['node','scripts/build_combined.cjs','--league',league['id'],'--data-dir',str(stage)])
+                run(['node','scripts/build_combined.cjs','--league',league['id'],'--data-dir',str(stage),'--reference-dir',str(args.output_dir)])
                 check="const fs=require('fs'),c=require('./dist/combined.js'),d=JSON.parse(fs.readFileSync(process.argv[1]));const q=c.coverage(d);if(!q.complete)throw Error(q.missing.join(','));console.log(JSON.stringify({league:d.metadata.competition,players:d.players.length,teams:d.teams.length,coverage:q}));"
                 run(['node','-e',check,str(stage/f"combined-{league['id']}-2026-27.json")])
                 # All outputs exist and validate before any published filename changes.
@@ -64,8 +64,14 @@ def main():
         except (ValueError,OSError,subprocess.CalledProcessError) as error:
             outcomes.append({'league':league['id'],'status':'unavailable','error':str(error)})
             if not args.all:raise
-    print(json.dumps({'leagues':outcomes},ensure_ascii=False))
     if not any(o['status']=='generated' for o in outcomes):raise SystemExit('No complete league was generated; existing files were preserved.')
+    # Recompute derived scores against the same final source set for every league.
+    for league in CATALOG:
+        required=[league['espnFile'],f"fotmob-{league['id']}-2026-27.json"]
+        if league['primary']=='Understat':required.append(f"understat-{league['id']}-2026-27.json")
+        if all((args.output_dir/name).exists() for name in required):
+            run(['node','scripts/build_combined.cjs','--league',league['id'],'--data-dir',str(args.output_dir)])
+    print(json.dumps({'leagues':outcomes},ensure_ascii=False))
 
 
 if __name__=='__main__':main()

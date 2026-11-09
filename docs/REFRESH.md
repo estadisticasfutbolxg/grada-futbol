@@ -18,11 +18,13 @@ ESPN/FotMob no proporcionan una lista de partidos en estos adaptadores: se infor
 
 ## Score de jugador y de equipo
 
-Score de jugador renombra el área normalizada del radar, entre 0 y 1, con referencia fija por posición/perfil y ámbito. La fórmula geométrica no cambia. Los rankings de una métrica concreta se ordenan por esa métrica; los rankings generales y las posiciones usan score. La actualización conserva la columna y dirección seleccionadas.
+Score de jugador es el área normalizada del radar de su posición POR/DEF/MED/DEL, entre 0 y 1. Usa una referencia común de las ligas cargadas; no cambia al seleccionar una liga, ranking, tabla o ficha. Requiere todos los ejes y muestra suficiente del propio jugador y cada métrica. La fórmula geométrica no cambia. Los rankings KPI se ordenan por esa métrica; los demás por su score de posición. La actualización conserva la columna y dirección seleccionadas. [Definiciones completas](SCORES.md).
 
 El score de equipo es `Σ(score_i × minutos_i) / Σ(minutos_i)`. Solo participan jugadores asignados al equipo por ID con score válido y minutos positivos publicados. No se imputan minutos ni scores ausentes. Se muestran jugadores ponderados/total, minutos utilizados, pesos y contribuciones. Un score cero válido participa; cero minutos no añade peso; sin participantes el resultado es null.
 
-La misma ponderación se usa para Mejor delantera (DEL) y los centros del campo ofensivo/defensivo (MED_ATT/MED_DEF). Todas recalcula percentiles antes del promedio. Los filtros no cambian los pesos ni las referencias. Se conservan los índices específicos de ataque/defensa de equipo calculados a partir de sus propias estadísticas; no eran sumas de jugadores.
+La misma ponderación se usa para cada bloque, incluidos defensa (DEF), delantera (DEL), ataque (DEL + MED de perfil ofensivo) y centros del campo ofensivo/defensivo. Los perfiles MED seleccionan candidatos mediante sus índices estadísticos; todos conservan su score MED. El radar de equipo representa las medias por posición y el mismo promedio general. Se eliminan los índices de equipo independientes de sus jugadores. Los KPI de equipo conservan sus estadísticas originales; los filtros no cambian pesos ni referencias.
+
+Los totales de asistencias y paradas muestran la suma publicada y su cobertura aunque falten algunos registros. Un subtotal parcial no se presenta como cobertura completa ni se completa con ceros.
 
 ## Fichas FotMob y valores ausentes
 
