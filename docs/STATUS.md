@@ -1,5 +1,13 @@
 # Estado comprobado de GRADA
 
+## Actualización verificada · 9 de noviembre de 2026
+
+- [GRADA pública](https://grada-futbol-analitica.ivanmatema2.chatgpt.site), versión **13**, despliegue nativo `succeeded` a las 10:25 Madrid. Mismas cinco ligas, capturas y permisos de v12.
+- Actualizar datos termina con un resumen por liga de jugadores nuevos/modificados/retirados y sus nombres/equipos. No cuenta fechas de consulta nuevas como modificaciones ni duplica jugadores entre proveedores. Se muestra cobertura de partidos por fuente y, con los registros Understat, los encuentros nuevos/modificados. Los agregados ESPN/FotMob no se presentan como partidos individualmente actualizados. Se informa de fichas incompletas y fallos conservados. La preferencia de informar al terminar futuras importaciones consta en AGENTS.md.
+- [PR #21](https://github.com/estadisticasfutbolxg/grada-futbol/pull/21) integrado en `c16380b11b13e1b6b6a6fdad500d489e0215ce61`, main comprobado. Fuente Sites `113a7bd7fdbbbc27c6738f1b52d485aad707436d`. Versión `appgprj_6ae0b8b2eb1881918601230d00603255~appgver_23190f5aa6708191992b8db348574be3`; despliegue `appgdep_6af1918c14d481919c16112135340565`.
+- Diez archivos Node, sintaxis, documentación y validador StatsBomb correctos. Chromium sobre el artefacto exacto verifica éxito, datos idénticos sin cambios, actualización parcial, fallo de todas las ligas, listas, cobertura, fichas conservadas, texto externo escapado y móvil sin desbordamiento, con ambas cachés denegadas. Sin errores de JavaScript; autocontrol sin revisión independiente.
+- Esta entrega cambia la interfaz y el cálculo del resumen, sin importar datos nuevos ni modificar bases. Permanecen 2.284 registros jugador/liga y 96 equipos de las capturas de noviembre descritas debajo. Las respuestas reales guardadas usadas en QA se mantienen aisladas y no se publican como una actualización del 9. Detalles e identificadores en la [tarea del resumen](../loop/tasks/20261109-codex-refresh-report.md) y definiciones en [REFRESH.md](REFRESH.md).
+
 ## Actualización verificada · 8 de noviembre de 2026
 
 - Web pública [GRADA](https://grada-futbol-analitica.ivanmatema2.chatgpt.site), versión **12**, despliegue nativo `succeeded` a las 20:16 Madrid. Selector combinado: LaLiga, Premier League, Serie A, Bundesliga, Ligue 1 y Todas las ligas. Audiencia pública e invitaciones conservadas.
