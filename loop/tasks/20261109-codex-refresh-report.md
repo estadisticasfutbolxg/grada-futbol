@@ -1,6 +1,6 @@
 # 20261109 · Resumen de jugadores y partidos al actualizar
 
-- Estado: `active`
+- Estado: `done`
 - Responsable: Codex, a petición del usuario
 - Revisor: autocontrol; sin revisión independiente
 - Rama: `feat/refresh-completion-report`
@@ -21,7 +21,7 @@ Archivos: dist/refresh.js, app.js, index.html, style.css; pruebas, AGENTS.md y d
 - [x] Resumen visible al finalizar, con cifras por liga/fuente y listas de jugadores/partidos disponibles.
 - [x] Sin duplicar jugadores entre fuentes, fechas solas no cuentan, fallos no cuentan como datos nuevos y desconocidos no son ceros.
 - [x] Navegador, móvil, seguridad de texto externo y checks proporcionales correctos.
-- [ ] Código subido, PR integrado y publicación nativa confirmada, conservando acceso público.
+- [x] Código subido, PR integrado y publicación nativa confirmada, conservando acceso público.
 
 ## Plan y evidencia
 
@@ -33,4 +33,8 @@ Preparación: sin cambios previos; main GitHub consultado, Site público v12 y o
 
 Chromium sobre el Worker exacto, con ambas cachés denegadas: liga individual y Todas, éxito 3/3, parcial 2/3 y fallo 0/11, cobertura por fuente, nombres de jugadores con cambios, repetición de idénticos datos con cero cambios, fichas fallidas conservadas, limpieza al cambiar liga, móvil sin desbordamiento y texto hostil escapado. Solo se enrutan capturas reales aisladas; no se publican datos ni resultados de QA. La primera consulta de las capturas ESPN de QA difiere de la captura inicial publicada y se informa como cambio real; la repetición demuestra cero modificaciones aunque cambie la fecha. Ningún error de JavaScript. Inspección visual de escritorio y móvil.
 
-El navegador requirió el permiso de red del sandbox para arrancar Chromium (setsockopt denegado sin ese permiso); no es un error de la web. Autocontrol sin hallazgos pendientes ni revisión independiente. Pendiente registrar PR, merge y publicación.
+El navegador requirió el permiso de red del sandbox para arrancar Chromium (setsockopt denegado sin ese permiso); no es un error de la web. Autocontrol sin hallazgos pendientes ni revisión independiente. [PR #21](https://github.com/estadisticasfutbolxg/grada-futbol/pull/21) integrado mediante squash en `c16380b11b13e1b6b6a6fdad500d489e0215ce61`; main comprobado. Commit de la rama GitHub `0a9be630c2e477d7809f88da91adb4bdd8a9b8e6`. Sin checks remotos configurados para este commit; mergeable clean y SHA esperado comprobados. Fuente Sites subida y confirmada `113a7bd7fdbbbc27c6738f1b52d485aad707436d`.
+
+Versión 13 `appgprj_6ae0b8b2eb1881918601230d00603255~appgver_23190f5aa6708191992b8db348574be3`; despliegue `appgdep_6af1918c14d481919c16112135340565`, succeeded el 9 de noviembre a las 10:25 Madrid. [GRADA pública](https://grada-futbol-analitica.ivanmatema2.chatgpt.site), acceso conservado. Artefacto con solo manifiesto y Worker, SHA256 de Worker `89fdc943a0be3cb819d316421e5d7bef9d970c0c0a758234b1d1cfd85caf946d`, exactamente el probado en Chromium.
+
+No se ha ejecutado una importación nueva: siguen las capturas publicadas de los días 1/6/7/8, 2.284 registros jugador/liga y 96 equipos. Los cambios comunicados por las pruebas pertenecen exclusivamente al navegador aislado de QA. El flujo completo se verificó localmente y Sites confirmó la publicación; no se afirma haber ejecutado una actualización de datos en producción. Criterios terminados, sin aprobación pendiente ni procesos en segundo plano.
