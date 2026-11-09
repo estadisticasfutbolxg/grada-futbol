@@ -1,7 +1,7 @@
 (function (root) {
   'use strict';
   const rates = new Set(['goals','assists','xg','xa','delta','passes','completed','shots','shotsOnTarget','saves','conceded','xga','tackles','interceptions','recoveries','keypasses','progressive','lineBreakingPasses','clearances','blocks','highClaims','sweeperActions','chancesCreated','bigChancesCreated','bigChancesMissed','yellowCards','redCards','penaltiesSaved','penaltiesFaced','xgot','prevented','psxg','xgaOnTarget']);
-  const fixedRates = {xga90:'xga',conceded90:'conceded',completedPer90:'completed',psxg90:'psxg',xgaOnTarget90:'xgaOnTarget'};
+  const fixedRates = {goalsPer90:'goals',assistsPer90:'assists',savesPer90:'saves',xga90:'xga',conceded90:'conceded',completedPer90:'completed',psxg90:'psxg',xgaOnTarget90:'xgaOnTarget'};
   const ratios = {goalsPerXg:['goals','xg'],assistsPerXa:['assists','xa']};
   const perMatch = {psxgPerMatch:'psxg',xgaOnTargetPerMatch:'xgaOnTarget',xgaPerMatch:'xga',xgPerMatch:'xg',goalsPerMatch:'goals',pointsPerMatch:'points',bigChancesPerMatch:'bigChances',savesPerMatch:'saves',concededPerMatch:'conceded',cleanPerMatch:'clean'};
   const differences={goalDifferencePerMatch:['goals','conceded'],xgDifferencePerMatch:['xg','xga']};
@@ -16,6 +16,7 @@
     const result=value/minutes*90;return number(result)?result:null;
   }
   function context(record,key) {
+    if(key==='savesPer90'&&record.metricContexts?.savesPer90)return record.metricContexts.savesPer90;
     if(key==='psxgEfficiency')return record.metricContexts?.psxg||null;
     if(key==='shotsPer90'&&!number(record.shotsPer90))return record.metricContexts?.shots||null;
     if(Object.hasOwn(differences,key)){
@@ -38,6 +39,7 @@
     return number(reported)?reported:per90(record[key],denominator(record,key,'minutes'));
   }
   function metric(record, key, unit = 'total') {
+    if(key==='savesPer90'&&number(record.savesPer90))return record.savesPer90;
     if(key==='psxgEfficiency'){const c=context(record,key),expected=record.psxg,conceded=c?.pairedConceded;if(!number(expected)||expected<=0||!number(conceded)||conceded<0)return null;const value=(1-conceded/expected)*100;return number(value)?value:null;}
     if(key==='shotsPer90')return number(record.shotsPer90)?record.shotsPer90:normalized(record,'shots');
     if(Object.hasOwn(differences,key)){

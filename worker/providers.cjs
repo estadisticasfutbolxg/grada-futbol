@@ -18,11 +18,11 @@ function number(value,{integer=false,signed=false,nullable=false,coerce=false}={
 }
 function name(value){if(typeof value!=='string'||!value.trim()||value.length>250)throw new Error('Nombre inválido.');return value.trim();}
 function id(value){const s=String(value);if(!/^\d{1,12}$/.test(s))throw new Error('Identidad inválida.');return s;}
-async function textResponse(url,{fetcher=fetch,headers={}}={}){
- const u=new URL(url);if(u.protocol!=='https:'||!['www.fotmob.com','understat.com'].includes(u.hostname))throw new Error('Fuente no permitida.');
+async function textResponse(url,{fetcher=fetch,headers={},signal}={}){
+ const u=new URL(url);if(u.protocol!=='https:'||!['www.fotmob.com','understat.com','site.api.espn.com'].includes(u.hostname)||u.port||u.username||u.password)throw new Error('Fuente no permitida.');
  let current=url,response;
  for(let redirects=0;redirects<4;redirects++){
-  response=await fetcher(current,{redirect:'manual',signal:AbortSignal.timeout(20000),headers:{'User-Agent':'GRADA football statistics/1.0',Accept:'text/html,application/json',...headers}});
+  response=await fetcher(current,{redirect:'manual',signal:signal?AbortSignal.any([signal,AbortSignal.timeout(20000)]):AbortSignal.timeout(20000),headers:{'User-Agent':'GRADA football statistics/1.0',Accept:'text/html,application/json',...headers}});
   if(![301,302,303,307,308].includes(response.status))break;
   const next=new URL(response.headers.get('location')||'',current);
   if(next.protocol!=='https:'||next.hostname!==u.hostname||next.port||next.username||next.password)throw new Error('Redirección de fuente no permitida.');
@@ -137,4 +137,7 @@ async function fetchUnderstat(leagueId,{fetcher=fetch,now=()=>new Date().toISOSt
  const headers={'X-Requested-With':'XMLHttpRequest',Referer:'https://understat.com/league/La_liga/2026'};
  try{return adaptUnderstat(JSON.parse(await textResponse('https://understat.com/getLeagueData/La%20liga/2026',{fetcher,headers})),now());}catch(_){return adaptUnderstat(extractUnderstat(await textResponse('https://understat.com/league/La_liga/2026',{fetcher,headers})),now());}
 }
-module.exports={specs,parseFotmob,buildFotmob,extractUnderstat,adaptUnderstat,fetchFotmob,fetchUnderstat,textResponse};
+async function fetchEspn(leagueId,{fetcher=fetch,now=()=>new Date().toISOString()}={}){
+ return require('../dist/laliga.js').fetchSeason({leagueId,now,fetchImpl:async(url,{signal}={})=>new Response(await textResponse(url,{fetcher,signal}),{headers:{'Content-Type':'application/json'}})});
+}
+module.exports={specs,parseFotmob,buildFotmob,extractUnderstat,adaptUnderstat,fetchFotmob,fetchUnderstat,fetchEspn,textResponse};

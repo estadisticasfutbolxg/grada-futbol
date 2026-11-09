@@ -39,7 +39,7 @@ def build():
 
     entry = include(ROOT / 'worker/app.cjs')
     assets = {}
-    client_files = ['index.html','style.css','leagues.json','leagues.js','metrics.js','security.js','understat.js','laliga.js','fotmob.js','combined.js','scopes.js','filters.js','radar.js','squads.js','scores.js','components.js','profiles.js','refresh.js','app.js']
+    client_files = ['index.html','style.css','leagues.json','leagues.js','metrics.js','security.js','understat.js','laliga.js','fotmob.js','combined.js','scopes.js','filters.js','radar.js','squads.js','scores.js','components.js','profiles.js','refresh.js','owner.js','app.js']
     files = [ROOT / 'dist' / filename for filename in client_files]
     client_bodies = {filename: (ROOT / 'dist' / filename).read_bytes() for filename in client_files}
     def version_asset(match):
@@ -66,7 +66,7 @@ def build():
     dependency_map = {k: v[1] for k, v in modules.items()}
     bundle = 'const factories={' + factories + '};\nconst dependencies=' + json.dumps(dependency_map) + ';\n'
     bundle += "const loaded=new Map();function load(id){if(loaded.has(id))return loaded.get(id).exports;const module={exports:{}};loaded.set(id,module);factories[id](module,module.exports,name=>{const target=dependencies[id][name];if(!target)throw new Error('Unknown bundled module');return load(target);});return module.exports;}\n"
-    bundle += 'const assets=' + json.dumps(assets, separators=(',', ':')) + ';\nconst app=load(' + json.dumps(entry) + ');\nexport default {fetch(request){return app.handle(request,assets);}};\n'
+    bundle += 'const assets=' + json.dumps(assets, separators=(',', ':')) + ';\nconst app=load(' + json.dumps(entry) + ');\nexport default {fetch(request,env){return app.handle(request,assets,{env});}};\n'
     output = ROOT / 'dist/server/index.js'
     output.parent.mkdir(exist_ok=True)
     output.write_text(bundle)

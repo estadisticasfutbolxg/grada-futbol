@@ -81,7 +81,7 @@
         data.teams.reduce((sum,t)=>sum+t.goals,0)!==data.teams.reduce((sum,t)=>sum+t.conceded,0)) throw new Error('Clasificación incoherente.');
     return data;
   }
-  async function fetchSeason({fetchImpl = fetch,signal,onProgress = () => {},leagueId='laliga'} = {}) {
+  async function fetchSeason({fetchImpl = fetch,signal,onProgress = () => {},leagueId='laliga',now=()=>new Date().toISOString()} = {}) {
     const controller = new AbortController();
     const cancel = () => controller.abort();
     if (signal?.aborted) cancel();
@@ -102,7 +102,7 @@
           onProgress(++done,rows.length);
         }
       }));
-      return adapt(standings,rosters,new Date().toISOString(),leagueId);
+      return adapt(standings,rosters,now(),leagueId);
     } catch (error) { controller.abort(); throw error; }
     finally { clearTimeout(timer); signal?.removeEventListener('abort',cancel); }
   }

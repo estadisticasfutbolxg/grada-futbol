@@ -5,6 +5,7 @@
   const espn = node ? require('./laliga.js') : root.GradaLaLiga;
   const fotmob = node ? require('./fotmob.js') : root.GradaFotmob;
   const leagues = node ? require('./leagues.js') : root.GradaLeagues;
+  const metrics = node ? require('./metrics.js') : root.GradaMetrics;
   const SOURCE = 'Understat + ESPN';
   const fields = [...new Set(['matches','minutes','goals','assists','xg','xa','shots','shotsOnTarget','shotsPer90','passes','completed','accuracy','conversion','delta','saves','savepct','conceded','xga','xgaOnTarget','clean','tackles','interceptions','recoveries','keypasses','progressive','psxg','prevented','points','bigChances','shotsOnTargetPerMatch','possession',...fotmob.fields])];
   const numeric = n => typeof n === 'number' && Number.isFinite(n);
@@ -88,6 +89,19 @@
       derived('delta','goals','xg',(a,b)=>a-b);
       derived('accuracy','completed','passes',(a,b)=>b>0?a/b*100:null);
       derived('savepct','saves','conceded',(a,b)=>a+b>0?a/(a+b)*100:null);
+      if(kind==='player'){
+        // A rate may use a different provider from the absolute total, but its
+        // own numerator and minutes must always describe the same sample.
+        row.savesPer90=null;
+        for(const [source,record] of [[primarySource,primary],['ESPN',other],['FotMob',additional]]){
+          if(!record)continue;
+          const value=metrics.metric(record,'saves','90');if(!numeric(value)||value<0)continue;
+          const original=metrics.context(record,'saves');
+          row.savesPer90=value;row.fieldSources.savesPer90=source;
+          row.metricContexts.savesPer90={...original,source,minutes:original&&Object.hasOwn(original,'minutes')?original.minutes:record.minutes??null,matches:original&&Object.hasOwn(original,'matches')?original.matches:record.matches??null,captured_at:original?.captured_at||({[primarySource]:u.metadata,ESPN:e.metadata,FotMob:f?.metadata||u.metadata})[source].imported_at,derived:numeric(original?.reportedPer90)?'published_per90':'same_source_per90'};
+          break;
+        }
+      }
       return row;
     }
     const players = u.players.map(p=>{

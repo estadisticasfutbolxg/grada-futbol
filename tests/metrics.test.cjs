@@ -1,6 +1,11 @@
 'use strict';
 const test = require('node:test'), assert = require('node:assert/strict');
 const {metric,per90} = require('../dist/metrics.js');
+test('explicit goals and assists per 90 use their own sample and normalize once in either display mode',()=>{
+ const p={minutes:90,goals:10,assists:5,metricContexts:{goals:{source:'Verified fixture',minutes:900,matches:10},assists:{source:'Verified fixture',minutes:450,matches:5}}};
+ for(const mode of ['total','90']){assert.equal(metric(p,'goalsPer90',mode),1);assert.equal(metric(p,'assistsPer90',mode),1);}
+ p.metricContexts.goals.minutes=null;assert.equal(metric(p,'goalsPer90'),null);p.assists=0;assert.equal(metric(p,'assistsPer90'),0);p.metricContexts.assists.minutes=0;assert.equal(metric(p,'assistsPer90'),null);
+});
 test('goalkeeper rates preserve totals and are normalized once in both modes',()=>{
  const p={xga:12,conceded:8,minutes:720,savepct:75};
  for(const unit of ['total','90']) {
