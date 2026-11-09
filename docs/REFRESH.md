@@ -28,7 +28,7 @@ Los totales de asistencias y paradas muestran la suma publicada y su cobertura a
 
 ## Líderes de portada por 90 minutos
 
-La portada ofrece nueve tarjetas con unidades fijas: goles totales, goles/90, pases completados/90, asistencias totales, asistencias/90, xG, xA, precisión de pase y paradas/90. El modo de la tabla no transforma estas tarjetas. Ver ranking abre su misma medida y unidad, orden descendente y filtros limpios; la columna de la tasa queda junto al nombre. Los totales de liga conservan sus sumas y los scores de posición no cambian.
+La portada ofrece nueve tarjetas con unidades fijas: goles totales, goles/90, pases completados/90, asistencias totales, asistencias/90, xG, xA, precisión de pase y paradas/90. El modo de la tabla no transforma estas tarjetas. La portada no muestra el selector Totales/Por 90 ni su separador; permanece disponible en jugadores, equipos y comparador. Ver ranking abre su misma medida y unidad, orden descendente y filtros limpios; la columna de la tasa queda junto al nombre. Los totales de liga conservan sus sumas y los scores de posición no cambian.
 
 Goles/90 y asistencias/90 usan el recuento y los minutos de su propia fuente. Pases completados/90 conserva la tasa publicada o un total verificado con sus minutos. Paradas/90 es una métrica independiente: recorre los proveedores inequívocamente unidos en el orden de prioridad y usa el primero que tiene tasa publicada o recuento y minutos propios. Por ello, un total ESPN puede acompañarse de una tasa FotMob, con procedencia y muestra separadas. Nunca se dividen paradas ESPN por minutos Understat/FotMob.
 
