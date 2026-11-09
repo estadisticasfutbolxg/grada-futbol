@@ -24,6 +24,34 @@
   }
   return {state:candidate,checked,updated,failed};
  }
+ // Capture dates and retrieval URLs can change without any football data changing.
+ const captureKeys=new Set(['captured_at','imported_at','minutes_captured_at','url']);
+ function canonical(value){
+  if(Array.isArray(value))return value.map(canonical);
+  if(value&&typeof value==='object')return Object.fromEntries(Object.keys(value).filter(k=>!captureKeys.has(k)).sort().map(k=>[k,canonical(value[k])]));
+  return value;
+ }
+ function playerValues(player){
+  return Object.fromEntries(Object.entries(player).filter(([key,value])=>value===null||typeof value!=='object'||['metricContexts','fieldSources'].includes(key)));
+ }
+ function changes(before,after,project=value=>value){
+  const old=new Map(before.map(row=>[String(row.id),row])),added=[],modified=[];
+  for(const row of after){const prior=old.get(String(row.id));if(!prior)added.push(row);else if(JSON.stringify(canonical(project(prior)))!==JSON.stringify(canonical(project(row))))modified.push(row);old.delete(String(row.id));}
+  return {added,modified,removed:[...old.values()]};
+ }
+ function matchCount(data){const n=data?.metadata?.imported_matches;return Number.isInteger(n)&&n>=0?n:null;}
+ function report(before,result){
+  const after=result.state,accepted=result.checked.length>0;
+  const players=changes(before.combined?.players||[],accepted?after.combined?.players||[]:before.combined?.players||[],playerValues);
+  const sources=result.checked.map(key=>{
+   const data=after[key],count=matchCount(data),previous=matchCount(before[key]);
+   const detailed=Array.isArray(data.matches)&&(data.matches.length>0||key==='understat'&&count===0);
+   return {key,players:data.players.length,matches:count,coverageDelta:count!==null&&previous!==null?count-previous:null,
+    matchesChanged:detailed?changes(before[key]?.matches||[],data.matches):null,
+    profiles:key==='fotmob'?data.metadata.profile_enrichment||null:null};
+  });
+  return {players,sources};
+ }
  function captureStore(){
   let connection;
   function open(){
@@ -42,5 +70,5 @@
   }
   return {get:(league,key)=>operation('readonly',league+'|'+key),set:(league,key,value)=>operation('readwrite',league+'|'+key,value)};
  }
- const api={sources,names,validate,refresh,captureStore};if(node)module.exports=api;else root.GradaRefresh=api;
+ const api={sources,names,validate,refresh,report,captureStore};if(node)module.exports=api;else root.GradaRefresh=api;
 })(typeof window==='object'?window:globalThis);

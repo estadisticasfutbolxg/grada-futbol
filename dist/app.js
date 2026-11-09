@@ -386,10 +386,28 @@ async function readProvider(key,league){
   }catch(_){}finally{done++;$('#refresh-status').textContent=league.name+' · FotMob: fichas '+done+'/'+data.players.length;}}}
   await Promise.all([worker(),worker(),worker()]);return GradaFotmob.validate(GradaProfiles.apply(data,profiles,datasets.get(league.id)?.fotmob));
 }
+function showRefreshReport(outcomes,ids){
+  let changed=0,added=0,removed=0;
+  const rows=ids.map(id=>{
+    const outcome=outcomes.find(o=>o.id===id),report=outcome.report,league=GradaLeagues.get(id);
+    const count=report.players.added.length+report.players.modified.length;changed+=count;added+=report.players.added.length;removed+=report.players.removed.length;
+    const coverage=report.sources.map(s=>esc(GradaRefresh.names[s.key])+': '+(s.matches===null?'sin recuento':s.matches+' partidos')+(s.coverageDelta?'<small>'+esc((s.coverageDelta>0?'+':'')+s.coverageDelta)+' en cobertura</small>':'')).join('<br>')||'Se conserva la cobertura anterior';
+    const matchDetails=report.sources.filter(s=>s.matchesChanged).map(s=>{
+      const matches=s.matchesChanged,items=[...matches.added.map(m=>({m,new:true})),...matches.modified.map(m=>({m,new:false}))];
+      return '<p>'+esc(GradaRefresh.names[s.key])+': '+items.length+' partidos con cambios ('+matches.added.length+' nuevos).'+(matches.removed.length?' '+matches.removed.length+' retirados de la captura.':'')+'</p>'+(items.length?'<details><summary>Ver partidos actualizados</summary><ul class="refresh-items">'+items.map(({m,new:isNew})=>'<li>'+esc(m.home)+' — '+esc(m.away)+' · '+esc(m.date)+(isNew?' · nuevo':' · modificado')+'</li>').join('')+'</ul></details>':'');
+    }).join('');
+    const playerDetails=count?'<details><summary>Ver '+count+' jugadores con cambios</summary><ul class="refresh-items">'+[...report.players.added.map(p=>({p,new:true})),...report.players.modified.map(p=>({p,new:false}))].sort((a,b)=>a.p.name.localeCompare(b.p.name,'es')).map(({p,new:isNew})=>'<li>'+esc(p.name)+' · '+esc(p.team)+(isNew?' · nuevo':' · modificado')+'</li>').join('')+'</ul></details>':'';
+    const profileDetails=report.sources.filter(s=>s.profiles).map(s=>'<p>Fichas FotMob verificadas: '+esc(s.profiles.matched)+'/'+esc(s.profiles.requested)+'.'+(s.profiles.matched<s.profiles.requested?' Se conservan los datos anteriores donde no hay ficha válida.':'')+'</p>').join('');
+    return '<tr><th scope="row">'+esc(league.name)+'</th><td>'+count+' ('+report.players.added.length+' nuevos)'+(report.players.removed.length?'<small>'+report.players.removed.length+' retirados</small>':'')+'</td><td>'+coverage+'</td></tr><tr class="refresh-detail"><td colspan="3">'+playerDetails+matchDetails+profileDetails+(!report.sources.some(s=>s.matchesChanged)?'<p>Sin registros por partido en las fuentes validadas; no se puede identificar qué encuentros cambiaron.</p>':'')+'</td></tr>';
+  }).join('');
+  $('#refresh-report-body').innerHTML='<p>Jugadores con cambios compara sus datos con los anteriores; una nueva fecha de consulta no cuenta como cambio. Partidos cubiertos indica el total de temporada por fuente, sin sumar proveedores. Los partidos actualizados se identifican solo cuando hay registros por encuentro.</p><div class="tablewrap"><table><thead><tr><th>Liga</th><th>Jugadores con cambios</th><th>Partidos cubiertos · fuente</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
+  $('#refresh-report').hidden=false;$('#refresh-report').open=true;
+  return 'Jugadores con cambios: '+changed+' ('+added+' nuevos). '+(removed?'Retirados: '+removed+'. ':'');
+}
 async function refreshData(){
   if(refreshing||!loaded)return;
   const scope=currentLeague,ids=isAll()?GradaLeagues.list().filter(l=>datasets.has(l.id)).map(l=>l.id):[currentLeague];
-  refreshing=true;$('#league').disabled=true;updateRefreshButton();
+  refreshing=true;$('#league').disabled=true;$('#refresh-report').hidden=true;updateRefreshButton();
   const outcomes=[];let cursor=0;
   async function worker(){while(cursor<ids.length){
     const id=ids[cursor++],league=GradaLeagues.get(id),state=datasets.get(id);
@@ -397,14 +415,15 @@ async function refreshData(){
       const result=await GradaRefresh.refresh(state,league,{combine:next=>joinSources(next),onProgress:key=>{$('#refresh-status').textContent=league.name+' · consultando '+GradaRefresh.names[key]+'…';},fetchers:{espn:l=>GradaLaLiga.fetchSeason({leagueId:l.id}),fotmob:l=>readProvider('fotmob',l),understat:l=>readProvider('understat',l)}});
       datasets.set(id,result.state);
       const saved=await Promise.all(result.checked.map(key=>captureStore.set(id,key,result.state[key])));
-      outcomes.push({id,...result,saved:saved.every(Boolean)});
-    }catch(_){outcomes.push({id,checked:[],updated:[],failed:GradaRefresh.sources(league),saved:true});}
+      outcomes.push({id,...result,report:GradaRefresh.report(state,result),saved:saved.every(Boolean)});
+    }catch(_){const result={state,checked:[],updated:[],failed:GradaRefresh.sources(league)};outcomes.push({id,...result,report:GradaRefresh.report(state,result),saved:true});}
   }}
   try{
     await Promise.all(Array.from({length:Math.min(2,ids.length)},worker));
     if(outcomes.some(o=>o.checked.length))activateLeague(scope);
     const checked=outcomes.reduce((n,o)=>n+o.checked.length,0),total=ids.reduce((n,id)=>n+GradaRefresh.sources(GradaLeagues.get(id)).length,0),failed=outcomes.flatMap(o=>o.failed.map(key=>GradaLeagues.get(o.id).name+' · '+GradaRefresh.names[key]));
-    $('#refresh-status').textContent='Fuentes consultadas: '+checked+'/'+total+'. '+(checked?'Datos combinados y scores recalculados. ':'')+(failed.length?'Se conservan las capturas anteriores de '+failed.join('; ')+'. ':'')+'Cada fuente mantiene su fecha. '+(outcomes.some(o=>!o.saved)?'No se pudo guardar alguna captura en este navegador.':'Las capturas válidas se guardan en este navegador.');
+    const summary=showRefreshReport(outcomes,ids);
+    $('#refresh-status').textContent='Actualización finalizada. '+summary+'Fuentes consultadas: '+checked+'/'+total+'. '+(checked?'Datos combinados y scores recalculados. ':'')+(failed.length?'Se conservan las capturas anteriores de '+failed.join('; ')+'. ':'')+'Cada fuente mantiene su fecha. '+(outcomes.some(o=>!o.saved)?'No se pudo guardar alguna captura en este navegador.':'Las capturas válidas se guardan en este navegador.');
   }finally{refreshing=false;$('#league').disabled=false;updateRefreshButton();}
 }
 const terms = [
@@ -437,7 +456,7 @@ $('#metric-rules').onclick = e=>{ const button = e.target.closest('[data-rule-re
 $('#clear-metrics').onclick = ()=>{ $('#min-minutes').value = ''; $('#min-goals').value = ''; $('#metric-rules').innerHTML = ''; $('#add-rule').disabled = false; renderTable(); };
 $('#search').oninput = renderTable; $('#teamfilter').onchange = renderTable; $('#allplayers').onclick = ()=>navigate('players'); $('.close').onclick = ()=>$('#detail').close();
 $('#refresh').onclick = () => refreshData();
-$('#league').onchange=()=>{if(refreshing){$('#league').value=currentLeague;return;}$('#refresh-status').textContent='';activateLeague($('#league').value);};
+$('#league').onchange=()=>{if(refreshing){$('#league').value=currentLeague;return;}$('#refresh-status').textContent='';$('#refresh-report').hidden=true;activateLeague($('#league').value);};
 document.addEventListener('pointerdown',()=>interaction++,true);
 document.addEventListener('keydown',()=>interaction++,true);
 async function readCapture(filename,validator){
