@@ -50,6 +50,20 @@ El eje Eficacia vs xGOT es `100 × (1 − goles_sin_autogoles / xGOT_recibido)`,
 
 Los guiones de tablas y fichas explican su causa: dato ausente, definición diferente, minutos insuficientes, muestra xGOT no verificable o falta de ejes. Nunca se sustituyen automáticamente por cero.
 
+## Acceso del propietario
+
+El icono de actualización está en la cabecera. La primera vez, el propietario se identifica con ChatGPT y define en la web una contraseña de 12 a 128 caracteres. No debe enviarla por el chat. Se comprueba el correo verificado de la cuenta propietaria para la vinculación inicial y se fija después su ID estable de este Site; otra cuenta con el mismo correo no puede reemplazarlo. Las visitas públicas siguen consultando las capturas.
+
+`worker/owner.cjs` guarda la configuración de acceso en el objeto privado `owner/config.json` de la vinculación R2 `BUCKET`. Conserva únicamente ID, sal aleatoria, hash PBKDF2-SHA256 (100.000 iteraciones, límite admitido por Workers), versión y fecha. La contraseña no se incluye en código, variables de entorno, respuestas ni almacenamiento del navegador. La configuración inicial es condicional para impedir sobrescrituras concurrentes. Los intentos de desbloqueo tienen límite persistente de 6 por 15 minutos. Si R2 o la configuración fallan, el acceso se deniega.
+
+Sites aporta identidad mediante sus cabeceras autenticadas y gestiona las rutas de entrada/salida. El Worker exige además un desbloqueo de 30 minutos firmado por HMAC en cookie `Secure`, `HttpOnly`, `SameSite=Strict`; comprueba identidad y caducidad en cada consulta de actualización y ficha. Los formularios son POST JSON del mismo origen, de tamaño limitado. Bloquear elimina la cookie de este navegador. La interfaz no contiene una contraseña o hash compartido para autorizar peticiones.
+
+ESPN también pasa ahora por el Worker del mismo origen; se retira su acceso directo del navegador y de la política de conexión. Las tres fuentes conservan restricciones de hosts, redirecciones, temporada, tamaño, validación y caché. La ruta pública de capturas nunca inicia una descarga de proveedor. Configurar `GRADA_OWNER_EMAIL` y `GRADA_OWNER_SESSION_SECRET` como secretos de Sites antes de desplegar; `.env.example` documenta solo los nombres. No se publica ningún valor ni contraseña en GitHub. La previsualización sin estos recursos mantiene lectura y deniega la actualización.
+
+## Permisos de las fuentes · revisión del 9 de noviembre de 2026
+
+El propietario solicita conservar los datos actuales y el Site público mientras gestiona los permisos. Esta decisión no equivale a obtenerlos. [ESPN remite a las condiciones de Disney](https://support.espn.com/hc/en-us/articles/360035445091-Terms-of-Use): [el texto en español](https://disneytermsofuse.com/spanish/) restringe extracción automatizada y reutilización pública sin autorización. [FotMob, condiciones de 22 de octubre de 2026](https://www.fotmob.com/tos.txt), exige consentimiento escrito para extracción, reproducción y redistribución de sus datos. Understat se encuentra en mantenimiento y no se ha podido verificar una licencia para redistribuirlos. Que un dato sea visible gratuitamente o se cite la fuente no concede por sí solo permiso. No se han enviado solicitudes a los proveedores ni confirmado licencias.
+
 ## Generación reproducible
 
 ```sh

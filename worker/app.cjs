@@ -1,6 +1,7 @@
 'use strict';
 const providers=require('./providers.cjs'),leagues=require('../dist/leagues.js');
 const profiles=require('../dist/profiles.js');
+const owner=require('./owner.cjs');
 const running=new Map(),localCache=new Map();
 const rosters=new Map();
 let localBytes=0;
@@ -27,9 +28,9 @@ function sharedCache(){
   }
  };
 }
-function json(body,status=200,headers={}){return new Response(JSON.stringify(body),{status,headers:{'Content-Type':'application/json; charset=utf-8','X-Content-Type-Options':'nosniff',...headers}});}
+function json(body,status=200,headers={}){return new Response(JSON.stringify(body),{status,headers:{'Content-Type':'application/json; charset=utf-8','X-Content-Type-Options':'nosniff','Cache-Control':'no-store',...headers}});}
 function apiKey(origin,source,league){return origin+'/api/source/'+source+'?league='+league;}
-function validSource(source,league){return Number.isInteger(league.fotmobId)&&['fotmob','understat'].includes(source)&&(source!=='understat'||league.primary==='Understat');}
+function validSource(source,league){return Number.isInteger(league.fotmobId)&&['espn','fotmob','understat'].includes(source)&&(source!=='understat'||league.primary==='Understat');}
 async function rosterPlayer(origin,league,playerId,assets,cache){
  const response=await cache.match(apiKey(origin,'fotmob',league.id)),asset=assets['/downloads/fotmob-'+league.id+'-2026-27.json'],tag=response?.ok?response.headers.get('X-Grada-Checked-At'):asset?.sha,key=league.id+'|'+tag;
  if(!rosters.has(key)){
@@ -55,20 +56,22 @@ async function refresh(key,source,league,{cache,fetcher,now}){
  const job=(async()=>{
   const checkedAt=new Date(now()).toISOString();let result;
   try{
-   const payload=await (source==='fotmob'?providers.fetchFotmob:providers.fetchUnderstat)(league.id,{fetcher,now:()=>new Date(now()).toISOString()});
+   const payload=await ({fotmob:providers.fetchFotmob,understat:providers.fetchUnderstat,espn:providers.fetchEspn}[source])(league.id,{fetcher,now:()=>new Date(now()).toISOString()});
    result=json(payload,200,{'Cache-Control':'public, max-age=86400','X-Grada-Checked-At':checkedAt});
-  }catch(_){result=json({error:'No se pudo validar una captura nueva de '+(source==='fotmob'?'FotMob':'Understat')+'. Se conserva la captura anterior.'},503,{'Cache-Control':'public, max-age=120','Retry-After':'120','X-Grada-Checked-At':checkedAt});}
+  }catch(_){result=json({error:'No se pudo validar una captura nueva de '+({fotmob:'FotMob',understat:'Understat',espn:'ESPN'}[source])+'. Se conserva la captura anterior.'},503,{'Cache-Control':'public, max-age=120','Retry-After':'120','X-Grada-Checked-At':checkedAt});}
   // Cache only validated payloads or bounded failure responses. No client data is written.
   await cache.put(result.ok?key:key+'&failure=1',result.clone());return result;
  })();running.set(key,job);
  try{return (await job).clone();}finally{running.delete(key);}
 }
 function snapshot(path){
+ const espn=leagues.list().find(league=>path==='/downloads/'+league.espnFile);if(espn)return {source:'espn',league:espn};
  const m=path.match(/^\/downloads\/(fotmob|understat)-([a-z-]+)-2026-27\.json$/);if(!m)return null;
  try{const league=leagues.get(m[2]);return validSource(m[1],league)?{source:m[1],league}:null;}catch(_){return null;}
 }
-async function handle(request,assets,{cache=sharedCache(),fetcher=fetch,now=Date.now}={}){
+async function handle(request,assets,{cache=sharedCache(),fetcher=fetch,now=Date.now,env={}}={}){
  const url=new URL(request.url);
+ if(url.pathname.startsWith('/api/owner/'))return owner.handle(request,env,now);
  if(url.pathname.startsWith('/api/')){
   if(request.method!=='GET')return json({error:'Método no permitido.'},405,{Allow:'GET'});
   const origin=request.headers.get('Origin'),site=request.headers.get('Sec-Fetch-Site');
@@ -76,13 +79,15 @@ async function handle(request,assets,{cache=sharedCache(),fetcher=fetch,now=Date
   if(url.pathname==='/api/player/fotmob'){
    const params=[...url.searchParams];if(params.length!==2||url.searchParams.getAll('league').length!==1||url.searchParams.getAll('player').length!==1||!/^\d{1,12}$/.test(url.searchParams.get('player')||''))return json({error:'Consulta no permitida.'},400);
    let league;try{league=leagues.get(url.searchParams.get('league'));if(!validSource('fotmob',league))throw new Error();}catch(_){return json({error:'Liga no admitida.'},400);}
-   try{const player=await rosterPlayer(url.origin,league,url.searchParams.get('player'),assets,cache);if(!player)return json({error:'Jugador fuera de la plantilla verificada.'},400);return await playerResponse(url,league,player,cache,fetcher,now);}catch(_){return json({error:'No se pudo verificar la ficha.'},503);}
+   const denied=await owner.requireOwner(request,env,now);if(denied)return denied;
+   try{const player=await rosterPlayer(url.origin,league,url.searchParams.get('player'),assets,cache);if(!player)return json({error:'Jugador fuera de la plantilla verificada.'},400);return privateResponse(await playerResponse(url,league,player,cache,fetcher,now));}catch(_){return json({error:'No se pudo verificar la ficha.'},503);}
   }
-  const route=url.pathname.match(/^\/api\/source\/(fotmob|understat)$/),params=[...url.searchParams];
+  const route=url.pathname.match(/^\/api\/source\/(espn|fotmob|understat)$/),params=[...url.searchParams];
   if(!route||params.length!==1||params[0][0]!=='league')return json({error:'Consulta no permitida.'},400);
   let league;try{league=leagues.get(params[0][1]);}catch(_){return json({error:'Liga no admitida.'},400);}
   if(!validSource(route[1],league))return json({error:'Fuente no usada en esta liga.'},400);
-  try{return await refresh(apiKey(url.origin,route[1],league.id),route[1],league,{cache,fetcher,now});}catch(_){return json({error:'No se pudo completar la consulta. Se conserva la captura anterior.'},503,{'Retry-After':'120'});}
+  const denied=await owner.requireOwner(request,env,now);if(denied)return denied;
+  try{return privateResponse(await refresh(apiKey(url.origin,route[1],league.id),route[1],league,{cache,fetcher,now}));}catch(_){return json({error:'No se pudo completar la consulta. Se conserva la captura anterior.'},503,{'Retry-After':'120'});}
  }
  if(!['GET','HEAD'].includes(request.method))return new Response('Método no permitido.',{status:405,headers:{Allow:'GET, HEAD'}});
  const path=url.pathname==='/'?'/index.html':url.pathname,asset=assets[path];
@@ -95,4 +100,5 @@ async function handle(request,assets,{cache=sharedCache(),fetcher=fetch,now=Date
  const bytes=Uint8Array.from(atob(asset.gzip),c=>c.charCodeAt(0)),body=new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
  return new Response(body,{headers});
 }
+function privateResponse(response){const result=new Response(response.body,response);result.headers.set('Cache-Control','private, no-store');result.headers.set('Vary','Cookie, oai-authenticated-user-id');return result;}
 module.exports={handle,apiKey};

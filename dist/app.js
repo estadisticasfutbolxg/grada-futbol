@@ -386,7 +386,7 @@ function applyData(next) {
   renderTerms(); navigate(view,false,true);
 }
 function updateRefreshButton(){
-  $('#refresh').disabled=!loaded||refreshing;$('#refresh').textContent=refreshing?'Actualizando…':isAll()?'↻ Actualizar datos · todas':'↻ Actualizar datos';
+  const button=$('#refresh');button.disabled=!loaded||refreshing;button.classList.toggle('is-refreshing',refreshing);button.setAttribute('aria-busy',String(refreshing));button.title=refreshing?'Actualizando datos…':'Actualizar datos · acceso del propietario';
 }
 function updateLeagueOptions(){
   const available=GradaLeagues.list().filter(l=>datasets.has(l.id));
@@ -443,7 +443,7 @@ async function refreshData(){
   async function worker(){while(cursor<ids.length){
     const id=ids[cursor++],league=GradaLeagues.get(id),state=datasets.get(id);
     try{
-      const result=await GradaRefresh.refresh(state,league,{combine:next=>joinSources(next),onProgress:key=>{$('#refresh-status').textContent=league.name+' · consultando '+GradaRefresh.names[key]+'…';},fetchers:{espn:l=>GradaLaLiga.fetchSeason({leagueId:l.id}),fotmob:l=>readProvider('fotmob',l),understat:l=>readProvider('understat',l)}});
+      const result=await GradaRefresh.refresh(state,league,{combine:next=>joinSources(next),onProgress:key=>{$('#refresh-status').textContent=league.name+' · consultando '+GradaRefresh.names[key]+'…';},fetchers:{espn:l=>readProvider('espn',l),fotmob:l=>readProvider('fotmob',l),understat:l=>readProvider('understat',l)}});
       datasets.set(id,result.state);
       const saved=await Promise.all(result.checked.map(key=>captureStore.set(id,key,result.state[key])));
       outcomes.push({id,...result,report:GradaRefresh.report(state,result),saved:saved.every(Boolean)});
@@ -471,7 +471,7 @@ const terms = [
   ['Centros del campo y delantera',GradaSquads.definition+' Los perfiles describen acciones y pueden solaparse; no identifican una posición detallada ni valoran el sistema táctico completo.'],
   ['Pases rompelíneas y métricas FotMob',descriptions.lineBreakingPasses+' '+descriptions.shotsOnTargetPer90+' '+descriptions.chancesCreated+' Más métricas disponibles en la ficha y en Añadir otra métrica; no todas las páginas publican todos los jugadores.'],
   ['Radar estadístico','Percentiles frente a jugadores de la misma posición: mínimo 450 minutos, o 180 para porteros (2 PJ si no hay minutos). Cada eje exige al menos cinco referencias; el gráfico necesita tres ejes. Los volúmenes usan /90 o /PJ según su etiqueta. En goles recibidos menos es mejor; el resto de ejes aumenta con el valor. Son estadísticas disponibles, no una valoración física.'],
-  ['Actualizar datos','Consulta ESPN, FotMob y Understat cuando esa fuente se usa en la liga seleccionada. FotMob y Understat se consultan desde el servidor de GRADA, con caché breve. Cada captura se valida antes de combinar. Si falla una fuente se conserva su captura y fecha anterior. Las capturas válidas se guardan en este navegador y los scores se recalculan sin cambiar su fórmula.']
+  ['Actualizar datos','Consulta ESPN, FotMob y Understat cuando esa fuente se usa en la liga seleccionada. Las tres fuentes se consultan desde el servidor de GRADA, con caché breve. Solo el propietario identificado puede iniciar una actualización, tras desbloquearla con su contraseña. Cada captura se valida antes de combinar. Si falla una fuente se conserva su captura y fecha anterior. Las capturas válidas se guardan en este navegador y los scores se recalculan sin cambiar su fórmula.']
 ];
 function renderTerms(){ $('#terms').innerHTML = terms.map((item,i)=>{let t=[...item];if(t[0].startsWith('xG ·'))t[1]=description('xg');if(t[0]==='xA derivada de tiros')t=['xA · Asistencias esperadas',description('xa')];return t;}).map((t,i)=>'<article class="panel"><span class="badge">'+String(i+1).padStart(2,'0')+'</span><h2 class="detailtitle">'+esc(t[0])+'</h2><p>'+esc(t[1])+'</p></article>').join(''); }
 $('#ranking-profile').innerHTML=[['player','Jugadores'],['team','Equipos']].map(([kind,label])=>'<optgroup label="'+label+'">'+GradaRadar.rankingDefinitions.filter(d=>d.kind===kind).map(d=>'<option value="'+d.key+'">'+esc(d.label)+'</option>').join('')+'</optgroup>').join('');
@@ -489,7 +489,8 @@ $('#metric-rules').oninput = renderTable; $('#metric-rules').onchange = renderTa
 $('#metric-rules').onclick = e=>{ const button = e.target.closest('[data-rule-remove]'); if (button) { button.closest('.metric-rule').remove(); $('#add-rule').disabled = false; renderTable(); } };
 $('#clear-metrics').onclick = ()=>{ $('#min-minutes').value = ''; $('#min-goals').value = ''; $('#metric-rules').innerHTML = ''; $('#add-rule').disabled = false; renderTable(); };
 $('#search').oninput = renderTable; $('#teamfilter').onchange = renderTable; $('#allplayers').onclick = ()=>navigate('players'); $('.close').onclick = ()=>$('#detail').close();
-$('#refresh').onclick = () => refreshData();
+GradaOwner.init({onRefresh:refreshData});
+$('#refresh').onclick = () => GradaOwner.open();
 $('#league').onchange=()=>{if(refreshing){$('#league').value=currentLeague;return;}$('#refresh-status').textContent='';$('#refresh-report').hidden=true;activateLeague($('#league').value);};
 document.addEventListener('pointerdown',()=>interaction++,true);
 document.addEventListener('keydown',()=>interaction++,true);

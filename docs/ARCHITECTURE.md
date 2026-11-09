@@ -15,7 +15,7 @@ StatsBomb Open Data (JSON de partidos, alineaciones y eventos)
           líderes, filtros, perfiles y comparación
 ```
 
-El navegador usa los datos de `dist/data.js` ya cargados. SQLite se genera como artefacto y ya no tiene enlace en la interfaz. El Worker sirve las capturas y permite consultas de lectura a proveedores; el navegador conserva las actualizaciones en IndexedDB. No hay autenticación propia ni datos de visitantes escritos públicamente. El diagrama anterior describe el archivo histórico StatsBomb; el flujo actual está en [REFRESH.md](REFRESH.md).
+El navegador usa los datos de `dist/data.js` ya cargados. SQLite se genera como artefacto y ya no tiene enlace en la interfaz. El Worker sirve las capturas y permite consultas de lectura a proveedores; el navegador conserva las actualizaciones en IndexedDB. Sites identifica al propietario; el desbloqueo adicional por contraseña se comprueba en el Worker y se conserva durante 30 minutos en una cookie firmada. La configuración del propietario se guarda en R2 privado. No hay escrituras públicas de visitantes. El diagrama anterior describe el archivo histórico StatsBomb; el flujo actual está en [REFRESH.md](REFRESH.md).
 
 ## Responsabilidades
 
