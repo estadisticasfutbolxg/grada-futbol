@@ -29,3 +29,5 @@ th .column-head button{white-space:nowrap}.column-info{border:0;background:trans
 .ranking-heading,.ranking-chart{margin-top:28px}
 
 .weight-detail{display:block;color:#68717b;font-size:11px;font-weight:400;line-height:1.6;margin-top:3px}
+
+.refresh-report{margin:12px 0 20px;border:1px solid var(--line);border-radius:6px;padding:14px;background:var(--panel);font-size:12px}.refresh-report>summary{cursor:pointer;font-weight:600;color:#1768a4}.refresh-report p{font-size:12px;line-height:1.6;margin:10px 0;color:var(--muted)}.refresh-report table{margin-top:12px}.refresh-report th[scope=row]{white-space:normal;background:var(--panel);font-size:12px;font-weight:600}.refresh-report td{vertical-align:top;white-space:normal;min-width:150px}.refresh-report td small{display:block;color:var(--muted);font-size:11px;margin:3px 0}.refresh-report .refresh-detail td{padding-top:8px;padding-bottom:14px}.refresh-report details summary{cursor:pointer;padding:6px 0}.refresh-items{max-height:240px;overflow:auto;padding-left:22px;line-height:1.8;overflow-wrap:anywhere}.refresh-report[hidden]{display:none}

@@ -12,6 +12,10 @@ La caché de servidor con nombre es opcional; Sites puede denegar Cache API. No 
 
 El navegador valida fuente, ID, club, temporada, fechas y cobertura antes de combinar. Guarda capturas válidas en IndexedDB; conserva los datos de las fuentes y fichas que fallen, con sus fechas y denominadores originales. La clasificación y los filtros siguen utilizables durante la consulta. Los datos individuales publicados permanecen como capturas de respaldo. La copia de cada navegador puede contener una actualización más reciente que la del paquete inicial.
 
+Al finalizar se abre un resumen por liga: jugadores con cambios, nuevos y retirados, con lista de nombres/equipos, y cobertura de partidos por proveedor. Cada jugador combinado cuenta una vez en su liga aunque lo consulten varias fuentes. Se comparan valores y contextos estadísticos; una fecha de captura o URL nueva no cuenta por sí sola. El resumen indica las fichas verificadas y las que conservan datos anteriores. Las fuentes fallidas no se cuentan como actualizadas.
+
+ESPN/FotMob no proporcionan una lista de partidos en estos adaptadores: se informa de su recuento de temporada y variación de cobertura, que no equivale a partidos individualmente modificados. Understat permite comparar encuentros por ID y listar nuevos/modificados, incluidos cambios de marcador o xG. Un recuento no disponible permanece desconocido. Las fuentes no se suman entre sí para contar partidos. El resumen corresponde a la última actualización de esa sesión y se limpia al cambiar de liga.
+
 ## Score de jugador y de equipo
 
 Score de jugador renombra el área normalizada del radar, entre 0 y 1, con referencia fija por posición/perfil y ámbito. La fórmula geométrica no cambia. Los rankings de una métrica concreta se ordenan por esa métrica; los rankings generales y las posiciones usan score. La actualización conserva la columna y dirección seleccionadas.

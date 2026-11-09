@@ -51,3 +51,5 @@ Señala errores reproducibles de cifras, denominadores, cobertura, periodos, asi
 ## Entrega
 
 Documenta resultado, comprobaciones reales, límites y siguiente paso en la tarea. Distingue: cambio local, commit local, push confirmado, PR, merge y despliegue confirmado. Un ZIP o un commit local no demuestra una subida. No repitas indefinidamente una escritura que queda pendiente; registra el bloqueo y entrega los archivos revisables.
+
+Al terminar cualquier actualización de datos, comunica los jugadores y partidos actualizados. Distingue jugadores nuevos/modificados de una nueva fecha de captura, y partidos individuales cambiados de la cobertura agregada de temporada. Incluye liga, fuente y fallos conservados; si una fuente no permite identificar partidos concretos, indícalo sin inventar un recuento.
