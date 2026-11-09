@@ -74,3 +74,10 @@ test('reviewed Mbappe identities bridge full-name variants and retain primary va
  f.players[0].team_id='2';assert.equal(combine(u,e,f).players[0].tackles,null);f.players[0].team_id='1';
  f.players[0].pos='POR';assert.equal(combine(u,e,f).players[0].tackles,null);
 });
+test('saves per 90 chooses a verified source cohort without mixing the ESPN total and another provider minutes',()=>{
+ const {u,e}=fixture(),f=fotmobFixture(u);f.players[0].metricContexts.saves.minutes=600;
+ let p=combine(u,e,f).players[0];assert.equal(p.saves,12);assert.equal(p.fieldSources.saves,'ESPN');assert(Math.abs(metric(p,'savesPer90')-99*90/600)<1e-12);assert.equal(p.metricContexts.savesPer90.source,'FotMob');assert.equal(p.metricContexts.savesPer90.minutes,600);assert.equal(p.metricContexts.savesPer90.captured_at,f.metadata.imported_at);
+ f.players[0].metricContexts.saves.reportedPer90=14.9;p=combine(u,e,f).players[0];assert.equal(metric(p,'savesPer90'),14.9);assert.equal(metric(p,'savesPer90','90'),14.9);
+ delete f.players[0].metricContexts.saves.reportedPer90;f.players[0].saves=0;p=combine(u,e,f).players[0];assert.equal(metric(p,'savesPer90'),0);assert.equal(p.saves,12);
+ f.players[0].name='Unmatched test record';p=combine(u,e,f).players[0];assert.equal(metric(p,'savesPer90'),null);assert.equal(p.minutes,180);assert.equal(p.saves,12);
+});

@@ -26,6 +26,14 @@ La misma ponderación se usa para cada bloque, incluidos defensa (DEF), delanter
 
 Los totales de asistencias y paradas muestran la suma publicada y su cobertura aunque falten algunos registros. Un subtotal parcial no se presenta como cobertura completa ni se completa con ceros.
 
+## Líderes de portada por 90 minutos
+
+La portada ofrece nueve tarjetas con unidades fijas: goles totales, goles/90, pases completados/90, asistencias totales, asistencias/90, xG, xA, precisión de pase y paradas/90. El modo de la tabla no transforma estas tarjetas. Ver ranking abre su misma medida y unidad, orden descendente y filtros limpios; la columna de la tasa queda junto al nombre. Los totales de liga conservan sus sumas y los scores de posición no cambian.
+
+Goles/90 y asistencias/90 usan el recuento y los minutos de su propia fuente. Pases completados/90 conserva la tasa publicada o un total verificado con sus minutos. Paradas/90 es una métrica independiente: recorre los proveedores inequívocamente unidos en el orden de prioridad y usa el primero que tiene tasa publicada o recuento y minutos propios. Por ello, un total ESPN puede acompañarse de una tasa FotMob, con procedencia y muestra separadas. Nunca se dividen paradas ESPN por minutos Understat/FotMob.
+
+Cada fila de una tasa muestra los minutos de su muestra. Los mínimos iniciales editables son 450 minutos para las tasas de juego de campo y 180 para paradas. Se aplican a los minutos propios de esa tasa y se comparten entre portada y su ranking completo; los totales no reciben este corte. Pueden ajustarse desde la portada y el ranking, o ponerse a cero para ver todas las muestras. La tabla indica el criterio activo; navegar a otra vista, posición o unidad sale de esa selección de líderes. Sin minutos positivos ni tasa publicada, la tasa queda desconocida y no entra en el ranking; un cero real se conserva. No se imputan minutos de otra fuente ni se reconstruyen totales a partir de tasas redondeadas.
+
 ## Fichas FotMob y valores ausentes
 
 Las fichas verificadas por ID y club añaden pases completados totales y otras cifras publicadas, además de posiciones amplias. Una ficha cuya competición/temporada no coincide puede aportar únicamente la posición explícita; sus estadísticas numéricas no se mezclan. Los intentos de pase no se reconstruyen de porcentajes redondeados. Los pases progresivos y rompelíneas siguen siendo conceptos distintos.
