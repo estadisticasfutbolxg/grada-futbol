@@ -1,9 +1,19 @@
 'use strict';
 const providers=require('./providers.cjs'),leagues=require('../dist/leagues.js');
 const profiles=require('../dist/profiles.js');
+const fotmob=require('../dist/fotmob.js');
 const owner=require('./owner.cjs');
 const running=new Map(),localCache=new Map();
 const rosters=new Map();
+const decodedAssets=new WeakMap();
+function assetJSON(asset){
+ if(!decodedAssets.has(asset)){
+  const bytes=Uint8Array.from(atob(asset.gzip),c=>c.charCodeAt(0));
+  const value=new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'))).json();
+  decodedAssets.set(asset,value);value.catch(()=>decodedAssets.delete(asset));
+ }
+ return decodedAssets.get(asset);
+}
 let localBytes=0;
 // Sites can deny the default Cache API. Caching must never gate source assets.
 function sharedCache(){
@@ -93,7 +103,18 @@ async function handle(request,assets,{cache=sharedCache(),fetcher=fetch,now=Date
  const path=url.pathname==='/'?'/index.html':url.pathname,asset=assets[path];
  if(!asset)return new Response('No encontrado.',{status:404});
  const source=snapshot(path);
- if(source){const cached=await cache.match(apiKey(url.origin,source.source,source.league.id));if(cached?.ok)return request.method==='HEAD'?new Response(null,{headers:cached.headers}):cached;}
+ if(source&&url.searchParams.get('capture')!=='published'){
+  const cached=await cache.match(apiKey(url.origin,source.source,source.league.id));
+  if(cached?.ok){
+   if(source.source!=='fotmob')return request.method==='HEAD'?new Response(null,{headers:cached.headers}):cached;
+   try{
+    const current=fotmob.validate(await cached.json()),published=fotmob.validate(await assetJSON(asset));
+    const newer=Date.parse(current.metadata.imported_at)>Date.parse(published.metadata.imported_at);
+    const restored=fotmob.validate(profiles.restore(newer?current:published,newer?published:current));
+    return request.method==='HEAD'?new Response(null,{headers:json(null).headers}):json(restored);
+   }catch(_){/* Invalid cached data must not hide the verified published capture. */}
+  }
+ }
  const headers={'Content-Type':asset.type,'X-Content-Type-Options':'nosniff','Referrer-Policy':'no-referrer','Cache-Control':asset.type.startsWith('text/html')?'no-store':'public, max-age=300',ETag:'"'+asset.sha+'"'};
  if(request.headers.get('If-None-Match')===headers.ETag)return new Response(null,{status:304,headers});
  if(request.method==='HEAD')return new Response(null,{headers});

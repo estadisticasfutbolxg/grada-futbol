@@ -27,7 +27,7 @@
  function describe(record){
   const r=record.positionResolution;if(!r)return 'Posición publicada: '+(labels[record.pos]||record.pos)+'.';
   const agreeing=Object.entries(r.alternatives).filter(([source,pos])=>pos===r.position&&(r.reportedPositions?.[source]?.length||1)===1).map(([s])=>s);
-  return 'Posición: '+(labels[r.position]||r.position)+'. '+(r.method==='source_consensus'?'Coinciden '+agreeing.join(' y ')+'. ':'Fuente de posición: '+r.source+'. ')+(r.conflicting?'Etiquetas publicadas: '+Object.entries(r.alternatives).map(([s,p])=>s+' '+(r.reportedPositions?.[s]?.join('/')||p)).join('; ')+'. ':'');
+  return 'Posición: '+(labels[r.position]||r.position)+'. '+(r.method==='source_consensus'?'Coinciden '+agreeing.join(' y ')+'. ':'Fuente de posición: '+r.source+'. ')+(r.conflicting?'Etiquetas publicadas: '+Object.entries(r.alternatives).map(([s,p])=>s+' '+(r.reportedPositions?.[s]?.join('/')||p)).join('; ')+'. ':'')+(r.context?.retained_from?'Posición de '+r.source+' conservada de una captura anterior; la nueva no aporta una posición posterior conocida. ':'');
  }
  const api={labels,fromFotmob,fromUnderstat,resolve,describe};
  if(typeof module==='object'&&module.exports)module.exports=api;else root.GradaPositions=api;

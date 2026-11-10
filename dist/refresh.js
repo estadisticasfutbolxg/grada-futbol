@@ -1,12 +1,18 @@
 (function(root){
  'use strict';
  const node=typeof module==='object'&&module.exports,leagues=node?require('./leagues.js'):root.GradaLeagues;
+ const profiles=node?require('./profiles.js'):root.GradaProfiles;
  const validators=node?{espn:require('./laliga.js').validate,fotmob:require('./fotmob.js').validate,understat:require('./understat.js').validate}:{espn:root.GradaLaLiga.validate,fotmob:root.GradaFotmob.validate,understat:root.GradaUnderstat.validate};
  const names={espn:'ESPN',fotmob:'FotMob',understat:'Understat'};
  function sources(league){return ['espn','fotmob',...(league.primary==='Understat'?['understat']:[])];}
  function validate(value,key,league,{now=Date.now()}={}){
   const next=validators[key](value),meta=next.metadata;
   if(meta.source!==names[key]||leagues.resolve(meta).id!==league.id||Date.parse(meta.imported_at)>now+300000)throw new Error('Fuente, liga o fecha incorrecta.');return next;
+ }
+ function selectCapture(current,candidate,key,league){
+  const next=validate(candidate,key,league),newer=Date.parse(next.metadata.imported_at)>Date.parse(current.metadata.imported_at);
+  const selected=newer?next:current,backup=newer?current:next;
+  return key==='fotmob'?validate(profiles.restore(selected,backup),key,league):selected;
  }
  async function refresh(state,league,{fetchers,combine,onProgress=()=>{}}){
   const keys=sources(league),results=await Promise.allSettled(keys.map(async key=>{onProgress(key);return validate(await fetchers[key](league),key,league);}));
@@ -70,5 +76,5 @@
   }
   return {get:(league,key)=>operation('readonly',league+'|'+key),set:(league,key,value)=>operation('readwrite',league+'|'+key,value)};
  }
- const api={sources,names,validate,refresh,report,captureStore};if(node)module.exports=api;else root.GradaRefresh=api;
+ const api={sources,names,validate,selectCapture,refresh,report,captureStore};if(node)module.exports=api;else root.GradaRefresh=api;
 })(typeof window==='object'?window:globalThis);

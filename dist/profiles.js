@@ -66,5 +66,39 @@
   });
   return {...data,metadata:{...data.metadata,notes:(data.metadata.notes||'').replace(/ Fichas individuales verificadas.*$/,'')+' Fichas individuales verificadas añaden totales publicados y xGOT recibido con datos del portero y autogoles comprobados.',profile_enrichment:{requested:data.players.length,downloaded:profiles.length,matched,retained_profile_fields:retained,imported_at:profiles.map(p=>p.captured_at).sort()[0]||null,definition:'Fichas FotMob con ID, club, liga y temporada verificados. Pases completados publicados; sin reconstruir intentos de pase. xG a puerta desde mapas completos; xGOT desde goles evitados y goles sin autogoles comprobados, o mapa completo.'}},players};
  }
- const api={parse,apply};if(node)module.exports=api;else root.GradaProfiles=api;
+ // An aggregate capture and its individual profiles have separate timestamps.
+ // A newer aggregate must not erase evidence absent from that response.
+ function restore(data,previous){
+  if(!previous)return data;
+  let sameLeague=false;try{sameLeague=leagues.resolve(data.metadata).id===leagues.resolve(previous.metadata).id;}catch(_){}
+  if(!sameLeague||data.metadata.source!=='FotMob'||previous.metadata.source!=='FotMob'||data.metadata.season_id!==previous.metadata.season_id||data.metadata.league_id!==previous.metadata.league_id)return data;
+  const oldById=new Map(previous.players.map(p=>[String(p.id),p]));let fields=0,positionsRetained=0;
+  const players=data.players.map(player=>{
+   const prior=oldById.get(String(player.id));
+   if(!prior||String(prior.team_id)!==String(player.team_id)||player.pos!=='—'&&prior.pos!=='—'&&(player.pos==='POR')!==(prior.pos==='POR'))return player;
+   const next={...player,metricContexts:{...player.metricContexts}},restored=new Set();
+   for(const key of allowed){
+    const context=prior.metricContexts?.[key],current=next.metricContexts[key],value=prior[key];
+    if(context?.source!=='FotMob'||context.profileVerified!==true||!Number.isFinite(value)||key!=='prevented'&&value<0)continue;
+    const newer=Date.parse(context.captured_at)>Date.parse(current?.captured_at||data.metadata.imported_at);
+    if(next[key]===null||next[key]===undefined||newer){next[key]=value;next.metricContexts[key]={...context};restored.add(key);fields++;}
+   }
+   const newerPosition=prior.positionContext?.identityVerified===true&&Date.parse(prior.positionContext.captured_at)>Date.parse(player.positionContext?.captured_at||data.metadata.imported_at);
+   if(Object.hasOwn(positions.labels,prior.pos)&&(next.pos==='—'||newerPosition)){
+    next.pos=prior.pos;next.positionContext={...prior.positionContext,retained_from:previous.metadata.imported_at};positionsRetained++;
+   }
+   if(Array.isArray(prior.nameAliases))next.nameAliases=[...new Set([player.name,...(Array.isArray(player.nameAliases)?player.nameAliases:[]),...prior.nameAliases].filter(n=>typeof n==='string'&&n.trim()&&n.length<=250))].slice(0,8);
+   // Do not leave a derived value describing the sample that was replaced.
+   for(const [key,denominator] of [['delta','xg'],['conversion','shots']])if(restored.has('goals')||restored.has(denominator)){
+    const a=next.metricContexts.goals,b=next.metricContexts[denominator];
+    const paired=a&&b&&a.captured_at===b.captured_at&&a.minutes===b.minutes&&a.matches===b.matches;
+    next[key]=paired&&Number.isFinite(next.goals)&&Number.isFinite(next[denominator])?(key==='delta'?next.goals-next.xg:next.shots>0?next.goals/next.shots*100:null):null;
+    delete next.metricContexts[key];
+    if(next[key]!==null){next.metricContexts[key]={...b,reportedValue:false,derived:'profile_counts'};delete next.metricContexts[key].reportedPer90;}
+   }
+   return next;
+  });
+  return {...data,players,metadata:{...data.metadata,capture_recovery:{fields,positions:positionsRetained,from:previous.metadata.imported_at,definition:'Se conservan posiciones conocidas y campos de fichas verificadas para el mismo ID y club, liga y temporada. Cada campo mantiene su fecha y muestra originales.'}}};
+ }
+ const api={parse,apply,restore};if(node)module.exports=api;else root.GradaProfiles=api;
 })(typeof window==='object'?window:globalThis);
