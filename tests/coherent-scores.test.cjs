@@ -60,3 +60,9 @@ test('published zero metrics and a zero score remain valid in ranking and weight
   assert.equal(scores.build(data,{referencePlayers:references}).players.get(p).score,null,'absence is distinct from a published zero');
  }
 });
+test('pending score explanations identify the missing metric or its own insufficient provider sample',()=>{
+ const data=fixture(),p=data.players.find(p=>p.pos==='DEL');p.metricContexts={dribblesPer90:{source:'FotMob',minutes:434,matches:8}};
+ let profile=scores.build(data).players.get(p);assert.equal(profile.score,null);assert.deepEqual(profile.insufficientSamples.map(a=>a.key),['dribblesPer90']);assert.match(radar.explain(profile),/FotMob · 434 min/);assert.match(radar.explain(profile),/450/);
+ p.metricContexts.dribblesPer90.minutes=600;p.dribblesPer90=null;profile=scores.build(data).players.get(p);assert.equal(profile.score,null);assert.match(radar.explain(profile),/Faltan métricas publicadas: Regates logrados/);assert.match(radar.explain(profile),/ceros reales sí se incluyen/);
+ p.dribblesPer90=0;profile=scores.build(data).players.get(p);assert.notEqual(profile.score,null);assert.match(radar.explain(profile),/ceros publicados cuentan/);
+});

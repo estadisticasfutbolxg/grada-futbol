@@ -54,9 +54,13 @@ test('position consensus fixes the same player without using his metrics or chan
  const conflict=positions.resolve(sources,'Understat');assert.equal(conflict.position,'DEL');assert.equal(conflict.method,'profile_position');assert.equal(conflict.uncertain,true);
  assert.equal(positions.resolve({Understat:{pos:'MED'},ESPN:{pos:'DEL'}},'Understat').position,'MED');
  assert.equal(positions.resolve({FotMob:{pos:'—'},ESPN:{pos:'DEF'}},'FotMob').position,'DEF');
+ const mixed=positions.resolve({Understat:{pos:'DEF',positions:['DEF','MED']},ESPN:{pos:'DEF'},FotMob:{pos:'MED'}},'Understat');
+ assert.equal(mixed.position,'MED');assert.equal(mixed.method,'profile_position');assert(mixed.uncertain);assert(positions.describe({positionResolution:mixed}).includes('Understat DEF/MED'));
+ const supported=positions.resolve({Understat:{pos:'MED',positions:['MED','DEL']},ESPN:{pos:'DEL'}},'Understat');assert.equal(supported.position,'DEL');assert.equal(supported.method,'supported_position');
 });
 test('position keys preserve multi-position source evidence and recognize winger, wingback and keeper aliases',()=>{
  assert.deepEqual(positions.fromUnderstat('M F M S'),['MED','DEL']);
  for(const[key,pos]of [['keeper_long','POR'],['left_wing_back','DEF'],['right-back','DEF'],['central_midfielder','MED'],['leftwinger','DEL']])assert.equal(positions.fromFotmob({key}),pos);
  assert.equal(positions.fromFotmob({key:'unknown'}),'—');assert.equal(positions.fromFotmob({label:'Attacker'}),'DEL');
+ assert.equal(positions.fromFotmob({key:'attacker'}),'DEL');assert.equal(positions.fromFotmob({key:'constructor',label:'constructor'}),'—');assert.deepEqual(positions.fromUnderstat('constructor __proto__ M F'),['MED','DEL']);
 });

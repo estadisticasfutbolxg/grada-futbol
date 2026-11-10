@@ -75,12 +75,14 @@
       values.push({key,label,value,percentile:percentile(value,sample,lower),lowerBetter:!!lower,referenceCount:sample.length,source:metrics.context(player,key)?.source||null});
     }
     const visible=values.length>=3?values:[],area=relativeArea(visible.map(a=>a.percentile));
-    const sampleEnough=baseEligible(player,player.pos,plan.minimum)&&values.every(a=>{
+    const insufficientSamples=values.flatMap(a=>{
       const c=metrics.context(player,a.key),minutes=c&&Object.hasOwn(c,'minutes')?c.minutes:player.minutes,matches=c&&Object.hasOwn(c,'matches')?c.matches:player.matches;
-      return Number.isFinite(minutes)?minutes>=plan.minimum:player.pos==='POR'&&Number.isFinite(matches)&&matches>=2;
+      const enough=Number.isFinite(minutes)?minutes>=plan.minimum:player.pos==='POR'&&Number.isFinite(matches)&&matches>=2;
+      return enough?[]:[{key:a.key,source:c?.source||null,minutes:Number.isFinite(minutes)?minutes:null,matches:Number.isFinite(matches)?matches:null}];
     });
+    const baseSampleEnough=baseEligible(player,player.pos,plan.minimum),sampleEnough=baseSampleEnough&&!insufficientSamples.length;
     const score=values.length===plan.keys.length&&sampleEnough?area:null;
-    return {axes:visible,area,score,comparableArea:score,expectedAxes:plan.keys,missingAxes:plan.keys.filter(k=>!values.some(a=>a.key===k)),sampleEnough,minimumMinutes:plan.minimum,minimumMatches:null,kind:'player',profileKey:plan.definition.key,profileLabel:plan.definition.label,peerCount:plan.peerCount,availableAxes:values.length,
+    return {axes:visible,area,score,comparableArea:score,expectedAxes:plan.keys,missingAxes:plan.keys.filter(k=>!values.some(a=>a.key===k)),sampleEnough,baseSampleEnough,insufficientSamples,minimumMinutes:plan.minimum,minimumMatches:null,kind:'player',profileKey:plan.definition.key,profileLabel:plan.definition.label,peerCount:plan.peerCount,availableAxes:values.length,
       referenceRule:player.pos==='POR'?'misma posición, mínimo 180 min o 2 PJ del proveedor de cada eje':'misma posición, mínimo 450 minutos'};
   }
   function profiles(all,{referencePlayers=all,kind='player'}={}){
@@ -110,6 +112,17 @@
     });
   }
   const axis=key=>axes[key]?{label:axes[key][0],unit:axes[key][1],lowerBetter:!!axes[key][2]}:null;
-  const api = {profile,profiles,midfieldIndices,midfieldRole,percentile,relativeArea,rankingDefinitions,definition,rankingEligible,axis};
+  function explain(profile){
+    if(!profile)return 'No hay una referencia suficiente para calcular el score.';
+    if(profile.kind==='team')return Number.isFinite(profile.score)?'Score ponderado de sus jugadores con minutos suficientes; faltan posiciones para dibujar el radar completo.':'Faltan scores de jugadores con minutos positivos para ponderar este equipo.';
+    if(profile.score!==null&&Number.isFinite(profile.score))return 'Score completo de su posición. Los ceros publicados cuentan como valores válidos.';
+    const parts=[];
+    if(profile.baseSampleEnough===false)parts.push('La muestra del jugador no alcanza el mínimo de '+profile.minimumMinutes+' min'+(profile.profileKey==='POR'?' o 2 PJ de su fuente':''));
+    if(profile.missingAxes?.length)parts.push('Faltan métricas publicadas: '+profile.missingAxes.map(k=>axis(k)?.label||k).join(', '));
+    if(profile.insufficientSamples?.length)parts.push('Muestra insuficiente por métrica (mínimo '+profile.minimumMinutes+' min): '+profile.insufficientSamples.map(a=>(axis(a.key)?.label||a.key)+(a.source?' · '+a.source:'')+' · '+(a.minutes===null?'sin minutos':a.minutes+' min')).join('; '));
+    if((profile.expectedAxes?.length||0)<3)parts.push('No hay al menos tres ejes con cinco referencias suficientes');
+    return (parts.join('. ')||'Faltan métricas o muestra suficiente de su posición')+'. Los ceros reales sí se incluyen; un dato ausente no se sustituye por cero.';
+  }
+  const api = {profile,profiles,midfieldIndices,midfieldRole,percentile,relativeArea,rankingDefinitions,definition,rankingEligible,axis,explain};
   if (typeof module === 'object' && module.exports) module.exports = api; else root.GradaRadar = api;
 })(typeof window === 'object' ? window : globalThis);

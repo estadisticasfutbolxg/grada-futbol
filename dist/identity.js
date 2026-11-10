@@ -35,7 +35,7 @@
   let selected=null;
   for(const first of names(a))for(const second of names(b)){
    const match=variant({name:first},{name:second},keyA,keyB);if(!match||selected&&selected.weight>=match.weight)continue;
-   selected={...match,method:first===a.name&&second===b.name?match.method:'provider_alias_team'};
+   selected={...match,method:first===a.name&&second===b.name?match.method:'provider_alias_team',names:[first,second]};
   }
   return selected;
  }
@@ -60,10 +60,10 @@
    const top=best(candidates);if(top.length!==1){state.ambiguous=true;continue;}
    const edge=top[0],back=best(reverse.get(edge.record));
    if(back.length!==1||back[0].primary!==p){state.ambiguous=true;continue;}
-   matches.set(p,{record:edge.record,method:edge.method});
+   matches.set(p,{record:edge.record,method:edge.method,confidence:edge.weight,names:edge.names||[p.name,edge.record.name]});
   }
   return {matches,states};
  }
- const api={normalize,tokens,variant,link,compatibleRole};
+ const api={normalize,tokens,variant,link,compatibleRole,publishedNames:names};
  if(typeof module==='object'&&module.exports)module.exports=api;else root.GradaIdentity=api;
 })(typeof window==='object'?window:globalThis);

@@ -33,6 +33,8 @@ test('failed detail requests retain verified missing fields only for the same pl
  const context={source:'FotMob',profileVerified:true,reportedValue:true,captured_at:'2026-11-07T00:00:00Z',minutes:90,matches:1};
  const d={metadata:{source:'FotMob',imported_at:'2026-11-08T00:00:00Z'},players:[{id:'1',team_id:'2',pos:'—',completed:null,metricContexts:{}}]},old={players:[{id:'1',team_id:'2',pos:'DEF',completed:20,metricContexts:{completed:context}}]},before=JSON.stringify(old);
  const result=profiles.apply(d,[],old);assert.equal(result.players[0].completed,20);assert.equal(result.players[0].metricContexts.completed.captured_at,context.captured_at);assert.equal(result.players[0].pos,'DEF');assert.equal(JSON.stringify(old),before);
+ const unknown=profiles.apply(d,[{id:'1',team_id:'2',pos:'—',nameAliases:['Published full name'],values:{},contexts:{}}],old);
+ assert.equal(unknown.players[0].pos,'DEF');assert(unknown.players[0].nameAliases.includes('Published full name'));
  old.players[0].team_id='3';assert.equal(profiles.apply(d,[],old).players[0].completed,null);
 });
 test('explicit zero profile counts and rates survive parsing and keep their verified position evidence',()=>{

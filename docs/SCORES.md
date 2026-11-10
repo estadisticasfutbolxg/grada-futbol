@@ -8,7 +8,7 @@ Cada jugador tiene un único score para su posición resuelta con las fuentes: P
 
 `radar.js` selecciona hasta seis ejes comunes por posición. Cada eje requiere cinco referencias suficientes. Los percentiles usan rango medio para empates y se invierten cuando menos es mejor. El score es el área relativa del polígono: `media(r[i] × r[i+1])`, con `r = percentil / 100` y cierre del último eje con el primero. Está entre 0 y 1 y describe rendimiento relativo a su posición.
 
-Solo hay score cuando existen al menos tres ejes, todos los ejes comunes tienen valor y tanto el jugador como cada métrica cumplen la muestra fija: 450 minutos en campo; 180 en porteros, o 2 PJ si su proveedor no publica minutos. La alternativa de 2 PJ no acredita un filtro adicional de 900 minutos. Un radar parcial puede dibujarse, pero su área parcial no se publica como score ni contribuye a equipos. El modo total/90 y los filtros no cambian el score. Un valor publicado cero, incluido un score exactamente cero, es válido en tablas, rankings y ponderaciones. Un campo ausente o un cociente con denominador cero permanece desconocido y no se sustituye por cero.
+Solo hay score cuando existen al menos tres ejes, todos los ejes comunes tienen valor y tanto el jugador como cada métrica cumplen la muestra fija: 450 minutos en campo; 180 en porteros, o 2 PJ si su proveedor no publica minutos. La alternativa de 2 PJ no acredita un filtro adicional de 900 minutos. Un radar parcial puede dibujarse, pero su área parcial no se publica como score ni contribuye a equipos. La tabla y el radar explican si faltan métricas y qué fuente no cumple sus minutos propios. El modo total/90 y los filtros no cambian el score. Un valor publicado cero, incluido un score exactamente cero, es válido en tablas, rankings y ponderaciones. Un campo ausente o un cociente con denominador cero permanece desconocido y no se sustituye por cero.
 
 Los ejes mantienen la definición y cobertura de `metrics.js`. En porteros, Eficacia vs xGOT usa los goles emparejados con esa misma muestra y sustituye el eje de goles evitados para evitar duplicidad. No se atribuye xG de equipo a un portero.
 
@@ -60,3 +60,5 @@ node --test tests/*.test.cjs
 ```
 
 El Worker empaqueta HTML con hashes en las URLs de scripts y CSS para que cada publicación cargue módulos de una misma versión. Las capturas iniciales se solicitan sin reutilizar la caché del navegador; los refrescos conservan su validación y respaldo. No se añaden secretos, permisos ni escrituras públicas. Las capturas, JSON/SQLite y Worker generado siguen fuera de GitHub.
+
+La auditoría de la revisión de nombres y posiciones, sus jugadores recuperados y los pendientes reales están en [SCORE_REVIEW.md](SCORE_REVIEW.md).

@@ -81,3 +81,9 @@ test('saves per 90 chooses a verified source cohort without mixing the ESPN tota
  delete f.players[0].metricContexts.saves.reportedPer90;f.players[0].saves=0;p=combine(u,e,f).players[0];assert.equal(metric(p,'savesPer90'),0);assert.equal(p.saves,12);
  f.players[0].name='Unmatched test record';p=combine(u,e,f).players[0];assert.equal(metric(p,'savesPer90'),null);assert.equal(p.minutes,180);assert.equal(p.saves,12);
 });
+test('a unique exact ESPN identity can bridge a published full name to FotMob, without propagating ambiguous aliases',()=>{
+ const {u,e}=fixture();u.players[0].name='Andrés Castrín';e.players[0].name='Andrés Castrín';e.players[0].nameAliases=['Andrés Castrín López'];
+ const f=fotmobFixture(u);f.players[0].name='Andrés López';
+ const row=combine(u,e,f).players[0];assert.equal(row.sourceRecords.FotMob.id,f.players[0].id);assert.equal(row.combination.match_methods.FotMob,'provider_alias_team');assert.equal(row.combination.match_evidence.FotMob.alias_bridge_source,'ESPN');assert.deepEqual(row.combination.match_evidence.FotMob.names,['Andrés Castrín López','Andrés López']);
+ e.players.push({...e.players[0],id:'duplicate'});assert(!combine(u,e,f).players[0].sourceRecords.FotMob);
+});

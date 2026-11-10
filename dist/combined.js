@@ -106,13 +106,21 @@
     function clubFor(teamMap,teamIndex){return p=>{const club=teamMap.get(String(p.team_id));return club&&teamIndex.get(club)?.length===1?club:null;};}
     const primaryClub=clubFor(uTeams,uTeamIndex);
     const espnLinks=identitiesAPI.link(u.players,e.players,{primaryClub,secondaryClub:clubFor(eTeams,eTeamIndex),primaryKey:uKey,secondaryKey:eKey});
-    const fotmobLinks=identitiesAPI.link(u.players,f?.players||[],{primaryClub,secondaryClub:clubFor(fTeams,fTeamIndex),primaryKey:uKey,secondaryKey:p=>playerKey(p,'FotMob',fTeams.get(String(p.team_id)))});
+    // Only an exact, reviewed or equal-token ESPN match may supply published
+    // aliases as a bridge to the third provider. Never propagate a guessed alias.
+    const fotmobInputs=new Map(u.players.map(p=>{
+      const linked=espnLinks.matches.get(p);
+      return [p,linked?.confidence>=4?{...p,nameAliases:[...new Set([p.name,...identitiesAPI.publishedNames(linked.record),...identitiesAPI.publishedNames(p)])].slice(0,8)}:p];
+    }));
+    const fotmobLinks=identitiesAPI.link([...fotmobInputs.values()],f?.players||[],{primaryClub,secondaryClub:clubFor(fTeams,fTeamIndex),primaryKey:uKey,secondaryKey:p=>playerKey(p,'FotMob',fTeams.get(String(p.team_id)))});
     const players = u.players.map(p=>{
-      const em=espnLinks.matches.get(p),fm=fotmobLinks.matches.get(p),other=em?.record||null,extra=fm?.record||null;
-      const row=merge(p,other,'player',extra);row.combination.match_methods={};
+      const em=espnLinks.matches.get(p),fm=fotmobLinks.matches.get(fotmobInputs.get(p)),other=em?.record||null,extra=fm?.record||null;
+      const row=merge(p,other,'player',extra);row.combination.match_methods={};row.combination.match_evidence={};
       if(em)row.combination.match_methods.ESPN=em.method;
       if(fm)row.combination.match_methods.FotMob=fm.method;
-      row.combination.ambiguous=espnLinks.states.get(p)?.ambiguous||fotmobLinks.states.get(p)?.ambiguous||false;
+      if(em)row.combination.match_evidence.ESPN={names:em.names,source_id:other.id};
+      if(fm)row.combination.match_evidence.FotMob={names:fm.names,source_id:extra.id,...(fm.method==='provider_alias_team'&&em?.confidence>=4?{alias_bridge_source:'ESPN',alias_bridge_id:other.id}:{})};
+      row.combination.ambiguous=espnLinks.states.get(p)?.ambiguous||fotmobLinks.states.get(fotmobInputs.get(p))?.ambiguous||false;
       if(other||extra)stats.matched_players++;else stats.understat_only_players++;
       if(other){stats.espn_matched_players++;matchedIDs.add(other.id);}
       if(extra){stats.fotmob_matched_players++;matchedFotmobIDs.add(extra.id);}
