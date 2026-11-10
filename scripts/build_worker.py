@@ -39,7 +39,7 @@ def build():
 
     entry = include(ROOT / 'worker/app.cjs')
     assets = {}
-    client_files = ['index.html','style.css','leagues.json','leagues.js','metrics.js','security.js','understat.js','laliga.js','fotmob.js','combined.js','scopes.js','filters.js','radar.js','squads.js','scores.js','components.js','profiles.js','refresh.js','owner.js','app.js']
+    client_files = ['index.html','style.css','leagues.json','leagues.js','metrics.js','security.js','understat.js','laliga.js','fotmob.js','identity.js','positions.js','combined.js','scopes.js','filters.js','radar.js','squads.js','scores.js','components.js','profiles.js','refresh.js','owner.js','app.js']
     files = [ROOT / 'dist' / filename for filename in client_files]
     client_bodies = {filename: (ROOT / 'dist' / filename).read_bytes() for filename in client_files}
     def version_asset(match):

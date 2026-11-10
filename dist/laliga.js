@@ -43,7 +43,7 @@
         const value = key => p[key] ?? null;
         const goals = value('totalGoals'), shots = value('totalShots');
         const saves = pos === 'POR' ? value('saves') : null, conceded = pos === 'POR' ? value('goalsConceded') : null;
-        players.push({id:id+':'+a.id,name:a.displayName,team_id:id,team:name,pos,matches:value('appearances'),minutes:null,shotsOnTarget:value('shotsOnTarget'),
+        players.push({id:id+':'+a.id,name:a.displayName,nameAliases:[...new Set([a.displayName,a.fullName,a.shortName].filter(n=>typeof n==='string'&&n.trim()&&n.length<=250))],team_id:id,team:name,pos,matches:value('appearances'),minutes:null,shotsOnTarget:value('shotsOnTarget'),
           goals,assists:value('goalAssists'),shots,conversion:numeric(goals)&&numeric(shots)&&shots>0?goals/shots*100:null,
           saves,conceded,savepct:numeric(saves)&&numeric(conceded)&&saves+conceded>0?saves/(saves+conceded)*100:null,
           xg:null,xa:null,xga:null,psxg:null,prevented:null,delta:null,passes:null,completed:null,accuracy:null,

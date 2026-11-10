@@ -29,6 +29,13 @@ test('provider parsing rejects the wrong season and redirects outside the select
  assert.throws(()=>providers.parseFotmob('<script id="__NEXT_DATA__">'+JSON.stringify(d)+'</script>','accurate_pass',league));let calls=0;
  await assert.rejects(providers.textResponse('https://www.fotmob.com/players/10/player',{fetcher:async()=>{calls++;return new Response('',{status:302,headers:{Location:'https://other.test/private'}});}}));assert.equal(calls,1);
 });
+test('server Understat parser preserves mixed positions and real zero values',()=>{
+ const teams=Object.fromEntries(Array.from({length:20},(_,i)=>[String(i+1),{id:i+1,title:'Club '+(i+1),history:Array.from({length:2},()=>({scored:1,missed:1,xG:1,xGA:1}))}]));
+ const dates=Array.from({length:380},(_,i)=>i<20?{id:i+1,isResult:true,datetime:'2026-08-21 19:00:00',h:{id:i%10*2+1,title:'Club '+(i%10*2+1)},a:{id:i%10*2+2,title:'Club '+(i%10*2+2)},goals:{h:1,a:1},xG:{h:1,a:1}}:{isResult:false});
+ const players=[{id:1,player_name:'Isolated fixture',team_title:'Club 1',position:'M F',games:2,time:180,goals:0,xG:0,shots:0,assists:0,xA:0,key_passes:0}];
+ const result=providers.adaptUnderstat({teams,dates,players},'2026-11-10T12:00:00Z').players[0];
+ assert.equal(result.pos,'MED');assert.deepEqual(result.positions,['MED','DEL']);assert.equal(result.goals,0);assert.equal(result.xg,0);assert.equal(result.conversion,null);
+});
 test('hosting cache denial cannot hide any league or break a source response',async()=>{
  const {env,headers}=await access();
  const previous=globalThis.caches;let defaultReads=0;

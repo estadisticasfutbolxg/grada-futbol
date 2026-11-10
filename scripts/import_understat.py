@@ -111,7 +111,7 @@ def adapt(raw, captured_at):
         position = str(p.get('position', '')).split()
         pos = 'POR' if 'GK' in position else next(({'D': 'DEF', 'M': 'MED', 'F': 'DEL'}[x] for x in position if x in {'D', 'M', 'F'}), '—')
         players.append({'id': identifier(p['id']), 'name': name(p['player_name']), 'team_id': team_names.get(team), 'team': team,
-                        'pos': pos, 'matches': number(p.get('games'), True), 'minutes': number(p.get('time')),
+                        'pos': pos, 'positions': list(dict.fromkeys({'GK': 'POR', 'D': 'DEF', 'M': 'MED', 'F': 'DEL'}[x] for x in position if x in {'GK', 'D', 'M', 'F'})), 'matches': number(p.get('games'), True), 'minutes': number(p.get('time')),
                         'goals': goals, 'assists': number(p.get('assists'), True), 'xg': xg, 'xa': number(p.get('xA')),
                         'shots': shots, 'keypasses': number(p.get('key_passes'), True),
                         'conversion': goals/shots*100 if goals is not None and shots else None,
@@ -177,9 +177,9 @@ def sqlite_bytes(payload):
         for table in ['players', 'teams', 'matches']:
             records = payload[table]
             keys = list(records[0])
-            definition = ','.join('"'+k+'" '+('TEXT' if k in {'id', 'name', 'team_id', 'team', 'pos', 'date', 'home', 'away', 'home_id', 'away_id'} else 'REAL')+(' PRIMARY KEY' if k == 'id' else '') for k in keys)
+            definition = ','.join('"'+k+'" '+('TEXT' if k in {'id', 'name', 'team_id', 'team', 'pos', 'positions', 'date', 'home', 'away', 'home_id', 'away_id'} else 'REAL')+(' PRIMARY KEY' if k == 'id' else '') for k in keys)
             connection.execute('CREATE TABLE '+table+' ('+definition+')')
-            connection.executemany('INSERT INTO '+table+' VALUES ('+','.join('?' for _ in keys)+')', [tuple(r[k] for k in keys) for r in records])
+            connection.executemany('INSERT INTO '+table+' VALUES ('+','.join('?' for _ in keys)+')', [tuple(json.dumps(r[k], ensure_ascii=False) if k == 'positions' else r[k] for k in keys) for r in records])
         if connection.execute('PRAGMA integrity_check').fetchone()[0] != 'ok':
             raise ValueError('SQLite integrity check failed')
         connection.commit()

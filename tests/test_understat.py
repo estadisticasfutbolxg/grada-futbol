@@ -8,6 +8,22 @@ spec.loader.exec_module(module)
 
 
 class SourceValidation(unittest.TestCase):
+    def test_sqlite_preserves_multiple_positions_as_json_and_numeric_zero(self):
+        import json
+        import sqlite3
+        payload = {'metadata': {}, 'players': [{'id': '1', 'positions': ['MED', 'DEL'], 'goals': 0, 'unknown': None}],
+                   'teams': [{'id': '2', 'goals': 0}], 'matches': [{'id': '3', 'home_goals': 0}]}
+        db = sqlite3.connect(':memory:')
+        try:
+            db.deserialize(module.sqlite_bytes(payload))
+            positions, goals, absent = db.execute('SELECT positions,goals,unknown FROM players').fetchone()
+            self.assertEqual(json.loads(positions), ['MED', 'DEL'])
+            self.assertEqual(goals, 0)
+            self.assertIsNone(absent)
+            self.assertEqual(db.execute("SELECT type FROM pragma_table_info('players') WHERE name='positions'").fetchone()[0], 'TEXT')
+        finally:
+            db.close()
+
     def test_numeric_values_preserve_absence_and_zero(self):
         self.assertIsNone(module.number(None))
         self.assertIsNone(module.number(''))

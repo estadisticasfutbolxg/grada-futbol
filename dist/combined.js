@@ -6,6 +6,8 @@
   const fotmob = node ? require('./fotmob.js') : root.GradaFotmob;
   const leagues = node ? require('./leagues.js') : root.GradaLeagues;
   const metrics = node ? require('./metrics.js') : root.GradaMetrics;
+  const identitiesAPI = node ? require('./identity.js') : root.GradaIdentity;
+  const positions = node ? require('./positions.js') : root.GradaPositions;
   const SOURCE = 'Understat + ESPN';
   const fields = [...new Set(['matches','minutes','goals','assists','xg','xa','shots','shotsOnTarget','shotsPer90','passes','completed','accuracy','conversion','delta','saves','savepct','conceded','xga','xgaOnTarget','clean','tackles','interceptions','recoveries','keypasses','progressive','psxg','prevented','points','bigChances','shotsOnTargetPerMatch','possession',...fotmob.fields])];
   const numeric = n => typeof n === 'number' && Number.isFinite(n);
@@ -51,9 +53,7 @@
     const uKey = p => playerKey(p,primarySource,uTeams.get(String(p.team_id)));
     const eKey = p => playerKey(p,'ESPN',eTeams.get(String(p.team_id)));
     const uTeamIndex = index(u.teams,t=>teamKey(t.name)), eTeamIndex = index(e.teams,t=>teamKey(t.name));
-    const ui = index(u.players.filter(p=>uTeams.has(String(p.team_id))),uKey), ei = index(e.players,eKey);
     const fTeams = new Map((f?.teams||[]).map(t=>[String(t.id),teamKey(t.name)]));
-    const fi = index(f?.players||[],p=>playerKey(p,'FotMob',fTeams.get(String(p.team_id))));
     const fTeamIndex = index(f?.teams||[],t=>teamKey(t.name));
     const matchedIDs = new Set(), matchedFotmobIDs = new Set();
     const stats = {matched_players:0,understat_only_players:0,ambiguous_players:0,conflicting_players:0,espn_matched_players:0,fotmob_matched_players:0};
@@ -61,8 +61,7 @@
       const row = {...primary,id:(kind === 'player'?'combined:':'')+primary.id,fieldSources:{name:primarySource,team:primarySource,pos:primarySource},metricContexts:{},sourceRecords:{[primarySource]:{...primary}}};
       if (other) row.sourceRecords.ESPN = {...other};
       if(additional) row.sourceRecords.FotMob = {...additional};
-      if(kind==='player'&&row.pos==='—'&&other&&['POR','DEF','MED','DEL'].includes(other.pos)){row.pos=other.pos;row.fieldSources.pos='ESPN';}
-      if(kind==='player'&&row.pos==='—'&&additional&&['POR','DEF','MED','DEL'].includes(additional.pos)){row.pos=additional.pos;row.fieldSources.pos='FotMob';}
+      if(kind==='player'){row.positionResolution=positions.resolve(row.sourceRecords,primarySource);row.pos=row.positionResolution.position;row.fieldSources.pos=row.positionResolution.source;}
       const differences = [];
       for (const key of fields) {
         const chosen = [[primarySource,primary],['ESPN',other],['FotMob',additional]].find(([,r])=>r&&(numeric(r[key])||numeric(r.metricContexts?.[key]?.reportedPer90)));
@@ -104,26 +103,21 @@
       }
       return row;
     }
+    function clubFor(teamMap,teamIndex){return p=>{const club=teamMap.get(String(p.team_id));return club&&teamIndex.get(club)?.length===1?club:null;};}
+    const primaryClub=clubFor(uTeams,uTeamIndex);
+    const espnLinks=identitiesAPI.link(u.players,e.players,{primaryClub,secondaryClub:clubFor(eTeams,eTeamIndex),primaryKey:uKey,secondaryKey:eKey});
+    const fotmobLinks=identitiesAPI.link(u.players,f?.players||[],{primaryClub,secondaryClub:clubFor(fTeams,fTeamIndex),primaryKey:uKey,secondaryKey:p=>playerKey(p,'FotMob',fTeams.get(String(p.team_id)))});
     const players = u.players.map(p=>{
-      const key = uKey(p), candidates = ei.get(key) || [], own = ui.get(key) || [];
-      const sameKeeperRole = candidates.length === 1 && ((p.pos === 'POR') === (candidates[0].pos === 'POR'));
-      const club = uTeams.get(String(p.team_id));
-      const unique = !!club && !!normalize(p.name) && uTeamIndex.get(club)?.length === 1 && eTeamIndex.get(club)?.length === 1 && own.length === 1 && candidates.length === 1 && sameKeeperRole;
-      const other = unique ? candidates[0] : null;
-      const fc = fi.get(key)||[];
-      const fRole = fc.length===1&&((p.pos==='POR')===(fc[0].pos==='POR'));
-      const fUnique = !!club&&!!normalize(p.name)&&own.length===1&&fc.length===1&&fRole&&uTeamIndex.get(club)?.length===1&&fTeamIndex.get(club)?.length===1;
-      const extra = fUnique?fc[0]:null;
-      const row = merge(p,other,'player',extra);
-      row.combination.match_methods={};
-      if(other)row.combination.match_methods.ESPN=identity(p,primarySource,club)?'verified_identity':'name_team';
-      if(extra)row.combination.match_methods.FotMob=identity(p,primarySource,club)?'verified_identity':'name_team';
-      row.combination.ambiguous = (candidates.length > 0 && !unique)||(fc.length>0&&!fUnique);
-      if (other||extra) stats.matched_players++; else stats.understat_only_players++;
+      const em=espnLinks.matches.get(p),fm=fotmobLinks.matches.get(p),other=em?.record||null,extra=fm?.record||null;
+      const row=merge(p,other,'player',extra);row.combination.match_methods={};
+      if(em)row.combination.match_methods.ESPN=em.method;
+      if(fm)row.combination.match_methods.FotMob=fm.method;
+      row.combination.ambiguous=espnLinks.states.get(p)?.ambiguous||fotmobLinks.states.get(p)?.ambiguous||false;
+      if(other||extra)stats.matched_players++;else stats.understat_only_players++;
       if(other){stats.espn_matched_players++;matchedIDs.add(other.id);}
       if(extra){stats.fotmob_matched_players++;matchedFotmobIDs.add(extra.id);}
-      if (row.combination.ambiguous) stats.ambiguous_players++;
-      if (row.combination.conflicting_fields.length) stats.conflicting_players++;
+      if(row.combination.ambiguous)stats.ambiguous_players++;
+      if(row.combination.conflicting_fields.length)stats.conflicting_players++;
       return row;
     });
     const et = index(e.teams,t=>teamKey(t.name)), ut = index(u.teams,t=>teamKey(t.name));
@@ -132,11 +126,14 @@
       const fc=fTeamIndex.get(club)||[],extra=fc.length===1&&ut.get(club)?.length===1?fc[0]:null;
       return merge(t,club && candidates.length === 1 && ut.get(teamKey(t.name)).length === 1 ? candidates[0] : null,'team',extra);
     });
+    stats.position_corrected_players=players.filter(p=>p.pos!==p.sourceRecords[primarySource].pos).length;
+    stats.position_conflicting_players=players.filter(p=>p.positionResolution.conflicting).length;
+    stats.generic_name_matches=players.reduce((n,p)=>n+Object.values(p.combination.match_methods).filter(m=>!['name_team','verified_identity'].includes(m)).length,0);
     const sources = {[primarySource]:{...u.metadata},ESPN:{...e.metadata}};
     if(f) sources.FotMob={...f.metadata};
     return {metadata:{...u.metadata,league_key:league.id,primary_source:primarySource,kind:'combined',source:primarySource+' + ESPN'+(f?' + FotMob':''),url:u.metadata.url,complete:false,sources,combination:{...stats,understat_only_players:primarySource==='Understat'?stats.understat_only_players:0,primary_only_players:stats.understat_only_players,espn_players_not_joined:e.players.length-matchedIDs.size,fotmob_players_not_joined:f?f.players.length-matchedFotmobIDs.size:0},
       imported_at:new Date(Math.min(...Object.values(sources).map(m=>Date.parse(m.imported_at)))).toISOString(),
-      notes:'Catálogo y valores prioritarios de '+primarySource+'. ESPN'+(f?' y FotMob':'')+' complementan coincidencias inequívocas de nombre y equipo o identidad revisada. '+stats.matched_players+'/'+players.length+' jugadores complementados. Las capturas pueden cubrir distintos partidos; cada campo conserva su fuente y PJ. Los casos dudosos mantienen la fuente principal. Las tasas usan minutos y PJ de la fuente de su numerador o su tasa publicada; no se infieren minutos de ESPN ni xG recibidos de porteros.'},
+      notes:'Catálogo y valores prioritarios de '+primarySource+'. ESPN'+(f?' y FotMob':'')+' complementan coincidencias inequívocas de nombres, iniciales o apellidos y equipo, o identidad revisada. Las posiciones usan consenso entre fuentes y, sin consenso, la posición de ficha FotMob cuando existe; las demás métricas conservan su prioridad. '+stats.matched_players+'/'+players.length+' jugadores complementados. Las capturas pueden cubrir distintos partidos; cada campo conserva su fuente y PJ. Los casos dudosos mantienen la fuente principal. Las tasas usan minutos y PJ de la fuente de su numerador o su tasa publicada; no se infieren minutos de ESPN ni xG recibidos de porteros.'},
       players,teams,matches:u.matches.map(m=>({...m}))};
   }
   function isCombined(data){return data?.metadata?.kind==='combined'||data?.metadata?.source===SOURCE;}
