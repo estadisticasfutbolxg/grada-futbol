@@ -36,6 +36,12 @@ Cada fila de una tasa muestra los minutos de su muestra. Los mínimos iniciales 
 
 ## Fichas FotMob y valores ausentes
 
+Al abrir la web se elige el agregado validado más reciente de cada fuente. En FotMob se recuperan además posiciones conocidas y campos de fichas verificadas de la otra captura, siempre para el mismo ID, club, competición y temporada. Una respuesta agregada sin posición no borra la posición conocida de una ficha. Los campos conservan su fecha, minutos y partidos originales; un cero publicado sigue siendo válido. Un perfil verificado posterior puede actualizar un campo aunque el agregado que lo contiene sea anterior. No se recuperan valores numéricos sin verificación de ficha ni se mezclan porteros con jugadores de campo conocidos.
+
+Esta recuperación se aplica tanto a IndexedDB al iniciar el cliente como a la lectura pública de un agregado FotMob guardado en el servidor. La lectura pública usa la captura embebida como respaldo y no consulta proveedores ni permite escrituras. La ficha y la ayuda de posición indican cuándo se conserva una posición de otra captura.
+
+El enlace «Ver captura publicada» de la ficha abre `?datos=publicados&liga=<liga>&jugador=<id>`: solicita los JSON embebidos en esa publicación y omite las copias guardadas solo para esa navegación. Conserva IndexedDB; no elimina las actualizaciones del propietario. Liga y jugador se buscan en los datos cargados. Sirve para reproducir una ficha con las mismas capturas, no para afirmar que esos son los datos más recientes del proveedor. Por ejemplo, [Vinícius en la captura publicada](https://grada-futbol-analitica.ivanmatema2.chatgpt.site/?datos=publicados&liga=laliga&jugador=combined%3A7008).
+
 Las fichas verificadas por ID y club añaden pases completados totales y otras cifras publicadas, además de posiciones amplias. Una ficha cuya competición/temporada no coincide puede aportar únicamente la posición explícita; sus estadísticas numéricas no se mezclan. Los intentos de pase no se reconstruyen de porcentajes redondeados. Los pases progresivos y rompelíneas siguen siendo conceptos distintos.
 
 El mapa completo de tiros de un jugador puede completar los tiros a puerta cuando su recuento coincide con los tiros publicados. En porteros, el xG de tiros a puerta recibidos se suma únicamente cuando el mapa permite verificar la cobertura de paradas y goles sin autogoles. No equivale al xG previo de todos los tiros rivales ni al total de equipo.

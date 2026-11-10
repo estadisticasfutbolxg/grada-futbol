@@ -11,6 +11,7 @@ let activeLeaderKey=null;
 const leaderMinimums={field:450,saves:180};
 const captureStore=GradaRefresh.captureStore();
 const cacheKey=id=>'grada:espn:'+id+':2026-27:v1';
+const initialQuery=new URLSearchParams(location.search),publishedCapture=initialQuery.get('datos')==='publicados';
 const labels = {name:'Jugador',team:'Equipo',pos:'Posición',matches:'PJ',minutes:'Min',goals:'Goles',assists:'Asist.',xg:'xG',xa:'xA',conversion:'Conv. %',delta:'Goles − xG',passes:'Pases',completed:'Completados',accuracy:'Pases %',completedPer90:'Pases precisos /90',recoveries:'Recuperaciones',shots:'Tiros',saves:'Paradas',savepct:'Paradas %',conceded:'Goles rec.',xga:'xG recibidos',xga90:'xG recibidos /90',xgaPerMatch:'xG rec. / partido',goalsPerXg:'Goles / xG',assistsPerXa:'Asist. / xA',conceded90:'Goles rec. /90',psxg:'xGOT recibidos (PSxG)',psxgEfficiency:'Eficacia vs xGOT %',psxgPerMatch:'PSxG / partido',psxg90:'PSxG /90',xgaOnTarget:'xG tiros a puerta recibidos',xgaOnTargetPerMatch:'xG a puerta / partido',xgaOnTarget90:'xG a puerta /90',prevented:'Goles evitados',clean:'Porterías a 0',savesPerMatch:'Paradas / partido',concededPerMatch:'Goles rec. / partido',cleanPerMatch:'Porterías a 0 / partido',tackles:'Entradas',interceptions:'Intercepc.',keypasses:'Pases clave',progressive:'Pases progres.'};
 const descriptions = {
   rank:'Puesto dentro de los resultados visibles y del orden seleccionado. No es una clasificación oficial.',
@@ -214,7 +215,9 @@ function originMark(record,key) {
 }
 function combinationNote(record) {
   if (!isCombined()) return '';
-  const positionNote=record.positionResolution?'<p class="sub position-note">'+esc(GradaPositions.describe(record))+'</p>':'';
+  const league=record.league_key||currentLeague,id=record.id.startsWith(league+':')?record.id.slice(league.length+1):record.id;
+  const link='?'+new URLSearchParams({datos:'publicados',liga:league,jugador:id});
+  const positionNote=record.positionResolution?'<p class="sub position-note">'+esc(GradaPositions.describe(record))+' <a href="'+esc(link)+'">Ver captura publicada</a></p>':'';
   if(isAll())return '<p class="sub combination-note">'+esc(record.league)+' · datos y prioridad de la liga original; referencia del radar: todas las ligas seleccionadas.</p>'+positionNote;
   const text = !record.combination?.matched?'Sin coincidencia única en las fuentes complementarias: se conservan los datos de la fuente principal.':record.combination.conflicting_fields.length?'Hay discrepancias entre las fuentes; se respeta la prioridad indicada arriba. Cada cifra muestra su origen.':'Registro completado con '+Object.keys(record.sourceRecords).filter(k=>k!==primarySource()).join(' y ')+'. '+primarySource()+' mantiene la prioridad.';
   return '<p class="sub combination-note">'+text+'</p>'+positionNote;
@@ -496,7 +499,7 @@ $('#league').onchange=()=>{if(refreshing){$('#league').value=currentLeague;retur
 document.addEventListener('pointerdown',()=>interaction++,true);
 document.addEventListener('keydown',()=>interaction++,true);
 async function readCapture(filename,validator){
-  const r=await fetch('downloads/'+filename,{signal:AbortSignal.timeout(15000),cache:'no-store'});
+  const r=await fetch('downloads/'+filename+(publishedCapture?'?capture=published':''),{signal:AbortSignal.timeout(15000),cache:'no-store'});
   if(!r.ok)throw new Error('No hay captura publicada: '+filename);
   return validator(await r.json());
 }
@@ -507,10 +510,10 @@ async function loadLeague(l){
     l.primary==='Understat'?readCapture('understat-'+l.id+'-2026-27.json',GradaUnderstat.validate):Promise.resolve(null)
   ]);
   const state={espn,fotmob,understat,combined:null};
-  for(const key of GradaRefresh.sources(l)){
+  for(const key of publishedCapture?[]:GradaRefresh.sources(l)){
     const cached=await captureStore.get(l.id,key),candidates=[cached];
     if(key==='espn')try{candidates.push(JSON.parse(localStorage.getItem(cacheKey(l.id))));}catch(_){}
-    for(const candidate of candidates)try{const valid=GradaRefresh.validate(candidate,key,l);if(Date.parse(valid.metadata.imported_at)>Date.parse(state[key].metadata.imported_at)){const next={...state,[key]:valid};joinSources(next);state[key]=valid;}}catch(_){}
+    for(const candidate of candidates)try{const selected=GradaRefresh.selectCapture(state[key],candidate,key,l),next={...state,[key]:selected};joinSources(next);state[key]=selected;}catch(_){}
   }
   for(const raw of [state.espn,state.fotmob,state.understat].filter(Boolean))if(GradaLeagues.resolve(raw.metadata).id!==l.id)throw new Error('Captura de otra liga rechazada.');
   state.combined=joinSources(state);
@@ -522,9 +525,13 @@ async function start(){
     const failures=[];
     try{await loadLeague(GradaLeagues.get('laliga'));}catch(e){failures.push('LaLiga: '+e.message);}
     await Promise.all(GradaLeagues.list().filter(l=>l.id!=='laliga').map(async l=>{try{await loadLeague(l);}catch(e){failures.push(l.name+': '+e.message);}}));
+    const requestedLeague=initialQuery.get('liga');if(datasets.has(requestedLeague))currentLeague=requestedLeague;
     initialLoadsComplete=true;updateLeagueOptions();if(datasets.size)activateLeague(datasets.has(currentLeague)?currentLeague:GradaLeagues.list().find(l=>datasets.has(l.id)).id);
     if(!loaded)$('#data-status').textContent='No hay capturas combinadas completas publicadas. Ejecuta los importadores incluidos. '+failures.join(' ');
     else if(failures.length)$('#refresh-status').textContent='Solo se muestran ligas con las familias de métricas verificadas. No disponibles: '+failures.map(f=>f.split(':')[0]).join(', ')+'.';
+    if(loaded&&publishedCapture)$('#refresh-status').textContent+=' Estás viendo las capturas de esta publicación. Tus datos guardados se conservan; recargar sin «datos=publicados» vuelve a usarlos.';
+    const requestedPlayer=data?.players.find(p=>p.id===initialQuery.get('jugador'));
+    if(requestedPlayer){navigate('players');$('#search').value=requestedPlayer.name;renderTable();detail(requestedPlayer.id);}
   }catch(e){$('#data-status').textContent='No se pudieron cargar las ligas: '+e.message;}
 }
 start();
