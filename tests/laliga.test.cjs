@@ -51,3 +51,8 @@ test('HTTP errors and cancellation fail without returning a partial payload',asy
  const c=new AbortController();c.abort();
  await assert.rejects(fetchSeason({signal:c.signal,fetchImpl:async(_url,options)=>{if(options.signal.aborted)throw new DOMException('Aborted','AbortError');}}),{name:'AbortError'});
 });
+test('source full names remain available for generic cross-provider identity matching',()=>{
+ const f=fixture(),athlete=f.rosters[0].athletes[1];athlete.displayName='Andrés Castrín';athlete.fullName='Andrés Castrín López';athlete.shortName='A. Castrín';
+ const p=adapt(f.standings,f.rosters).players.find(p=>p.name==='Andrés Castrín');
+ assert.deepEqual(p.nameAliases,['Andrés Castrín','Andrés Castrín López','A. Castrín']);assert.equal(p.goals,3);
+});

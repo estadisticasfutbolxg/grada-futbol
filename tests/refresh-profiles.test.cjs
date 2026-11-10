@@ -33,5 +33,17 @@ test('failed detail requests retain verified missing fields only for the same pl
  const context={source:'FotMob',profileVerified:true,reportedValue:true,captured_at:'2026-11-07T00:00:00Z',minutes:90,matches:1};
  const d={metadata:{source:'FotMob',imported_at:'2026-11-08T00:00:00Z'},players:[{id:'1',team_id:'2',pos:'—',completed:null,metricContexts:{}}]},old={players:[{id:'1',team_id:'2',pos:'DEF',completed:20,metricContexts:{completed:context}}]},before=JSON.stringify(old);
  const result=profiles.apply(d,[],old);assert.equal(result.players[0].completed,20);assert.equal(result.players[0].metricContexts.completed.captured_at,context.captured_at);assert.equal(result.players[0].pos,'DEF');assert.equal(JSON.stringify(old),before);
+ const unknown=profiles.apply(d,[{id:'1',team_id:'2',pos:'—',nameAliases:['Published full name'],values:{},contexts:{}}],old);
+ assert.equal(unknown.players[0].pos,'DEF');assert(unknown.players[0].nameAliases.includes('Published full name'));
  old.players[0].team_id='3';assert.equal(profiles.apply(d,[],old).players[0].completed,null);
+});
+test('explicit zero profile counts and rates survive parsing and keep their verified position evidence',()=>{
+ const fixture=keeperHTML(),items=fixture.data.firstSeasonStats.statsSection.items[0].items;
+ fixture.data.positionDescription.primaryPosition={key:'left_wing_back',label:'Defender'};
+ items.push({localizedTitleId:'blocked_shots',statValue:'0',statFormat:'number',per90:0},{localizedTitleId:'interceptions',statValue:'0',statFormat:'number',per90:0},{localizedTitleId:'dribbles_succeeded',statValue:'0',statFormat:'number',per90:0});
+ const result=profiles.parse(fixture.html(),{id:'10',team_id:'1'},'laliga','2026-11-10T12:00:00Z');
+ assert.equal(result.values.blocks,0);assert.equal(result.values.interceptions,0);assert.equal(result.values.dribblesPer90,0);assert.equal(result.contexts.blocks.reportedPer90,0);
+ assert.equal(result.pos,'DEF');assert.equal(result.positionContext.key,'left_wing_back');assert(result.positionContext.identityVerified);
+ const data={metadata:{source:'FotMob',imported_at:'2026-11-09T00:00:00Z'},players:[{id:'10',team_id:'1',pos:'—',blocks:null,metricContexts:{}}]};
+ const applied=profiles.apply(data,[result]).players[0];assert.equal(applied.blocks,0);assert.equal(applied.pos,'DEF');assert.equal(applied.positionContext.captured_at,'2026-11-10T12:00:00Z');
 });
