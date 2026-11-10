@@ -110,3 +110,157 @@ El mínimo general se cumple. La última columna muestra la métrica aún descon
 | Ligue 1 | Gauthier Gallon | Le Havre | Balones aéreos atrapados /90 |
 | Ligue 1 | Paul Nardi | Auxerre | Balones aéreos atrapados /90 |
 | Ligue 1 | Rémy Descamps | Lyon | Acciones de líbero /90 |
+
+## Registros con enlaces mejorados
+
+Son 147 registros de la misma captura, con nuevos enlaces de proveedor. No son jugadores nuevos descargados. El cambio puede completar cifras conocidas sin cambiar sus fechas; los scores se recalculan con la referencia común.
+
+| Liga | Jugador | Equipo | Fuente añadida |
+| --- | --- | --- | --- |
+| LaLiga | Fernando Niño | Elche | ESPN, FotMob |
+| LaLiga | Mariano | Alaves | ESPN, FotMob |
+| LaLiga | Álex Grimaldo | Atletico Madrid | ESPN, FotMob |
+| LaLiga | Jonathan Christian David | Atletico Madrid | ESPN, FotMob |
+| LaLiga | Pape Alassane Gueye | Villarreal | ESPN, FotMob |
+| LaLiga | Abdessamad Ezzalzouli | Real Betis | ESPN |
+| LaLiga | Juan Camilo Hernández | Real Betis | FotMob |
+| LaLiga | Lee Kang-In | Atletico Madrid | FotMob |
+| LaLiga | Roberto Navarro | Athletic Club | ESPN, FotMob |
+| LaLiga | Yuri | Athletic Club | ESPN, FotMob |
+| LaLiga | Raba | Valencia | ESPN, FotMob |
+| LaLiga | Mario Soriano | Deportivo La Coruna | ESPN |
+| LaLiga | Hugo Novoa Ramos | Alaves | ESPN, FotMob |
+| LaLiga | Jon Ander Olasagasti | Levante | FotMob |
+| LaLiga | Javier Rodríguez | Celta Vigo | ESPN, FotMob |
+| LaLiga | Peque | Sevilla | FotMob |
+| LaLiga | Daniel Requena | Levante | ESPN, FotMob |
+| LaLiga | Alexander Freeman | Villarreal | ESPN, FotMob |
+| LaLiga | José Antonio Morante | Real Betis | ESPN |
+| LaLiga | Odisseas Vlachodimos | Sevilla | FotMob |
+| LaLiga | Wojciech Szczesny | Barcelona | ESPN, FotMob |
+| LaLiga | Daniel Carvajal | Getafe | ESPN |
+| LaLiga | Jonny | Alaves | FotMob |
+| LaLiga | Mat Ryan | Levante | ESPN, FotMob |
+| LaLiga | Remiro | Real Sociedad | ESPN, FotMob |
+| LaLiga | Kiko Femenía | Getafe | FotMob |
+| LaLiga | Yeray Álvarez | Athletic Club | ESPN |
+| LaLiga | Djené Dakonam | Getafe | ESPN, FotMob |
+| LaLiga | Antonio Martínez | Alaves | ESPN, FotMob |
+| LaLiga | Dani Vivian | Athletic Club | FotMob |
+| LaLiga | Javi Puado | Espanyol | ESPN |
+| LaLiga | Santiago Comesaña | Villarreal | ESPN, FotMob |
+| LaLiga | Manuel Sánchez | Levante | ESPN |
+| LaLiga | Arnaut Danjuma Groeneveld | Valencia | ESPN, FotMob |
+| LaLiga | Daniel Cárdenas | Rayo Vallecano | FotMob |
+| LaLiga | Jon Pacheco Dozagarat | Real Sociedad | ESPN, FotMob |
+| LaLiga | Alfon | Sevilla | FotMob |
+| LaLiga | Abdelkabir Abqar | Getafe | ESPN |
+| LaLiga | Álex Balde | Barcelona | ESPN, FotMob |
+| LaLiga | Nicolás Serrano | Athletic Club | ESPN, FotMob |
+| LaLiga | Jens Cajuste | Malaga | FotMob |
+| LaLiga | Javier Guerra | Valencia | ESPN |
+| LaLiga | Pablo Barrios Rivas | Atletico Madrid | ESPN, FotMob |
+| LaLiga | Abderrahmane Rebbach | Alaves | ESPN, FotMob |
+| LaLiga | Jonathan Asp Jensen | Deportivo La Coruna | FotMob |
+| LaLiga | Javier Rueda | Celta Vigo | ESPN, FotMob |
+| LaLiga | José Ángel López | Espanyol | FotMob |
+| LaLiga | Jean Valou | Getafe | ESPN, FotMob |
+| LaLiga | Alemão | Rayo Vallecano | ESPN |
+| LaLiga | Dani Martinez | Atletico Madrid | ESPN |
+| LaLiga | Zaid Romero | Getafe | FotMob |
+| LaLiga | Javier Morcillo | Elche | FotMob |
+| LaLiga | Facu González | Racing Santander | ESPN, FotMob |
+| LaLiga | Manu Hernando | Racing Santander | ESPN, FotMob |
+| LaLiga | Íñigo Sainz-Maza | Racing Santander | ESPN |
+| LaLiga | Marc Santos | Levante | ESPN |
+| LaLiga | Umaru | Elche | FotMob |
+| LaLiga | Álvaro Padilla | Elche | ESPN |
+| LaLiga | Dani Lorenzo | Malaga | ESPN |
+| LaLiga | Nizar El Jmili | Villarreal | ESPN |
+| LaLiga | Yanis Musuayi | Levante | ESPN |
+| LaLiga | Gnangoro | Rayo Vallecano | ESPN, FotMob |
+| LaLiga | Alejandro Santiago | Espanyol | ESPN |
+| LaLiga | Jan Peries | Espanyol | ESPN |
+| Premier League | Gabriel | Arsenal | ESPN |
+| Premier League | Victor Nilsson Lindelöf | Aston Villa | ESPN |
+| Premier League | Oli McBurnie | Hull City | ESPN |
+| Premier League | Pascal Groß | Brighton & Hove Albion | ESPN |
+| Premier League | Joshua King | Fulham | ESPN |
+| Premier League | Reinildo | Sunderland | ESPN |
+| Premier League | Malick Junior Yalcouyé | Brighton & Hove Albion | ESPN |
+| Premier League | Alysson Edward | Aston Villa | ESPN |
+| Premier League | Jaden Philogene-Bidace | Ipswich Town | ESPN |
+| Premier League | Daniel Burn | Newcastle United | ESPN |
+| Premier League | Malick Diouf | Brentford | ESPN |
+| Premier League | Arnaud Kalimuendo-Muinga | Nottingham Forest | ESPN |
+| Premier League | Allan | Manchester City | ESPN |
+| Premier League | Matthew O'Riley | Brighton & Hove Albion | ESPN |
+| Premier League | Juan Riquelme Angulo | Sunderland | ESPN |
+| Premier League | Jens Hjertø-Dahl | Hull City | ESPN |
+| Serie A | Gleison Bremer | Juventus | ESPN |
+| Serie A | Michel Ndary Adopo | Cagliari | ESPN |
+| Serie A | Mikael Egill Ellertsson | Genoa | ESPN |
+| Serie A | Łukasz Skorupski | Bologna | ESPN |
+| Serie A | Yann Aurel Bisseck | Inter | ESPN |
+| Serie A | Foe Ondoa | Monza | ESPN |
+| Serie A | Francesco Pio Esposito | Inter | ESPN |
+| Serie A | Jonathan Rowe | Atalanta | ESPN |
+| Serie A | Nicolás González | Juventus | ESPN |
+| Serie A | Pape Sarr | Juventus | ESPN |
+| Serie A | Thórir Helgason | Venezia | ESPN |
+| Serie A | Amorim | Genoa | ESPN |
+| Serie A | Benja Domínguez | Sassuolo | ESPN |
+| Serie A | Ibrahim Sulemana | Sassuolo | ESPN |
+| Serie A | Albert Guðmundsson | Lazio | ESPN |
+| Serie A | Giovane Nascimento | Napoli | ESPN |
+| Serie A | Juan Arizala | Udinese | ESPN |
+| Serie A | Franz-Ethan Meichtry | Genoa | ESPN |
+| Serie A | Yvan Kouadio Maye | Monza | ESPN |
+| Bundesliga | Lukas Pinckert | Elversberg | ESPN |
+| Bundesliga | Łukasz Poręba | Elversberg | ESPN |
+| Bundesliga | Nahuel Noll | Paderborn | ESPN |
+| Bundesliga | Jano ter Horst | Paderborn | ESPN |
+| Bundesliga | Tom Krauß | 1. FC Köln | ESPN |
+| Bundesliga | Frederik Rønnow | Union Berlin | ESPN |
+| Bundesliga | Jan-Niklas Beste | Freiburg | ESPN |
+| Bundesliga | Albert Grønbæk | Hamburger SV | ESPN |
+| Bundesliga | Woo-Yeong Jeong | Union Berlin | ESPN |
+| Bundesliga | Jae-Sung Lee | Mainz 05 | ESPN |
+| Bundesliga | Min-Jae Kim | Bayern München | ESPN |
+| Bundesliga | Francis Onyeka | Elversberg | ESPN |
+| Bundesliga | Hee-Chan Hwang | Schalke 04 | ESPN |
+| Bundesliga | Ransford Königsdörffer | Mainz 05 | ESPN |
+| Bundesliga | Young-Woo Seol | Augsburg | ESPN |
+| Bundesliga | Ayoube Amaimouni-Echghouyab | Eintracht Frankfurt | ESPN |
+| Bundesliga | Ørjan Håskjold Nyland | RB Leipzig | ESPN |
+| Bundesliga | Mekhi Gray | Union Berlin | ESPN |
+| Bundesliga | Alexander Røssing | Hamburger SV | ESPN |
+| Bundesliga | Paul Erevbenagie | Werder Bremen | ESPN |
+| Bundesliga | Gian-Luca Waldschmidt | 1. FC Köln | ESPN |
+| Bundesliga | Nicolas-Gerrit Kühn | Borussia Mönchengladbach | ESPN |
+| Bundesliga | Rael Nakuzola | Mainz 05 | ESPN |
+| Bundesliga | Victor Okoh Boniface | Bayer Leverkusen | ESPN |
+| Bundesliga | Yasin Zor | Hoffenheim | ESPN |
+| Ligue 1 | Cristian Cásseres | Toulouse | ESPN |
+| Ligue 1 | Filip Jörgensen | Strasbourg | ESPN |
+| Ligue 1 | Flávio Nazinho | Monaco | ESPN |
+| Ligue 1 | Alexsandro Ribeiro | Lille | ESPN |
+| Ligue 1 | Xavier Mandza | Nice | ESPN |
+| Ligue 1 | Hákon Arnar Haraldsson | Lille | ESPN |
+| Ligue 1 | Joseph Kalulu | Angers | ESPN |
+| Ligue 1 | Pape Demba Diop | Strasbourg | ESPN |
+| Ligue 1 | Przemysław Frankowski | Rennes | ESPN |
+| Ligue 1 | Mousa Tamari | Rennes | ESPN |
+| Ligue 1 | Jacobo Ortega | Strasbourg | ESPN |
+| Ligue 1 | Michał Skóras | Lens | ESPN |
+| Ligue 1 | Paolo Gozzi | Troyes | ESPN |
+| Ligue 1 | Habibou Mouhamadou Diallo | Le Mans | ESPN |
+| Ligue 1 | Lionel Mpasi-Nzau | Le Havre | ESPN |
+| Ligue 1 | Rémy Lascary | Auxerre | ESPN |
+| Ligue 1 | Aron Dønnum | Toulouse | ESPN |
+| Ligue 1 | Maurits Kjærgaard | Lille | ESPN |
+| Ligue 1 | Isak Steiner Jensen | Lorient | ESPN |
+| Ligue 1 | Mezian Mesloub Soares | Lens | ESPN |
+| Ligue 1 | Everton | Nice | ESPN |
+| Ligue 1 | Aiyegun Tosin | Lorient | ESPN |
+| Ligue 1 | Nosa Edward Obaretin | Lorient | ESPN |
