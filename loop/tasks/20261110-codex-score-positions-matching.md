@@ -1,6 +1,6 @@
 # 20261110 · Scores completos, posiciones y cruce genérico
 
-- Estado: `review`
+- Estado: `done`
 - Responsable: Codex, a petición del usuario
 - Revisor: autocontrol; sin revisión independiente
 - Rama: `fix/score-positions-matching`
@@ -31,7 +31,7 @@ Combinación/identidades/posiciones, lectores y cálculo si la auditoría encuen
 - [x] Posiciones revisadas de forma general, con evidencia y procedencia; Vinícius calculado con el perfil adecuado.
 - [x] Nombres compuestos, acentos e iniciales se unen solo con candidatos únicos en el mismo club y sin reutilizar una ficha.
 - [x] Datos originales intactos; referencias y equipos usan los mismos scores por posición.
-- [ ] Pruebas, GitHub y publicación confirmados; recuento final y límites documentados.
+- [x] Pruebas, GitHub y publicación confirmados; recuento final y límites documentados.
 
 ## Incremento 1 · unión y posiciones
 
@@ -54,3 +54,11 @@ Primer incremento subido al [PR #29](https://github.com/estadisticasfutbolxg/gra
 Comprobación final de contratos: 14 archivos Node y siete pruebas Python correctos. Añadido el puente genérico de alias publicados desde una unión ESPN exacta/revisada hacia FotMob, con evidencia de nombres/IDs y sin propagar una coincidencia ambigua. Esto permite resolver apellidos alternativos cuando el nombre completo viene en la tercera fuente; no descarga alias nuevos ni inventa equivalencias. Los IDs revisados siguen fijados. Se comprueba que un alias de perfil con posición desconocida no borre una posición anterior verificada.
 
 Artefacto final SHA256 `a157215e7ef25533b83fd92ddd116a76d30274036d4c7f083919238ae4e72db0`, 10 módulos, 33 assets, 1.577.346 bytes. Sin cambios posteriores de código; QA final del mismo Worker en curso, incluyendo comparador. Las capturas originales se conservan y los cinco derivados se regeneran con el modelo común. El informe identifica también el caso que pasa a pendiente, sin ocultar esa consecuencia de revisar posiciones.
+
+## Entrega confirmada
+
+El QA final del Worker `a157215e7ef25533b83fd92ddd116a76d30274036d4c7f083919238ae4e72db0` pasa 30 cruces de ranking/ámbito, 1.406 promedios, 4.962 contribuciones, comparador, motivos de pendientes y móvil; sin errores JS. Se mantiene la igualdad de scores entre generador, liga/Todas y vistas. Verificados también por HTTPS los SHA256 de los módulos identity/positions/radar/app realmente publicados. Sin descargas nuevas de fuentes; once originales intactos.
+
+PR #29, head final `705d4dba5ac56cb7123ea4467bdb41f616554883`, integrado en `9fd9887f7ce71fe6b4f6a2275c5d96096e3e5324`, main verificado. GitHub mergeable clean, sin checks registrados; no se omiten protecciones. Fuente Sites `e530f649c79c5c8ef7dc3b1c150274c1b965b1d8`, versión **17** `appgprj_6ae0b8b2eb1881918601230d00603255~appgver_3d392a6796788191b81c487093442b4c`, despliegue `appgdep_6af35e0fa3148191a4b98a30589db9a0`, `succeeded` el 10 de noviembre a las 18:10:40 UTC (19:10 Madrid), revisión de entorno 1 y misma audiencia pública. URL: https://grada-futbol-analitica.ivanmatema2.chatgpt.site.
+
+El informe lista los 28 scores recuperados, Moleiro pendiente y los 52 motivos pendientes; añade las 147 fichas con enlaces mejorados (sin sustituciones de IDs ni retiradas de enlaces anteriores). Se distinguen revisiones y datos nuevos: 0 jugadores/partidos nuevos descargados; se preservan las capturas mientras el propietario gestiona permisos. Cierre documental posterior sin volver a publicar un Worker idéntico.
