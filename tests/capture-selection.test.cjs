@@ -33,6 +33,19 @@ test('derived counts cannot retain a previous conversion after restoring a diffe
  let p=profiles.restore(b,a).players[0];assert.equal(p.conversion,20);assert.equal(p.metricContexts.conversion.reportedValue,false);
  a.players[0].metricContexts.shots.captured_at=older;p=profiles.restore(b,a).players[0];assert.equal(p.conversion,null);assert.equal(p.metricContexts.conversion,undefined);
 });
+test('an update cannot regress a newer saved profile, including its known position, aliases and real zero',()=>{
+ const previous=capture(),aggregate=capture(newer,'—'),saved='2026-11-08T12:00:00Z';
+ Object.assign(previous.players[0],{interceptions:0,positionContext:{source:'FotMob',identityVerified:true,captured_at:saved},nameAliases:['Published alias'],metricContexts:{interceptions:context(saved)}});
+ const stale={id:'10',team_id:'1',pos:'MED',positionContext:{source:'FotMob',identityVerified:true,captured_at:older},captured_at:older,values:{interceptions:3},contexts:{interceptions:context(older)}};
+ let p=profiles.apply(aggregate,[stale],previous).players[0];assert.equal(p.pos,'DEL');assert.equal(p.interceptions,0);assert.equal(p.metricContexts.interceptions.captured_at,saved);assert(p.nameAliases.includes('Published alias'));
+ const current={...stale,captured_at:'2026-11-10T12:00:00Z',positionContext:{...stale.positionContext,captured_at:'2026-11-10T12:00:00Z'},values:{interceptions:2},contexts:{interceptions:context('2026-11-10T12:00:00Z')}};
+ p=profiles.apply(aggregate,[current],previous).players[0];assert.equal(p.pos,'MED');assert.equal(p.interceptions,2);
+ previous.metadata.season='2025/26';p=profiles.apply(aggregate,[],previous).players[0];assert.equal(p.pos,'—');assert.equal(p.interceptions,null);
+});
+test('fresh profiles do not derive conversion from different samples even with an equal capture timestamp',()=>{
+ const date='2026-11-10T12:00:00Z',data=capture(),profile={id:'10',team_id:'1',pos:'DEL',captured_at:date,values:{goals:1,shots:10},contexts:{goals:context(date),shots:{...context(date),minutes:450,matches:5}}};
+ const p=profiles.apply(data,[profile]).players[0];assert.equal(p.goals,1);assert.equal(p.shots,10);assert.equal(p.conversion,null);assert.equal(p.metricContexts.conversion,undefined);
+});
 test('public cached aggregates retain published profiles without upstream calls; published mode bypasses caches',async()=>{
  const published=capture(),aggregate=capture(newer,'—');published.players[0].completed=20;published.players[0].metricContexts.completed=context();
  const path='/downloads/fotmob-laliga-2026-27.json',assets={[path]:{type:'application/json',sha:'fixture',gzip:gzipSync(JSON.stringify(published)).toString('base64')}};let fetches=0,reads=0;

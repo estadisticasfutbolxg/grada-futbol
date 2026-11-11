@@ -1,6 +1,6 @@
 'use strict';
 const test = require('node:test'), assert = require('node:assert/strict');
-const {adapt,validate,fetchSeason,STANDINGS,rosterURL} = require('../dist/laliga.js');
+const {adapt,validate,fetchSeason,enrichIdentities,restoreIdentities,STANDINGS,rosterURL} = require('../dist/laliga.js');
 // Minimal isolated responses for validation tests. They are never served by the site.
 const stat=(name,value)=>({name,value});
 function fixture() {
@@ -55,4 +55,24 @@ test('source full names remain available for generic cross-provider identity mat
  const f=fixture(),athlete=f.rosters[0].athletes[1];athlete.displayName='Andrés Castrín';athlete.fullName='Andrés Castrín López';athlete.shortName='A. Castrín';
  const p=adapt(f.standings,f.rosters).players.find(p=>p.name==='Andrés Castrín');
  assert.deepEqual(p.nameAliases,['Andrés Castrín','Andrés Castrín López','A. Castrín']);assert.equal(p.goals,3);
+});
+test('published first and last names enrich nicknames without changing statistics or their capture dates',()=>{
+ const f=fixture(),a=f.rosters[0].athletes[1];a.displayName='Nickname';a.fullName='Nickname';a.firstName='Published';a.lastName='Fullname';
+ const d=adapt(f.standings,f.rosters,'2026-11-01T00:00:00Z'),p=d.players[1];assert(p.nameAliases.includes('Published Fullname'));
+ delete p.nameAliases;const old=JSON.stringify(d);a.statistics.splits.categories[0].stats.find(s=>s.name==='totalGoals').value=99;
+ const enriched=enrichIdentities(d,[f.rosters[0]],'2026-11-11T00:00:00Z');assert.equal(enriched.players[1].goals,3);assert.equal(enriched.metadata.imported_at,d.metadata.imported_at);assert(enriched.players[1].nameAliases.includes('Published Fullname'));assert.equal(JSON.stringify(d),old);
+ assert(enriched.players[1].nameAliasContexts['Published Fullname'].identityVerified);f.rosters[0].season.year=2025;assert.throws(()=>enrichIdentities(d,[f.rosters[0]],'2026-11-11T00:00:00Z'));
+});
+test('newer cached ESPN counts retain verified identity aliases only for the same ID, club and season',()=>{
+ const f=fixture(),d=adapt(f.standings,f.rosters,'2026-11-01T00:00:00Z'),backup=structuredClone(d);backup.players[1].nameAliases=['Published full name'];d.players[1].goals=0;
+ let p=restoreIdentities(d,backup).players[1];assert(p.nameAliases.includes('Published full name'));assert.equal(p.goals,0);
+ backup.players[1].team_id='2';assert(!restoreIdentities(d,backup).players[1].nameAliases.includes('Published full name'));
+ backup.players[1].team_id='1';backup.metadata.season='2025/26';assert.equal(restoreIdentities(d,backup),d);
+});
+test('public ESPN aggregates retain published aliases without provider requests or replacing current zeros',async()=>{
+ const {gzipSync}=require('node:zlib'),worker=require('../worker/app.cjs'),f=fixture(),published=adapt(f.standings,f.rosters,'2026-11-01T00:00:00Z');published.players[1].nameAliases=['Published Fullname'];
+ const current=structuredClone(published);current.metadata.imported_at='2026-11-10T00:00:00Z';delete current.players[1].nameAliases;current.players[1].goals=0;
+ const asset={type:'application/json',sha:'isolated',gzip:gzipSync(JSON.stringify(published)).toString('base64')},path='/downloads/laliga-2026-27.json';let calls=0;
+ const r=await worker.handle(new Request('https://grada.test'+path),{[path]:asset},{cache:{match:async()=>new Response(JSON.stringify(current))},fetcher:async()=>{calls++;throw new Error();}}),d=await r.json();
+ assert(d.players[1].nameAliases.includes('Published Fullname'));assert.equal(d.players[1].goals,0);assert.equal(d.metadata.imported_at,current.metadata.imported_at);assert.equal(calls,0);
 });

@@ -2,6 +2,7 @@
 const providers=require('./providers.cjs'),leagues=require('../dist/leagues.js');
 const profiles=require('../dist/profiles.js');
 const fotmob=require('../dist/fotmob.js');
+const espn=require('../dist/laliga.js');
 const owner=require('./owner.cjs');
 const running=new Map(),localCache=new Map();
 const rosters=new Map();
@@ -106,11 +107,13 @@ async function handle(request,assets,{cache=sharedCache(),fetcher=fetch,now=Date
  if(source&&url.searchParams.get('capture')!=='published'){
   const cached=await cache.match(apiKey(url.origin,source.source,source.league.id));
   if(cached?.ok){
-   if(source.source!=='fotmob')return request.method==='HEAD'?new Response(null,{headers:cached.headers}):cached;
+   if(!['fotmob','espn'].includes(source.source))return request.method==='HEAD'?new Response(null,{headers:cached.headers}):cached;
    try{
-    const current=fotmob.validate(await cached.json()),published=fotmob.validate(await assetJSON(asset));
+    const validator=source.source==='fotmob'?fotmob:espn;
+    const current=validator.validate(await cached.json()),published=validator.validate(await assetJSON(asset));
     const newer=Date.parse(current.metadata.imported_at)>Date.parse(published.metadata.imported_at);
-    const restored=fotmob.validate(profiles.restore(newer?current:published,newer?published:current));
+    const restore=source.source==='fotmob'?profiles.restore:espn.restoreIdentities;
+    const restored=validator.validate(restore(newer?current:published,newer?published:current));
     return request.method==='HEAD'?new Response(null,{headers:json(null).headers}):json(restored);
    }catch(_){/* Invalid cached data must not hide the verified published capture. */}
   }

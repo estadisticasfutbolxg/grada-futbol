@@ -24,6 +24,38 @@
   function statsMap(stats) {
     return Object.fromEntries((stats || []).filter(s => typeof s.name === 'string').map(s => [s.name,numeric(s.value) ? s.value : null]));
   }
+  function athleteNames(a){
+    const firstLast=[a.firstName,a.lastName].every(n=>typeof n==='string'&&n.trim())?a.firstName.trim()+' '+a.lastName.trim():null;
+    return [...new Set([a.displayName,a.fullName,a.shortName,firstLast].filter(n=>typeof n==='string'&&n.trim()&&n.length<=250).map(n=>n.trim()))];
+  }
+  function restoreIdentities(data,previous){
+    if(!previous||data.metadata?.source!=='ESPN'||previous.metadata?.source!=='ESPN')return data;
+    try{if(leagues.resolve(data.metadata).id!==leagues.resolve(previous.metadata).id)return data;}catch(_){return data;}
+    const old=new Map(previous.players.map(p=>[p.id,p]));
+    return {...data,players:data.players.map(p=>{
+      const prior=old.get(p.id);if(!prior||String(prior.team_id)!==String(p.team_id))return p;
+      const names=[...new Set([p.name,...(Array.isArray(p.nameAliases)?p.nameAliases:[]),...(Array.isArray(prior.nameAliases)?prior.nameAliases:[])].filter(n=>typeof n==='string'&&n.trim()&&n.length<=250))].slice(0,8);
+      return {...p,nameAliases:names,nameAliasContexts:{...prior.nameAliasContexts,...p.nameAliasContexts}};
+    })};
+  }
+  function enrichIdentities(data,rosters,capturedAt){
+    validate(data);const league=leagues.resolve(data.metadata),verified=new Map();
+    if(!Number.isFinite(Date.parse(capturedAt)))throw new Error('Fecha de identidad inválida.');
+    for(const roster of rosters){
+      season(roster);const team=String(roster.team?.id);
+      if(!data.teams.some(t=>String(t.id)===team)||!Array.isArray(roster.athletes))throw new Error('Plantilla de identidad inválida.');
+      for(const athlete of roster.athletes){const id=team+':'+athlete.id;if(verified.has(id))throw new Error('Identidad duplicada.');verified.set(id,{athlete,team});}
+    }
+    let matched=0,modified=0;
+    const players=data.players.map(p=>{
+      const v=verified.get(p.id);if(!v||String(p.team_id)!==v.team)return p;
+      matched++;const names=athleteNames(v.athlete),nameAliases=[...new Set([...(Array.isArray(p.nameAliases)?p.nameAliases:[p.name]),...names])].slice(0,8),nameAliasContexts={...p.nameAliasContexts};
+      if(JSON.stringify(nameAliases)!==JSON.stringify(p.nameAliases||[p.name]))modified++;
+      for(const name of names)nameAliasContexts[name]={source:'ESPN',captured_at:capturedAt,url:rosterURL(v.team,league.id),identityVerified:true};
+      return {...p,nameAliases,nameAliasContexts};
+    });
+    return validate({...data,players,metadata:{...data.metadata,identity_enrichment:{source:'ESPN',captured_at:capturedAt,matched_players:matched,modified_aliases:modified,definition:'Alias publicados y nombre + apellido de plantillas con ID, equipo y temporada verificados. Sin actualizar estadísticas ni su fecha de captura.'}}});
+  }
   function adapt(standings, rosters, importedAt = new Date().toISOString(),leagueId='laliga') {
     const league=leagues.get(leagueId),rows = entries(standings,leagueId), players = [], teams = [];
     if (!Array.isArray(rosters) || rosters.length !== rows.length) throw new Error('Faltan plantillas: se conserva la captura anterior.');
@@ -43,7 +75,7 @@
         const value = key => p[key] ?? null;
         const goals = value('totalGoals'), shots = value('totalShots');
         const saves = pos === 'POR' ? value('saves') : null, conceded = pos === 'POR' ? value('goalsConceded') : null;
-        players.push({id:id+':'+a.id,name:a.displayName,nameAliases:[...new Set([a.displayName,a.fullName,a.shortName].filter(n=>typeof n==='string'&&n.trim()&&n.length<=250))],team_id:id,team:name,pos,matches:value('appearances'),minutes:null,shotsOnTarget:value('shotsOnTarget'),
+        players.push({id:id+':'+a.id,name:a.displayName,nameAliases:athleteNames(a),team_id:id,team:name,pos,matches:value('appearances'),minutes:null,shotsOnTarget:value('shotsOnTarget'),
           goals,assists:value('goalAssists'),shots,conversion:numeric(goals)&&numeric(shots)&&shots>0?goals/shots*100:null,
           saves,conceded,savepct:numeric(saves)&&numeric(conceded)&&saves+conceded>0?saves/(saves+conceded)*100:null,
           xg:null,xa:null,xga:null,psxg:null,prevented:null,delta:null,passes:null,completed:null,accuracy:null,
@@ -106,7 +138,7 @@
     } catch (error) { controller.abort(); throw error; }
     finally { clearTimeout(timer); signal?.removeEventListener('abort',cancel); }
   }
-  const api = {adapt,validate,fetchSeason,STANDINGS,standingsURL,rosterURL};
+  const api = {adapt,validate,fetchSeason,athleteNames,enrichIdentities,restoreIdentities,STANDINGS,standingsURL,rosterURL};
   if (typeof module === 'object' && module.exports) module.exports = api;
   else root.GradaLaLiga = api;
 })(typeof window === 'object' ? window : globalThis);

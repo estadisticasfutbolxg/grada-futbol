@@ -31,7 +31,8 @@ test('xGOT aggregate excludes verified own goals and survives an incomplete save
 });
 test('failed detail requests retain verified missing fields only for the same player and club',()=>{
  const context={source:'FotMob',profileVerified:true,reportedValue:true,captured_at:'2026-11-07T00:00:00Z',minutes:90,matches:1};
- const d={metadata:{source:'FotMob',imported_at:'2026-11-08T00:00:00Z'},players:[{id:'1',team_id:'2',pos:'—',completed:null,metricContexts:{}}]},old={players:[{id:'1',team_id:'2',pos:'DEF',completed:20,metricContexts:{completed:context}}]},before=JSON.stringify(old);
+ const meta={source:'FotMob',competition:'LaLiga',league_key:'laliga',season:'2026/27',season_id:38843,league_id:87};
+ const d={metadata:{...meta,imported_at:'2026-11-08T00:00:00Z'},players:[{id:'1',team_id:'2',pos:'—',completed:null,metricContexts:{}}]},old={metadata:{...meta,imported_at:'2026-11-07T00:00:00Z'},players:[{id:'1',team_id:'2',pos:'DEF',completed:20,metricContexts:{completed:context}}]},before=JSON.stringify(old);
  const result=profiles.apply(d,[],old);assert.equal(result.players[0].completed,20);assert.equal(result.players[0].metricContexts.completed.captured_at,context.captured_at);assert.equal(result.players[0].pos,'DEF');assert.equal(JSON.stringify(old),before);
  const unknown=profiles.apply(d,[{id:'1',team_id:'2',pos:'—',nameAliases:['Published full name'],values:{},contexts:{}}],old);
  assert.equal(unknown.players[0].pos,'DEF');assert(unknown.players[0].nameAliases.includes('Published full name'));
