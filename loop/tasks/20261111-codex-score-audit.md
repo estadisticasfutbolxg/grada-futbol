@@ -1,12 +1,12 @@
 # 20261111-codex · Auditar otros scores y posiciones
 
-- Estado: `active`
+- Estado: `done`
 - Responsable: Codex
 - Revisor: autocontrol, sin revisión independiente
 - Rama: `fix/score-audit-five-leagues`
 - Base Sites: `a2fcb0f9282786c07d53f4ebd0ddd9159ee4718d`
 - Base GitHub: `c251aa4e05ae49341fba9c27c483f58908df8cef`
-- PR: pendiente
+- PR: [#33](https://github.com/estadisticasfutbolxg/grada-futbol/pull/33), integrado
 - Objetivo: revisar las cinco ligas, corregir fallos reproducibles, integrar y publicar
 
 ## Alcance
@@ -18,7 +18,7 @@ Revisar scores pendientes sobre el mínimo, discrepancias de posición, cruces i
 - [x] Auditar todos los registros de las cinco ligas y los pendientes sobre el mínimo, con motivos verificables.
 - [x] Contrastar los casos dudosos por identidad, club y posición, sin unir homónimos ni muestras de otros clubes.
 - [x] Comprobar las rutas de actualización y carga guardada; corregir solo fallos reproducidos.
-- [ ] Validar ceros, posiciones, score único y promedios de equipo; publicar el resultado y registrar jugadores/partidos realmente actualizados.
+- [x] Validar ceros, posiciones, score único y promedios de equipo; publicar el resultado y registrar jugadores/partidos realmente actualizados.
 
 ## Plan
 
@@ -41,4 +41,11 @@ v18: 994 scores completos, 52 pendientes sobre el mínimo general. LaLiga 12, Pr
 - Chromium del Worker final: actualización simulada en las cinco ligas con agregado sin posición, una ficha antigua y fallo del resto. Vinícius, Robertson, Kike Pérez, Scally y Zabarnyi conservan posición/score/cifras en tabla, ficha y comparador. Cala recupera 0,065 incluso con IndexedDB ESPN más reciente sin alias. Cero real de Robertson preservado; móvil y portada correctos; sin errores JS ni consultas reales de proveedores en QA.
 - Diez capturas de proveedores conservan su hash completo. El JSON ESPN LaLiga cambia solo en alias/contextos de identidad y su metadato de enriquecimiento; todas sus cifras, equipos, partidos y fecha de estadísticas son idénticos. Se regeneran los cinco combinados con referencia común. Los datos/Worker generado permanecen ignorados por GitHub.
 
-Autocontrol, sin revisión independiente. No se publican fixtures. Informe y listado de identidades: [SCORE_AUDIT.md](../../docs/SCORE_AUDIT.md). Pendiente subir/integrar/publicar. Cero jugadores nuevos y cero partidos actualizados; 31 identidades enriquecidas, dos enlaces recuperados y un score recuperado. Las consultas de fichas usadas para contraste no se anuncian como nuevas estadísticas incorporadas.
+Autocontrol, sin revisión independiente. No se publican fixtures. Informe y listado de identidades: [SCORE_AUDIT.md](../../docs/SCORE_AUDIT.md). Cero jugadores nuevos, cero estadísticas sustituidas y cero partidos actualizados; 31 identidades enriquecidas, dos enlaces recuperados y un score recuperado. Las consultas de fichas usadas para contraste no se anuncian como nuevas estadísticas incorporadas.
+
+## Integración y publicación verificadas
+
+- Código GitHub `3464057326cfcbd9cbffeb309a619fe527696396`, PR #33 integrado mediante squash `ce63a36553c5a41168c3478d0341d0116026d0f1`; main remoto comprobado. Base/head coincidían y mergeable limpio. No había checks/status registrados (cero), sin declarar CI aprobado. Árbol sobre el main real de GitHub; trece archivos de código/pruebas/documentación, sin datos generados.
+- Fuente Sites subida/verificada en `dd9f3ac843e5e97c398e7ce17fd173bd32149a1e`. Versión **19** `appgprj_6ae0b8b2eb1881918601230d00603255~appgver_d0eb92a3ee8881919e5f2490528ea24f`; despliegue `appgdep_6af3b46272588191b9e44d6456a75f78`, `succeeded` el 11 de noviembre a las 01:18 Madrid (00:18 UTC). Revisión de secretos 1, audiencia pública conservada.
+- Worker SHA256 `836f6334103e128f6cc8a21efd15a1fb4b5b2a540f4e0f35bfd6bdc2befc33c8`, diez módulos y 33 recursos. HTTPS de producción verifica laliga/profiles/refresh/positions y las tres capturas LaLiga por SHA256; el HTML de Cala lleva los hashes actuales. Navegador probado sobre ese mismo artefacto.
+- Se registra el cierre documental por separado sin volver a desplegar un Worker idéntico. La revisión queda terminada; los 51 pendientes y los límites constan en el informe, sin convertir ausencias en ceros ni unir identidades dudosas.
