@@ -45,6 +45,14 @@ function fotmobFixture(u){
    metricContexts:Object.fromEntries(['completed','accuracy','tackles','prevented','saves','shotsOnTargetPer90'].map(k=>[k,{source:'FotMob',matches:10,minutes:700,captured_at:'2026-11-06T12:00:00Z',...(k==='completed'?{reportedPer90:105.9}:k==='tackles'?{reportedPer90:2.6}:k==='accuracy'?{reportedValue:true}:{})}]))
  }))};
 }
+test('a published first-plus-last alias bridges an exact nickname identity without a fuzzy surname guess',()=>{
+ const {u,e}=fixture(),f=fotmobFixture(u),espn=require('../dist/laliga.js');
+ u.players[0].name='Nickname';e.players[0].name='Nickname';f.players[0].name='Published Fullname';
+ assert.equal(combine(u,e,f).players[0].sourceRecords.FotMob,undefined);
+ e.players[0].nameAliases=espn.athleteNames({displayName:'Nickname',firstName:'Published',lastName:'Fullname'});
+ const p=combine(u,e,f).players[0];assert.equal(p.sourceRecords.FotMob.id,f.players[0].id);assert.equal(p.goals,u.players[0].goals);
+ f.players.push({...f.players[0],id:'99999'});assert.equal(combine(u,e,f).players[0].sourceRecords.FotMob,undefined);
+});
 test('third source preserves priority, published rates and negative goals prevented without fabricating totals',()=>{
  const {u,e}=fixture(),f=fotmobFixture(u),before=JSON.stringify(f),p=combine(u,e,f).players[0];
  assert.equal(p.saves,12);assert.equal(p.fieldSources.saves,'ESPN');assert.equal(p.minutes,180);

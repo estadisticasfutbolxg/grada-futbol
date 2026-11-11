@@ -50,18 +50,30 @@
   return {id:String(player.id),team_id:String(player.team_id),pos,positionContext,nameAliases,values,contexts,captured_at:capturedAt};
  }
  const allowed=new Set(['minutes','matches','goals','assists','shotsPer90','shotsOnTargetPer90','psxg','xgaOnTarget',...Object.values(fields).map(v=>v[0]),...Object.values(rates)]);
+ function deriveCounts(next,changed){
+  for(const [key,denominator] of [['delta','xg'],['conversion','shots']])if(changed.has('goals')||changed.has(denominator)){
+   const a=next.metricContexts.goals,b=next.metricContexts[denominator];
+   const paired=a&&b&&a.source==='FotMob'&&b.source==='FotMob'&&a.captured_at===b.captured_at&&a.minutes===b.minutes&&a.matches===b.matches;
+   next[key]=paired&&Number.isFinite(next.goals)&&Number.isFinite(next[denominator])?(key==='delta'?next.goals-next.xg:next.shots>0?next.goals/next.shots*100:null):null;
+   delete next.metricContexts[key];
+   if(next[key]!==null){next.metricContexts[key]={...b,reportedValue:false,derived:'profile_counts'};delete next.metricContexts[key].reportedPer90;}
+  }
+ }
  function apply(data,profiles,previous=null){
-  const byId=new Map(profiles.map(p=>[String(p.id),p])),oldById=new Map((previous?.players||[]).map(p=>[String(p.id),p]));let matched=0,retained=0;
+  data=restore(data,previous);
+  const byId=new Map(profiles.map(p=>[String(p.id),p]));let matched=0;
+  const retained=data.metadata.capture_recovery?.fields||0;
   const players=data.players.map(player=>{
-   const candidate=byId.get(String(player.id)),profile=candidate&&String(candidate.team_id)===String(player.team_id)?candidate:null,old=oldById.get(String(player.id)),prior=old&&String(old.team_id)===String(player.team_id)?old:null;
-   const next={...player,metricContexts:{...player.metricContexts}};
-   for(const [key,value] of Object.entries(profile?.values||{})){const context=profile.contexts[key];if(!allowed.has(key)||!context||context.source!=='FotMob'||context.profileVerified!==true||!Number.isFinite(value)||key!=='prevented'&&value<0)throw new Error('Ficha normalizada inválida.');if(next[key]===null||next[key]===undefined||Date.parse(context.captured_at)>=Date.parse(next.metricContexts[key]?.captured_at||data.metadata.imported_at)){next[key]=value;next.metricContexts[key]=context;}}
-   if(profile&&profile.pos!=='—'){if(!Object.hasOwn(positions.labels,profile.pos))throw new Error('Posición de ficha inválida.');next.pos=profile.pos;next.positionContext=profile.positionContext||null;}
-   else if(next.pos==='—'&&prior&&Object.hasOwn(positions.labels,prior.pos)){next.pos=prior.pos;if(prior.positionContext)next.positionContext={...prior.positionContext};}
+   const candidate=byId.get(String(player.id)),profile=candidate&&String(candidate.team_id)===String(player.team_id)?candidate:null;
+   const next={...player,metricContexts:{...player.metricContexts}},changed=new Set();
+   for(const [key,value] of Object.entries(profile?.values||{})){const context=profile.contexts[key];if(!allowed.has(key)||!context||context.source!=='FotMob'||context.profileVerified!==true||!Number.isFinite(value)||key!=='prevented'&&value<0)throw new Error('Ficha normalizada inválida.');if(next[key]===null||next[key]===undefined||Date.parse(context.captured_at)>=Date.parse(next.metricContexts[key]?.captured_at||data.metadata.imported_at)){next[key]=value;next.metricContexts[key]=context;changed.add(key);}}
+   if(profile&&profile.pos!=='—'){
+    if(!Object.hasOwn(positions.labels,profile.pos))throw new Error('Posición de ficha inválida.');
+    const profileAt=Date.parse(profile.positionContext?.captured_at||profile.captured_at),positionAt=Date.parse(next.positionContext?.captured_at||next.positionContext?.retained_from||data.metadata.imported_at);
+    if(next.pos==='—'||profileAt>=positionAt){next.pos=profile.pos;next.positionContext=profile.positionContext||null;}
+   }
    if(Array.isArray(profile?.nameAliases))next.nameAliases=[...new Set([player.name,...(Array.isArray(player.nameAliases)?player.nameAliases:[]),...profile.nameAliases].filter(n=>typeof n==='string'&&n.trim()&&n.length<=250))].slice(0,8);
-   if(prior)for(const key of allowed){const c=prior.metricContexts?.[key];if((next[key]===null||next[key]===undefined)&&Number.isFinite(prior[key])&&c?.profileVerified===true){next[key]=prior[key];next.metricContexts[key]={...c};retained++;}}
-   if(Number.isFinite(next.goals)&&Number.isFinite(next.xg)&&next.metricContexts.goals?.captured_at===next.metricContexts.xg?.captured_at){next.delta=next.goals-next.xg;next.metricContexts.delta={...next.metricContexts.xg,reportedValue:false,derived:'profile_counts'};delete next.metricContexts.delta.reportedPer90;}
-   if(Number.isFinite(next.goals)&&Number.isFinite(next.shots)&&next.metricContexts.goals?.captured_at===next.metricContexts.shots?.captured_at){next.conversion=next.shots>0?next.goals/next.shots*100:null;next.metricContexts.conversion={...next.metricContexts.shots,reportedValue:false,derived:'profile_counts'};delete next.metricContexts.conversion.reportedPer90;}
+   deriveCounts(next,changed);
    if(profile)matched++;return next;
   });
   return {...data,metadata:{...data.metadata,notes:(data.metadata.notes||'').replace(/ Fichas individuales verificadas.*$/,'')+' Fichas individuales verificadas añaden totales publicados y xGOT recibido con datos del portero y autogoles comprobados.',profile_enrichment:{requested:data.players.length,downloaded:profiles.length,matched,retained_profile_fields:retained,imported_at:profiles.map(p=>p.captured_at).sort()[0]||null,definition:'Fichas FotMob con ID, club, liga y temporada verificados. Pases completados publicados; sin reconstruir intentos de pase. xG a puerta desde mapas completos; xGOT desde goles evitados y goles sin autogoles comprobados, o mapa completo.'}},players};
@@ -89,13 +101,7 @@
    }
    if(Array.isArray(prior.nameAliases))next.nameAliases=[...new Set([player.name,...(Array.isArray(player.nameAliases)?player.nameAliases:[]),...prior.nameAliases].filter(n=>typeof n==='string'&&n.trim()&&n.length<=250))].slice(0,8);
    // Do not leave a derived value describing the sample that was replaced.
-   for(const [key,denominator] of [['delta','xg'],['conversion','shots']])if(restored.has('goals')||restored.has(denominator)){
-    const a=next.metricContexts.goals,b=next.metricContexts[denominator];
-    const paired=a&&b&&a.captured_at===b.captured_at&&a.minutes===b.minutes&&a.matches===b.matches;
-    next[key]=paired&&Number.isFinite(next.goals)&&Number.isFinite(next[denominator])?(key==='delta'?next.goals-next.xg:next.shots>0?next.goals/next.shots*100:null):null;
-    delete next.metricContexts[key];
-    if(next[key]!==null){next.metricContexts[key]={...b,reportedValue:false,derived:'profile_counts'};delete next.metricContexts[key].reportedPer90;}
-   }
+   deriveCounts(next,restored);
    return next;
   });
   return {...data,players,metadata:{...data.metadata,capture_recovery:{fields,positions:positionsRetained,from:previous.metadata.imported_at,definition:'Se conservan posiciones conocidas y campos de fichas verificadas para el mismo ID y club, liga y temporada. Cada campo mantiene su fecha y muestra originales.'}}};
