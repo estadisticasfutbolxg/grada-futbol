@@ -1,5 +1,7 @@
 # Auditoría de scores · 11 de noviembre de 2026
 
+Publicada en Sites v19, a las 01:18 Madrid, con el [PR #33](https://github.com/estadisticasfutbolxg/grada-futbol/pull/33) integrado. [Cierre y versión exacta](../loop/tasks/20261111-codex-score-audit.md).
+
 Se revisan computacionalmente los 2.284 registros de las cinco ligas y se contrastan 14 fichas actuales FotMob, dos biografías ESPN y una plantilla ESPN del Espanyol. La revisión distingue fallos reproducidos, discrepancias publicadas y métricas ausentes. No acredita la exactitud de todos los proveedores ni acceso al almacenamiento de un visitante.
 
 ## Resultado
