@@ -13,7 +13,16 @@ const captureStore=GradaRefresh.captureStore();
 const cacheKey=id=>'grada:espn:'+id+':2026-27:v1';
 const initialQuery=new URLSearchParams(location.search),publishedCapture=initialQuery.get('datos')==='publicados';
 const labels = {name:'Jugador',team:'Equipo',pos:'Posición',matches:'PJ',minutes:'Min',goals:'Goles',assists:'Asist.',xg:'xG',xa:'xA',conversion:'Conv. %',delta:'Goles − xG',passes:'Pases',completed:'Completados',accuracy:'Pases %',completedPer90:'Pases precisos /90',recoveries:'Recuperaciones',shots:'Tiros',saves:'Paradas',savepct:'Paradas %',conceded:'Goles rec.',xga:'xG recibidos',xga90:'xG recibidos /90',xgaPerMatch:'xG rec. / partido',goalsPerXg:'Goles / xG',assistsPerXa:'Asist. / xA',conceded90:'Goles rec. /90',psxg:'xGOT recibidos (PSxG)',psxgEfficiency:'Eficacia vs xGOT %',psxgPerMatch:'PSxG / partido',psxg90:'PSxG /90',xgaOnTarget:'xG tiros a puerta recibidos',xgaOnTargetPerMatch:'xG a puerta / partido',xgaOnTarget90:'xG a puerta /90',prevented:'Goles evitados',clean:'Porterías a 0',savesPerMatch:'Paradas / partido',concededPerMatch:'Goles rec. / partido',cleanPerMatch:'Porterías a 0 / partido',tackles:'Entradas',interceptions:'Intercepc.',keypasses:'Pases clave',progressive:'Pases progres.'};
+Object.assign(labels,{xgPerShot:'xG por tiro',goalInvolvements:'Goles + asistencias',expectedInvolvements:'xG + xA',goalInvolvementsPer90:'Goles + asist. /90',xgXaPer90:'xG + xA /90',preventedPer90:'Goles evitados /90'});
+labels.tacticalRole='Puesto publicado';
 const descriptions = {
+  tacticalRole:'Puestos declarados por FotMob en la ficha o plantilla actual. CB central; LB/RB lateral; LWB/RWB carrilero; CDM pivote; CM mediocentro/interior; CAM mediapunta. Puede haber varios puestos; no se conoce el reparto de minutos. Filtrar por puesto no recalcula el score POR/DEF/MED/DEL.',
+  xgPerShot:'Calidad media de las ocasiones: xG acumulado dividido entre tiros de la misma fuente y muestra. 0,15 equivale a 0,15 goles esperados por tiro. No mide el acierto del rematador. Sin tiros positivos se muestra —.',
+  goalInvolvements:'Goles más asistencias publicados en la misma fuente y muestra. No suma componentes de proveedores o periodos distintos.',
+  expectedInvolvements:'xG más xA del mismo proveedor y muestra. Conserva el modelo de ese proveedor; no equivale a sumar modelos de fuentes diferentes.',
+  goalInvolvementsPer90:'Goles más asistencias por 90 minutos: (goles + asistencias) × 90 ÷ minutos de esa misma fuente y muestra. No se añade una tasa publicada de goles a otra de asistencias con distinta cobertura.',
+  xgXaPer90:'Producción esperada por 90 minutos: (xG + xA) × 90 ÷ minutos de la misma fuente y muestra. Sirve para comparar la aportación al remate y a la creación de ocasiones.',
+  preventedPer90:'Goles evitados publicados por 90 minutos de su propia fuente. Admite valores negativos; no se obtiene restando goles recibidos al xG previo al tiro.',
   rank:'Puesto dentro de los resultados visibles y del orden seleccionado. No es una clasificación oficial.',
   name:'Nombre del jugador. Selecciónalo para abrir su ficha.',team:'Equipo al que corresponden estas estadísticas.',pos:'Posición: POR portero, DEF defensa, MED centrocampista y DEL delantero.',
   matches:'Partidos en los que participó el jugador; en equipos, partidos disputados.',
@@ -67,8 +76,8 @@ Object.assign(descriptions,GradaFotmob.descriptions,{
 });
 const rates = GradaMetrics.rates;
 const per90Columns={shots:'shotsPer90',goals:'goalsPer90',assists:'assistsPer90',saves:'savesPer90'};
-const playerkeys = ['radarArea','matches','minutes','goals','assists','xg','xa','shots','shotsOnTarget','shotsPer90','goalsPerXg','assistsPerXa','conversion','delta','passes','completedPer90','accuracy','recoveries','keypasses','progressive','tackles','interceptions',...GradaFotmob.fields.filter(k=>!['highClaims','sweeperActions','saves','conceded','penaltiesSaved','penaltiesFaced','clean','savepct','prevented'].includes(k))];
-const keeperkeys = ['radarArea','matches','minutes','saves','savesPerMatch','savepct','conceded','concededPerMatch','conceded90','xga','xga90','xgaPerMatch','psxg','psxgEfficiency','psxgPerMatch','xgaOnTarget','xgaOnTargetPerMatch','prevented','clean','highClaims','sweeperActions','penaltiesSaved','penaltiesFaced','passes','completedPer90','accuracy','longBallsPer90','longBallAccuracy','yellowCards','redCards'];
+const playerkeys = ['xgPerShot','goalInvolvementsPer90','xgXaPer90','radarArea','matches','minutes','goals','assists','xg','xa','shots','shotsOnTarget','shotsPer90','goalsPerXg','assistsPerXa','conversion','delta','completedPer90','accuracy','recoveries','keypasses','tackles','interceptions',...GradaFotmob.fields.filter(k=>!['highClaims','sweeperActions','saves','conceded','penaltiesSaved','penaltiesFaced','clean','savepct','prevented'].includes(k))];
+const keeperkeys = ['radarArea','matches','minutes','saves','savesPerMatch','savepct','conceded','concededPerMatch','conceded90','xga','xga90','xgaPerMatch','psxg','psxgEfficiency','psxgPerMatch','xgaOnTarget','xgaOnTargetPerMatch','prevented','preventedPer90','clean','highClaims','sweeperActions','penaltiesSaved','penaltiesFaced','completedPer90','accuracy','longBallsPer90','longBallAccuracy','yellowCards','redCards'];
 const teamkeys = ['teamArea','areaPlayers',...Object.values(GradaSquads.unitKeys).flatMap(c=>[c.area,c.coverage]),'matches','points','pointsPerMatch','goals','goalsPerMatch','xg','xgPerMatch','goalsPerXg','conceded','concededPerMatch','xga','xgaPerMatch','clean','cleanPerMatch','shotsOnTargetPerMatch','bigChances','bigChancesPerMatch','goalDifferencePerMatch','xgDifferencePerMatch'];
 function esc(v) { return String(v ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function initials(s) { return String(s).split(' ').map(w=>w[0]).slice(0,2).join(''); }
@@ -136,6 +145,9 @@ function description(k,isTeam = isTeamView()) {
   return text + ' Un guion (—) significa que el dato no está disponible.';
 }
 function missingReason(p,key){
+  const composite=GradaMetrics.fixedRates[key]||key;
+  if((Object.hasOwn(GradaMetrics.ratios,composite)||Object.hasOwn(GradaMetrics.sums,composite))&&p.metricContexts&&!GradaMetrics.context(p,key))return 'Los componentes requieren la misma fuente, minutos y partidos de la misma competición/temporada. Falta un componente o sus muestras no coinciden.';
+  if(Object.hasOwn(GradaMetrics.ratios,composite)&&p[GradaMetrics.ratios[composite][1]]===0)return 'El denominador es cero; este cociente no se puede calcular.';
   if(squadMetricKeys.has(key))return 'No hay jugadores de esta posición con score válido y minutos positivos para ponderar.';
   if(key==='radarArea')return GradaRadar.explain(radarProfiles.get(p));
   if(key==='passes')return 'No hay un recuento publicado de pases intentados. No se reconstruye desde porcentajes redondeados; consulta Pases completados.';
@@ -153,12 +165,12 @@ function val(p,k) {
   for(const [profile,config] of Object.entries(GradaSquads.unitKeys))if(k===config.coverage){const a=unitSummary(p,profile);return a?a.validPlayers+' / '+a.totalPlayers:'—';}
   const n = metric(p,k);
   if (n === null) return '<span class="unavailable" tabindex="0" title="'+esc(missingReason(p,k))+'" aria-label="'+esc(missingReason(p,k))+'">—</span>';
-  const factor = Object.hasOwn(GradaMetrics.ratios,k);
-  const decimals = scoreKeys.has(k)?3:view==='rankings'&&rankingAxisKeys.has(k)?2:factor || Object.hasOwn(GradaMetrics.perMatch,k) || GradaMetrics.fixedRates[k] || unit === '90' && rates.has(k) ? 2 : ['xg','xa','xgaOnTarget','psxg','psxgEfficiency','delta','conversion','savepct','xga','psxg','prevented','minutes','accuracy','xgot','shotsPer90',...GradaFotmob.publishedRates,...GradaFotmob.percentages].includes(k) ? 1 : 0;
+  const factor = ['goalsPerXg','assistsPerXa'].includes(k);
+  const decimals = scoreKeys.has(k)||k==='xgPerShot'?3:['xg','xa','xga','xgaOnTarget','psxg','prevented','delta','xgot'].includes(k)?2:view==='rankings'&&rankingAxisKeys.has(k)?2:factor || Object.hasOwn(GradaMetrics.perMatch,k) || GradaMetrics.fixedRates[k] || unit === '90' && rates.has(k) ? 2 : ['xg','xa','xgaOnTarget','psxg','psxgEfficiency','delta','conversion','savepct','xga','psxg','prevented','minutes','accuracy','xgot','shotsPer90',...GradaFotmob.publishedRates,...GradaFotmob.percentages].includes(k) ? 1 : 0;
   return new Intl.NumberFormat('es-ES',{minimumFractionDigits:scoreKeys.has(k)?3:view==='rankings'&&rankingAxisKeys.has(k)?2:factor?2:0,maximumFractionDigits:decimals}).format(n)+(factor?'×':'');
 }
 function compare(a,b,key = sort) {
-  const x = ['name','team','pos','league'].includes(key) ? a[key] ?? null : metric(a,key), y = ['name','team','pos','league'].includes(key) ? b[key] ?? null : metric(b,key);
+  const x = key==='tacticalRole'?GradaRoles.info(a).label:['name','team','pos','league'].includes(key) ? a[key] ?? null : metric(a,key), y = key==='tacticalRole'?GradaRoles.info(b).label:['name','team','pos','league'].includes(key) ? b[key] ?? null : metric(b,key);
   if (x === null && y === null) return a.name.localeCompare(b.name);
   if (x === null) return 1;
   if (y === null) return -1;
@@ -170,9 +182,9 @@ function columns() {
   let base;
   if (isTeamView()) base = ['name',...teamkeys];
   else if (pos === 'POR') base = ['name','team','matches','minutes','saves','savesPerMatch','savepct','conceded','concededPerMatch',...(unit === 'total' ? ['conceded90'] : []),'psxg','psxgEfficiency','psxgPerMatch','xgaOnTarget','xgaOnTargetPerMatch',...(unit === 'total' ? ['psxg90'] : []),'prevented','highClaims','sweeperActions','clean'];
-  else if (pos === 'DEF') base = ['name','team','minutes','tackles','interceptions','recoveries','clearances','blocks','lineBreakingPasses','completedPer90','accuracy','progressive'];
+  else if (pos === 'DEF') base = ['name','team','minutes','tackles','interceptions','recoveries','clearances','blocks','lineBreakingPasses','completedPer90','accuracy'];
   else if (pos === 'MED') base = ['name','team','minutes','completedPer90','accuracy','lineBreakingPasses','tackles','interceptions','recoveries','xa','keypasses','chancesCreated','bigChancesCreated','goals','assists','shots','shotsOnTargetPer90'];
-  else base = ['name','team','pos','minutes','shots','shotsOnTargetPer90','goals','assists','xg','xa','goalsPerXg','assistsPerXa','conversion','dribblesPer90'];
+  else base = ['name','team','pos','minutes','shots','shotsOnTargetPer90','goals','assists','xg','xa','xgPerShot','goalInvolvementsPer90','xgXaPer90','goalsPerXg','assistsPerXa','conversion','dribblesPer90'];
   if(view!=='teams')base.push('radarArea');
   if(!isTeamView()&&pos!=='POR'){base=base.filter(k=>k!=='keypasses');if(unit==='90')base=base.map(k=>k==='shots'?'shotsPer90':k);else base.push('shotsPer90');}
   if (view !== 'teams' && pos !== 'POR') {
@@ -188,6 +200,7 @@ function columns() {
   for(const rule of numericRules())if(rule.value!==''&&labels[rule.key]&&!base.includes(rule.key))base.push(rule.key);
   if (labels[sort] && !base.includes(sort)) base.push(sort);
   if(view!=='rankings'&&['goalsPer90','assistsPer90','savesPer90','completedPer90'].includes(sort)){base=base.filter(k=>k!==sort);base.splice(base.indexOf('name')+1,0,sort);}
+  if(!isTeamView())base.splice(Math.max(base.indexOf('team')+1,1),0,'tacticalRole');
   base=[...new Set(base)];
   return base;
 }
@@ -201,7 +214,7 @@ function numericRules() {
 function addMetricRule() {
   if ($$('#metric-rules .metric-rule').length >= 6) return;
   const row = document.createElement('div'); row.className = 'metric-rule';
-  row.innerHTML = '<select data-rule-key aria-label="Métrica del filtro">'+Object.entries(labels).filter(([k])=>!['name','team','pos','league'].includes(k)).map(([k,v])=>'<option value="'+k+'">'+esc(k==='radarArea'&&isTeamView()?columnLabel(k,true):v)+'</option>').join('')+'</select><select data-rule-op aria-label="Comparación"><option value=">=">≥</option><option value=">">&gt;</option><option value="<=">≤</option><option value="<">&lt;</option></select><input data-rule-value type="number" step="any" aria-label="Valor del filtro" placeholder="Valor"><button data-rule-remove class="linkbtn" aria-label="Eliminar filtro">×</button>';
+  row.innerHTML = '<select data-rule-key aria-label="Métrica del filtro">'+Object.entries(labels).filter(([k])=>!['name','team','pos','league','tacticalRole'].includes(k)).map(([k,v])=>'<option value="'+k+'">'+esc(k==='radarArea'&&isTeamView()?columnLabel(k,true):v)+'</option>').join('')+'</select><select data-rule-op aria-label="Comparación"><option value=">=">≥</option><option value=">">&gt;</option><option value="<=">≤</option><option value="<">&lt;</option></select><input data-rule-value type="number" step="any" aria-label="Valor del filtro" placeholder="Valor"><button data-rule-remove class="linkbtn" aria-label="Eliminar filtro">×</button>';
   $('#metric-rules').append(row); $('#add-rule').disabled = $$('#metric-rules .metric-rule').length >= 6;
 }
 function originMark(record,key) {
@@ -215,19 +228,33 @@ function originMark(record,key) {
 }
 function combinationNote(record) {
   if (!isCombined()) return '';
+  const club=record.team!==undefined?GradaClubs.info(record,teams()):null;
+  const clubNote=club&&club.kind!=='single'?'<p class="sub club-note">'+esc(club.description)+'</p>':'';
+  const tactical=record.team!==undefined?GradaRoles.info(record):null;
+  const tacticalNote=tactical?'<p class="sub tactical-note">'+(tactical.codes.length?'Puestos publicados: '+esc(tactical.label)+' · FotMob · '+esc(new Intl.DateTimeFormat('es-ES',{dateStyle:'medium',timeZone:'Europe/Madrid'}).format(new Date(tactical.context.captured_at)))+'. Puede declarar varios puestos; no conocemos los minutos en cada uno.':'Sin posición detallada verificada; no se deduce de las estadísticas.')+'</p>':'';
+  const statistical=statisticalProfileNote(record);
   const league=record.league_key||currentLeague,id=record.id.startsWith(league+':')?record.id.slice(league.length+1):record.id;
   const link='?'+new URLSearchParams({datos:'publicados',liga:league,jugador:id});
   const positionNote=record.positionResolution?'<p class="sub position-note">'+esc(GradaPositions.describe(record))+' <a href="'+esc(link)+'">Ver captura publicada</a></p>':'';
-  if(isAll())return '<p class="sub combination-note">'+esc(record.league)+' · datos y prioridad de la liga original; referencia del radar: todas las ligas seleccionadas.</p>'+positionNote;
+  if(isAll())return '<p class="sub combination-note">'+esc(record.league)+' · datos y prioridad de la liga original; referencia del radar: todas las ligas seleccionadas.</p>'+clubNote+positionNote+tacticalNote+statistical;
   const text = !record.combination?.matched?'Sin coincidencia única en las fuentes complementarias: se conservan los datos de la fuente principal.':record.combination.conflicting_fields.length?'Hay discrepancias entre las fuentes; se respeta la prioridad indicada arriba. Cada cifra muestra su origen.':'Registro completado con '+Object.keys(record.sourceRecords).filter(k=>k!==primarySource()).join(' y ')+'. '+primarySource()+' mantiene la prioridad.';
-  return '<p class="sub combination-note">'+text+'</p>'+positionNote;
+  return '<p class="sub combination-note">'+text+'</p>'+clubNote+positionNote+tacticalNote+statistical;
+}
+function statisticalProfileNote(record){
+  if(record.pos!=='MED')return '';
+  const kind=scoreModel.roles.get(record),attack=scoreModel.indices.get('MED_ATT')?.get(record)?.rolePercentile,defense=scoreModel.indices.get('MED_DEF')?.get(record)?.rolePercentile;
+  if(!kind)return '<p class="sub midfield-note">Perfil estadístico sin clasificar: faltan ejes o muestra de sus índices. La posición publicada y el score MED se conservan.</p>';
+  const label={MED_ATT:'ofensivo',MED_DEF:'defensivo',MED_BALANCED:'equilibrado'}[kind];
+  const pct=new Intl.NumberFormat('es-ES',{maximumFractionDigits:1});
+  return '<p class="sub midfield-note">Perfil estadístico: '+label+' · índice ofensivo P'+pct.format(attack)+' / defensivo P'+pct.format(defense)+'. Hasta 10 puntos de diferencia se considera equilibrado. Describe sus cifras frente a otros MED; no determina si juega de pivote, interior o mediapunta. Conserva el mismo score MED.</p>';
 }
 function radarFor(record) { return GradaComponents.radar(record,players(),data.metadata,radarProfiles.get(record)); }
 function rows() {
   const search=$('#search').value.trim().toLocaleLowerCase('es'),tf=$('#teamfilter').value,rules=numericRules(),def=GradaRadar.definition(rankingProfile);
   return (isTeamView()?teams():players()).filter(p=>{
     if(view==='players'&&activeLeaderKey&&!leaderEligible(p,activeLeaderKey))return false;
-    if(!isTeamView()&&(pos!=='Todos'&&p.pos!==pos||tf&&(isAll()?p.league_key+'|'+p.team:p.team)!==tf))return false;
+    if(!isTeamView()&&(pos!=='Todos'&&p.pos!==pos||!GradaClubs.matches(p,tf,teams())))return false;
+    if(!isTeamView()&&!GradaRoles.matches(p,$('#rolefilter').value))return false;
     if(view==='rankings'&&!GradaScores.eligible(scoreModel,p,def,rankingMinimum,{includePending:isTeamView()}))return false;
     return GradaFilters.textMatches(p,search)&&GradaFilters.matches(p,rules,(record,key)=>(key==='radarArea'||squadMetricKeys.has(key))?metric(record,key):GradaMetrics.metric(record,key,'total'));
   }).sort((a,b)=>compare(a,b));
@@ -273,10 +300,11 @@ function renderTable() {
   hideHelp(true);
   const cols = columns(), a = rows();
   $('#thead').innerHTML = '<tr><th scope="col"><button class="column-info" data-help="rank" aria-label="Descripción del puesto" aria-describedby="column-tooltip">#</button></th>'+cols.map(k=>'<th scope="col" aria-sort="'+(sort === k ? direction < 0 ? 'descending' : 'ascending' : 'none')+'"><div class="column-head"><button data-sort="'+k+'" data-help="'+k+'" aria-describedby="column-tooltip">'+columnLabel(k)+(sort === k ? direction < 0 ? ' ↓' : ' ↑' : '')+'</button><button class="column-info" data-help="'+k+'" aria-label="Descripción: '+esc(columnLabel(k))+'" aria-describedby="column-tooltip">ⓘ</button></div></th>').join('')+'</tr>';
-  $('#tbody').innerHTML = a.map((p,i)=>'<tr><td>'+(view==='rankings'&&isTeamView()&&(sort==='radarArea'||squadMetricKeys.has(sort))&&metric(p,sort)===null?'—':String(i+1).padStart(2,'0'))+'</td>'+cols.map(k=>'<td class="'+(['goals','xg','saves'].includes(k)?'highlight':'')+'">'+(k === 'name' ? '<button class="namebtn" data-detail="'+esc(p.id)+'"><span class="initials">'+esc(initials(p.name))+'</span>'+esc(p.name)+'</button>' : k === 'pos' ? '<span class="pos" tabindex="0" title="'+esc(GradaPositions.describe(p))+'">'+esc(p.pos)+'</span>' : k === 'team' ? esc(p.team) : k==='league'?esc(p.league) : val(p,k)+originMark(p,k))+'</td>').join('')+'</tr>').join('') || '<tr><td colspan="'+(cols.length+1)+'" class="empty">'+(loaded ? 'No hay resultados con estos filtros.' : 'Aún no hay datos importados.')+'</td></tr>';
+  $('#tbody').innerHTML = a.map((p,i)=>'<tr><td>'+(view==='rankings'&&isTeamView()&&(sort==='radarArea'||squadMetricKeys.has(sort))&&metric(p,sort)===null?'—':String(i+1).padStart(2,'0'))+'</td>'+cols.map(k=>'<td class="'+(['goals','xg','saves'].includes(k)?'highlight':'')+'">'+(k === 'name' ? '<button class="namebtn" data-detail="'+esc(p.id)+'"><span class="initials">'+esc(initials(p.name))+'</span>'+esc(p.name)+'</button>' : k === 'tacticalRole' ? '<span class="role-label" title="'+esc(GradaRoles.info(p).label)+'">'+esc(GradaRoles.info(p).codes.join(' / ')||'—')+'</span>' : k === 'pos' ? '<span class="pos" tabindex="0" title="'+esc(GradaPositions.describe(p))+'">'+esc(p.pos)+'</span>' : k === 'team' ? '<span title="'+esc(GradaClubs.info(p,teams()).description)+'">'+esc(GradaClubs.info(p,teams()).label)+'</span>' : k==='league'?esc(p.league) : val(p,k)+originMark(p,k))+'</td>').join('')+'</tr>').join('') || '<tr><td colspan="'+(cols.length+1)+'" class="empty">'+(loaded ? 'No hay resultados con estos filtros.' : 'Aún no hay datos importados.')+'</td></tr>';
   $('#count').textContent = a.length+' '+(isTeamView()?'equipos':'jugadores')+' · '+source()+(isLive()?' · plantillas actuales':'')+(view==='rankings'?' · unidades por eje':unit === '90'?' · volumen por 90 min':'');
   $('#radar-table-note').hidden=false;
   $('#radar-table-note').textContent=view==='rankings'&&activeUnit()?GradaSquads.unitDefinition(activeUnit())+' Los filtros y el mínimo de PJ del equipo no cambian los pesos.':isTeamView()?GradaSquads.definition+' Entre 0 y 1; cobertura en Jugadores ponderados. Los filtros no cambian pesos ni scores.':view==='rankings'?'Orden por el score único de su posición; muestra filtrada desde '+rankingMinimum+' minutos. La referencia y el score se mantienen al cambiar de ranking o liga.':'Score único por posición (POR, DEF, MED o DEL), entre 0 y 1; — si faltan ejes o muestra. La liga y los filtros no cambian la referencia.';
+  if(view==='rankings'&&GradaRadar.definition(rankingProfile).roleKey)$('#radar-table-note').textContent+=' Solo puestos publicados verificados; los polivalentes pueden aparecer en varios grupos. El score DEF se conserva.';
   $$('[data-sort]').forEach(b=>b.onclick=()=>{ direction = sort === b.dataset.sort ? -direction : -1; sort = b.dataset.sort; renderTable(); });
   $$('[data-detail]').forEach(b=>b.onclick=()=>detail(b.dataset.detail,isTeamView()));
   bindHelp();
@@ -299,14 +327,14 @@ function renderLeaders() {
     return '<article class="leadercard" data-leader-key="'+key+'"><h3>'+esc(title)+'</h3>'+(rate?'<p class="leader-sample-note">Mínimo '+leaderMinimum(key)+' min de su fuente</p>':'')+list.map((p,i)=>{const context=GradaMetrics.context(p,key),minutes=rate?' · '+(Number.isFinite(context?.minutes)?new Intl.NumberFormat('es-ES').format(context.minutes)+' min de la tasa':'minutos no publicados'):'';return '<div class="leaderrow"><span class="leaderplace">'+(i+1)+'</span><button class="namebtn" data-leader-profile="'+esc(p.id)+'"><span class="initials">'+esc(initials(p.name))+'</span><span>'+esc(p.name)+'<small>'+esc(p.team+minutes)+'</small></span></button><strong>'+format(p)+(key==='accuracy'?'%':'')+originMark(p,key)+'</strong></div>';}).join('')+(list.length?'':'<p class="empty">'+(loaded?'Sin datos con esta tasa y muestra mínima.':'Sin datos importados')+'</p>')+'<button class="leaderlink" data-leader-sort="'+key+'">Ver ranking →</button></article>';
   }).join('');
   $$('[data-leader-profile]').forEach(b=>b.onclick=()=>detail(b.dataset.leaderProfile,false));
-  $$('[data-leader-sort]').forEach(b=>b.onclick=()=>{sort=b.dataset.leaderSort;activeLeaderKey=sort;unit=Object.hasOwn(GradaMetrics.fixedRates,sort)?'90':'total';pos=sort==='savesPer90'?'POR':'Todos';direction=-1;$('#search').value='';$('#teamfilter').value='';$('#min-minutes').value='';$('#min-goals').value='';$('#metric-rules').innerHTML='';$('#add-rule').disabled=false;$$('[data-unit]').forEach(q=>q.classList.toggle('on',q.dataset.unit===unit));syncPositions();navigate('players');});
+  $$('[data-leader-sort]').forEach(b=>b.onclick=()=>{sort=b.dataset.leaderSort;activeLeaderKey=sort;$('#rolefilter').value='';unit=Object.hasOwn(GradaMetrics.fixedRates,sort)?'90':'total';pos=sort==='savesPer90'?'POR':'Todos';direction=-1;$('#search').value='';$('#teamfilter').value='';$('#min-minutes').value='';$('#min-goals').value='';$('#metric-rules').innerHTML='';$('#add-rule').disabled=false;$$('[data-unit]').forEach(q=>q.classList.toggle('on',q.dataset.unit===unit));syncPositions();navigate('players');});
 }
 function openRanking(key,id=null){
-  const def=GradaRadar.definition(key);rankingProfile=key;rankingMinimum=def.minimum;$('#ranking-min').value=rankingMinimum;$('#search').value='';$('#teamfilter').value='';$('#min-minutes').value='';$('#min-goals').value='';$('#metric-rules').innerHTML='';$('#add-rule').disabled=false;
+  const def=GradaRadar.definition(key);rankingProfile=key;rankingMinimum=def.minimum;$('#ranking-min').value=rankingMinimum;$('#search').value='';$('#teamfilter').value='';$('#rolefilter').value='';$('#min-minutes').value='';$('#min-goals').value='';$('#metric-rules').innerHTML='';$('#add-rule').disabled=false;
   navigate('rankings');if(id)detail(id,def.kind==='team');
 }
 function renderRankingPreviews(){
-  const targets={DEL:'#striker-leaders',POR:'#keeper-leaders',DEF:'#defender-leaders',MED_ATT:'#attacking-midfield-leaders',MED_DEF:'#defensive-midfield-leaders',TEAM_ATTACK:'#ranks',TEAM_STRIKERS:'#striker-team-leaders',TEAM_DEFENSE:'#defense-leaders',TEAM_MED_ATT:'#team-attacking-midfield-leaders',TEAM_MED_DEF:'#team-defensive-midfield-leaders',TEAM_OVERALL:'#overall-team-leaders'};
+  const targets={DEL:'#striker-leaders',POR:'#keeper-leaders',DEF:'#defender-leaders',DEF_CB:'#central-leaders',DEF_FB:'#fullback-leaders',MED_ATT:'#attacking-midfield-leaders',MED_DEF:'#defensive-midfield-leaders',MED_BALANCED:'#balanced-midfield-leaders',TEAM_ATTACK:'#ranks',TEAM_STRIKERS:'#striker-team-leaders',TEAM_DEFENSE:'#defense-leaders',TEAM_MED_ATT:'#team-attacking-midfield-leaders',TEAM_MED_DEF:'#team-defensive-midfield-leaders',TEAM_OVERALL:'#overall-team-leaders'};
   for(const def of GradaRadar.rankingDefinitions){
     const key=def.key,target=targets[key],mid=def.aggregateProfile,sum=def.kind==='team',records=sum?teams():players();
     const summary=p=>mid?unitSummary(p,mid):squad(p),score=p=>GradaScores.value(scoreModel,p,def);
@@ -341,7 +369,7 @@ function renderCompare() {
   if (!choices.length || choices.some(id=>!a.find(p=>String(p.id) === String(id)))) choices = a.slice(0,2).map(p=>String(p.id));
   $('#comparegrid').innerHTML = choices.map((id,i)=>{
     const p = a.find(p=>String(p.id) === String(id));
-    return '<div class="panel"><p class="sub">JUGADOR '+(i+1)+'</p><select class="compareselect" data-compare="'+i+'" aria-label="Jugador '+(i+1)+'">'+a.map(q=>'<option value="'+esc(q.id)+'" '+(String(q.id) === String(id)?'selected':'')+'>'+esc(q.name)+' · '+esc(q.team)+'</option>').join('')+'</select><h2>'+esc(p.name)+'</h2><p class="sub">'+esc(p.team)+' · '+esc(p.pos)+'</p>'+combinationNote(p)+radarFor(p)+keysFor(p).map(k=>'<div class="comparestat"><span>'+columnLabel(k,false)+'</span><b>'+val(p,k)+originMark(p,k)+'</b></div>').join('')+'</div>';
+    return '<div class="panel"><p class="sub">JUGADOR '+(i+1)+'</p><select class="compareselect" data-compare="'+i+'" aria-label="Jugador '+(i+1)+'">'+a.map(q=>'<option value="'+esc(q.id)+'" '+(String(q.id) === String(id)?'selected':'')+'>'+esc(q.name)+' · '+esc(q.team)+'</option>').join('')+'</select><h2>'+esc(p.name)+'</h2><p class="sub">'+esc(GradaClubs.info(p,teams()).label)+' · '+esc(p.pos)+'</p>'+combinationNote(p)+radarFor(p)+keysFor(p).map(k=>'<div class="comparestat"><span>'+columnLabel(k,false)+'</span><b>'+val(p,k)+originMark(p,k)+'</b></div>').join('')+'</div>';
   }).join('');
   $$('[data-compare]').forEach(e=>e.onchange=()=>{ choices[+e.dataset.compare] = e.value; renderCompare(); });
 }
@@ -349,7 +377,7 @@ function unitCard(record,profile){return GradaComponents.squadArea(unitSummary(r
 function detail(id,isTeam) {
   const p = (isTeam?teams():players()).find(p=>String(p.id) === String(id));
   if (!p) return;
-  $('#detailbody').innerHTML = '<span class="badge">'+esc(source())+'</span><h1 class="detailtitle">'+esc(p.name)+'</h1><p class="sub">'+esc(p.team || data.metadata.competition)+(p.league?' · '+esc(p.league):'')+' · '+esc(data.metadata.season)+(unit === '90'?' · volumen por 90 min':'')+'</p>'+combinationNote(p)+(isTeam?GradaComponents.squadArea(squad(p)):'')+(isTeam&&view==='rankings'&&activeUnit()?unitCard(p,activeUnit()):isTeam?radarFor(p)+Object.keys(GradaSquads.unitKeys).map(key=>unitCard(p,key)).join(''):radarFor(p))+'<div class="detailstats">'+keysFor(p,isTeam).map(k=>'<div class="comparestat"><span>'+columnLabel(k,isTeam)+'</span><b>'+val(p,k)+originMark(p,k)+'</b></div>').join('')+'</div><p class="sub note">'+(isSeason()?esc(data.metadata.notes):'— = no disponible. Las tasas /90 usan los minutos de juego. PSxG y goles evitados no se calculan para StatsBomb. xA derivada del xG de tiros asistidos.')+'</p>';
+  $('#detailbody').innerHTML = '<span class="badge">'+esc(source())+'</span><h1 class="detailtitle">'+esc(p.name)+'</h1><p class="sub">'+esc(isTeam?data.metadata.competition:GradaClubs.info(p,teams()).label)+(p.league?' · '+esc(p.league):'')+' · '+esc(data.metadata.season)+(unit === '90'?' · volumen por 90 min':'')+'</p>'+combinationNote(p)+(isTeam?GradaComponents.squadArea(squad(p)):'')+(isTeam&&view==='rankings'&&activeUnit()?unitCard(p,activeUnit()):isTeam?radarFor(p)+Object.keys(GradaSquads.unitKeys).map(key=>unitCard(p,key)).join(''):radarFor(p))+'<div class="detailstats">'+keysFor(p,isTeam).map(k=>'<div class="comparestat"><span>'+columnLabel(k,isTeam)+'</span><b>'+val(p,k)+originMark(p,k)+'</b></div>').join('')+'</div><p class="sub note">'+(isSeason()?esc(data.metadata.notes):'— = no disponible. Las tasas /90 usan los minutos de juego. PSxG y goles evitados no se calculan para StatsBomb. xA derivada del xG de tiros asistidos.')+'</p>';
   $('#detail').showModal();
 }
 function navigate(v,scroll=true,preserveSort=false){
@@ -364,16 +392,22 @@ function navigate(v,scroll=true,preserveSort=false){
   $('#overview').classList.toggle('hidden',v!=='overview');$('#listing').classList.toggle('hidden',!['overview','teams','players','rankings'].includes(v));$('#compare').classList.toggle('hidden',v!=='compare');$('#glossary').classList.toggle('hidden',v!=='glossary');
   $('#filters').classList.toggle('hidden',v==='glossary');$('#min-minutes').closest('label').classList.toggle('hidden',isTeamView());$('#positions').classList.toggle('hidden',isTeamView()||v==='rankings');$('#teamfilter').classList.toggle('hidden',isTeamView());$('#allplayers').classList.toggle('hidden',v!=='overview');
   $$('#filters .seg, #filters .divider').forEach(control=>control.classList.toggle('hidden',v==='overview'||v==='rankings'));$('#ranking-controls').classList.toggle('hidden',v!=='rankings');$('#ranking-min-caption').textContent=isTeamView()?'Partidos mínimos':'Minutos mínimos';$('#ranking-profile').value=rankingProfile;
-  $('#ranking-note').textContent=isTeamView()&&activeUnit()?GradaSquads.unitDefinition(activeUnit()):isTeamView()?GradaSquads.definition:rankingProfile.startsWith('MED_')?'Se selecciona el perfil estadístico dominante comparando los índices ofensivo y defensivo; los equilibrados pueden aparecer en ambos. El orden y el score son siempre los de la posición MED. Sin ambos índices completos, el perfil queda pendiente.':'Un score único de su posición, con muestra suficiente y todos los ejes. La referencia común de ligas se conserva en tablas, fichas y rankings.';
+  $('#ranking-note').textContent=isTeamView()&&activeUnit()?GradaSquads.unitDefinition(activeUnit()):isTeamView()?GradaSquads.definition:GradaRadar.definition(rankingProfile).roleKey?'Solo candidatos con puesto publicado compatible. Los polivalentes pueden aparecer en varios grupos; conservan su mismo score DEF. No se conoce el reparto de minutos por puesto.':rankingProfile.startsWith('MED_')?'Perfil estadístico por percentiles de los índices ofensivo y defensivo. Hasta 10 puntos de diferencia: equilibrado, incluido también en ambos grupos. El orden y el score son siempre MED; no indica un puesto táctico. Sin ambos índices completos, queda pendiente.':'Un score único de su posición, con muestra suficiente y todos los ejes. La referencia común de ligas se conserva en tablas, fichas y rankings.';
   $('#tabletitle').textContent=v==='rankings'?GradaRadar.definition(rankingProfile).label:isTeamView()?'Ranking de equipos':'Ranking de jugadores';$('#tablesub').textContent=isTeamView()?'Scores de equipo ponderados por minutos, entre 0 y 1. Consulta pesos y contribuciones en la ficha.':activeLeaderKey?'Ranking de '+labels[activeLeaderKey]+(activeLeaderKey==='savesPer90'?' · porteros':' · jugadores de campo')+'. Misma selección que en portada.':'Selecciona un nombre para ver su radar. Score entre 0 y 1; — = no disponible.';
   if(v==='overview'){dashboard();renderLeaders();}
   syncPositions();renderTable();renderCompare();if(scroll)window.scrollTo({top:0,behavior:'smooth'});
 }
-function syncPositions() { $$('[data-pos]').forEach(b=>b.classList.toggle('on',b.dataset.pos === pos)); }
+function syncPositions() { $$('[data-pos]').forEach(b=>b.classList.toggle('on',b.dataset.pos === pos));refreshRoleOptions(); }
+function refreshRoleOptions(){
+  const select=$('#rolefilter'),selected=select.value,position=pos==='Todos'?null:pos,candidates=players().filter(p=>!position||p.pos===position);
+  select.innerHTML='<option value="">Todos los puestos publicados</option>'+Object.entries(GradaRoles.groups).filter(([,g])=>!position||g.position===position).map(([key,g])=>'<option value="'+key+'">'+esc(g.label)+'</option>').join('')+'<option value="UNKNOWN">Sin puesto compatible verificado</option>';
+  select.value=[...select.options].some(o=>o.value===selected)?selected:'';select.hidden=isTeamView();
+  const coverage=GradaRoles.coverage(candidates);$('#role-filter-note').hidden=isTeamView();$('#role-filter-note').textContent=coverage.known+'/'+coverage.total+' fichas con puestos publicados; '+coverage.classified+' compatibles con su posición canónica. Un jugador polivalente puede aparecer en varios grupos, siempre con el mismo score. Puesto táctico y perfil estadístico son distintos.';
+}
 function applyData(next) {
   data = next; loaded = !!(data?.metadata && data.players?.length && Array.isArray(data.teams)); choices = [];
   updateRadarProfiles();
-  $('#search').value='';const clubs=new Map(players().map(p=>[isAll()?p.league_key+'|'+p.team:p.team,isAll()?p.league+' · '+p.team:p.team]));$('#teamfilter').innerHTML='<option value="">Todos los equipos</option>'+[...clubs].sort((a,b)=>a[1].localeCompare(b[1])).map(([id,name])=>'<option value="'+esc(id)+'">'+esc(name)+'</option>').join('');
+  $('#search').value='';$('#teamfilter').innerHTML='<option value="">Todos los equipos</option>'+(data?GradaClubs.options(data):[]).map(c=>'<option value="'+esc(c.id)+'">'+esc(c.label)+'</option>').join('');
   $('#league').value = selectedSource(); $('#season').innerHTML = '<option>'+esc(loaded?data.metadata.season:'2026/27 · pendiente')+'</option>';
   $$('[data-source]').forEach(e=>e.textContent = source()); $('.sidefoot').textContent = 'GRADA / '+leagueConfig().name.toUpperCase()+' 2026/27';
   $('.status').textContent = source();
@@ -462,6 +496,9 @@ async function refreshData(){
   }finally{refreshing=false;$('#league').disabled=false;updateRefreshButton();}
 }
 const terms = [
+  ['Puestos publicados y perfiles estadísticos',descriptions.tacticalRole+' El perfil ofensivo/defensivo/equilibrado compara percentiles de dos índices MED; una diferencia de hasta 10 puntos se considera equilibrada. No cambia el score MED.'],
+  ['Calidad de ocasión · xG por tiro',descriptions.xgPerShot],
+  ['Participación en goles y producción esperada',descriptions.goalInvolvementsPer90+' '+descriptions.xgXaPer90],
   ['Fuentes y cobertura','Selector de ligas combinadas 2026/27. LaLiga prioriza Understat, ESPN y FotMob, en ese orden. Las demás ligas usan FotMob como fuente principal y ESPN como complemento. Los modelos de xG/xA pueden diferir entre proveedores; las cifras conservan origen, fecha y denominador. Solo se habilitan ligas con todas las familias de métricas verificadas.'],
   ['xG · Goles esperados',descriptions.xg+' Los endpoints de ESPN usados aquí no lo incluyen.'],['xA derivada de tiros',descriptions.xa],['Conversión y goles − xG',descriptions.conversion+' '+descriptions.delta],
   ['Paradas y xG recibidos',descriptions.saves+' '+descriptions.xga],['Goles/xG y asistencias/xA',descriptions.goalsPerXg+' '+descriptions.assistsPerXa],['xG recibidos por partido',descriptions.xgaPerMatch],['Tasas de porteros por 90',descriptions.xga90+' '+descriptions.conceded90],['PSxG y goles evitados',descriptions.psxg+' '+descriptions.prevented],
@@ -479,7 +516,7 @@ const terms = [
 ];
 function renderTerms(){ $('#terms').innerHTML = terms.map((item,i)=>{let t=[...item];if(t[0].startsWith('xG ·'))t[1]=description('xg');if(t[0]==='xA derivada de tiros')t=['xA · Asistencias esperadas',description('xa')];return t;}).map((t,i)=>'<article class="panel"><span class="badge">'+String(i+1).padStart(2,'0')+'</span><h2 class="detailtitle">'+esc(t[0])+'</h2><p>'+esc(t[1])+'</p></article>').join(''); }
 $('#ranking-profile').innerHTML=[['player','Jugadores'],['team','Equipos']].map(([kind,label])=>'<optgroup label="'+label+'">'+GradaRadar.rankingDefinitions.filter(d=>d.kind===kind).map(d=>'<option value="'+d.key+'">'+esc(d.label)+'</option>').join('')+'</optgroup>').join('');
-$('#ranking-profile').onchange=()=>{rankingProfile=$('#ranking-profile').value;rankingMinimum=GradaRadar.definition(rankingProfile).minimum;$('#ranking-min').value=rankingMinimum;navigate('rankings',false);};
+$('#ranking-profile').onchange=()=>{$('#rolefilter').value='';rankingProfile=$('#ranking-profile').value;rankingMinimum=GradaRadar.definition(rankingProfile).minimum;$('#ranking-min').value=rankingMinimum;navigate('rankings',false);};
 $('#ranking-min').oninput=()=>{rankingMinimum=Number($('#ranking-min').value);renderTable();};
 $$('nav button').forEach(b=>b.onclick=()=>{activeLeaderKey=null;navigate(b.dataset.view);});
 $$('[data-pos]').forEach(b=>b.onclick=()=>{activeLeaderKey=null;pos=b.dataset.pos;sort=pos==='Todos'?'goals':'radarArea';direction=-1;syncPositions();renderTable();});
@@ -492,7 +529,7 @@ $('#add-rule').onclick = addMetricRule;
 $('#metric-rules').oninput = renderTable; $('#metric-rules').onchange = renderTable;
 $('#metric-rules').onclick = e=>{ const button = e.target.closest('[data-rule-remove]'); if (button) { button.closest('.metric-rule').remove(); $('#add-rule').disabled = false; renderTable(); } };
 $('#clear-metrics').onclick = ()=>{ $('#min-minutes').value = ''; $('#min-goals').value = ''; $('#metric-rules').innerHTML = ''; $('#add-rule').disabled = false; renderTable(); };
-$('#search').oninput = renderTable; $('#teamfilter').onchange = renderTable; $('#allplayers').onclick = ()=>navigate('players'); $('.close').onclick = ()=>$('#detail').close();
+$('#rolefilter').onchange=renderTable; $('#search').oninput = renderTable; $('#teamfilter').onchange = renderTable; $('#allplayers').onclick = ()=>navigate('players'); $('.close').onclick = ()=>$('#detail').close();
 GradaOwner.init({onRefresh:refreshData});
 $('#refresh').onclick = () => GradaOwner.open();
 $('#league').onchange=()=>{if(refreshing){$('#league').value=currentLeague;return;}$('#refresh-status').textContent='';$('#refresh-report').hidden=true;activateLeague($('#league').value);};

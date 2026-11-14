@@ -1,11 +1,21 @@
 (function (root) {
   'use strict';
   const rates = new Set(['goals','assists','xg','xa','delta','passes','completed','shots','shotsOnTarget','saves','conceded','xga','tackles','interceptions','recoveries','keypasses','progressive','lineBreakingPasses','clearances','blocks','highClaims','sweeperActions','chancesCreated','bigChancesCreated','bigChancesMissed','yellowCards','redCards','penaltiesSaved','penaltiesFaced','xgot','prevented','psxg','xgaOnTarget']);
-  const fixedRates = {goalsPer90:'goals',assistsPer90:'assists',savesPer90:'saves',xga90:'xga',conceded90:'conceded',completedPer90:'completed',psxg90:'psxg',xgaOnTarget90:'xgaOnTarget'};
-  const ratios = {goalsPerXg:['goals','xg'],assistsPerXa:['assists','xa']};
+  const fixedRates = {goalsPer90:'goals',assistsPer90:'assists',savesPer90:'saves',xga90:'xga',conceded90:'conceded',completedPer90:'completed',psxg90:'psxg',xgaOnTarget90:'xgaOnTarget',goalInvolvementsPer90:'goalInvolvements',xgXaPer90:'expectedInvolvements',preventedPer90:'prevented'};
+  const ratios = {goalsPerXg:['goals','xg'],assistsPerXa:['assists','xa'],xgPerShot:['xg','shots']};
+  const sums={goalInvolvements:['goals','assists'],expectedInvolvements:['xg','xa']};
+  for(const key of Object.keys(sums))rates.add(key);
   const perMatch = {psxgPerMatch:'psxg',xgaOnTargetPerMatch:'xgaOnTarget',xgaPerMatch:'xga',xgPerMatch:'xg',goalsPerMatch:'goals',pointsPerMatch:'points',bigChancesPerMatch:'bigChances',savesPerMatch:'saves',concededPerMatch:'conceded',cleanPerMatch:'clean'};
   const differences={goalDifferencePerMatch:['goals','conceded'],xgDifferencePerMatch:['xg','xga']};
   const number = n => typeof n === 'number' && Number.isFinite(n);
+  function sameSample(a,b){
+    if(!a||!b||!a.source||a.source!==b.source||a.minutes!==b.minutes||a.matches!==b.matches||a.league_key&&b.league_key&&a.league_key!==b.league_key)return false;
+    return !(a.sample_id||b.sample_id)||a.sample_id===b.sample_id;
+  }
+  function componentContext(record,a,b,derived){
+    const first=record.metricContexts?.[a],second=record.metricContexts?.[b];if(!sameSample(first,second))return null;
+    const c={...first,reportedValue:false,derived,components:[a,b],componentCaptures:{[a]:first.captured_at||null,[b]:second.captured_at||null}};delete c.reportedPer90;return c;
+  }
   function ratio(numerator, denominator) {
     if (!number(numerator) || numerator < 0 || !number(denominator) || denominator <= 0) return null;
     const result = numerator / denominator;
@@ -20,14 +30,15 @@
     if(key==='psxgEfficiency')return record.metricContexts?.psxg||null;
     if(key==='shotsPer90'&&!number(record.shotsPer90))return record.metricContexts?.shots||null;
     if(Object.hasOwn(differences,key)){
-      const [a,b]=differences[key],ca=record.metricContexts?.[a],cb=record.metricContexts?.[b];
-      return ca&&cb&&ca.source===cb.source&&ca.matches===cb.matches?ca:null;
+      const [a,b]=differences[key];return componentContext(record,a,b,'difference_per_match');
     }
     if (Object.hasOwn(ratios,key) && record.metricContexts) {
-      const [a,b] = ratios[key];
-      const ca=record.metricContexts[a],cb=record.metricContexts[b];if(!ca||!cb||ca.source!==cb.source||ca.minutes!==cb.minutes||ca.matches!==cb.matches)return null;
+      const [a,b] = ratios[key];return componentContext(record,a,b,'ratio');
     }
     const original = fixedRates[key] || perMatch[key] || (Object.hasOwn(ratios,key) ? ratios[key][0] : key);
+    if(Object.hasOwn(sums,original)){
+      const [a,b]=sums[original];return componentContext(record,a,b,'sum');
+    }
     return record.metricContexts?.[original] || null;
   }
   function denominator(record,key,field) {
@@ -35,8 +46,9 @@
     return c && Object.hasOwn(c,field) ? c[field] : record[field];
   }
   function normalized(record,key){
+    if(Object.hasOwn(sums,key)&&record.metricContexts&&!context(record,key))return null;
     const reported=context(record,key)?.reportedPer90;
-    return number(reported)?reported:per90(record[key],denominator(record,key,'minutes'));
+    return number(reported)?reported:per90(Object.hasOwn(sums,key)?metric(record,key):record[key],denominator(record,key,'minutes'));
   }
   function metric(record, key, unit = 'total') {
     if(key==='savesPer90'&&number(record.savesPer90))return record.savesPer90;
@@ -52,6 +64,10 @@
       if(record.metricContexts&&!context(record,key))return null;
       return ratio(record[numerator],record[denominator]);
     }
+    if(Object.hasOwn(sums,key)){
+      if(record.metricContexts&&!context(record,key))return null;
+      const [a,b]=sums[key],value=number(record[a])&&record[a]>=0&&number(record[b])&&record[b]>=0?record[a]+record[b]:null,sum=number(value)?value:null;return unit==='90'?per90(sum,denominator(record,key,'minutes')):sum;
+    }
     if (Object.hasOwn(perMatch,key)) {const value=record[perMatch[key]],matches=denominator(record,key,'matches');if(key==='pointsPerMatch'&&number(value)&&number(matches)&&matches>0){const result=value/matches;return number(result)?result:null;}return ratio(value,matches);}
     if (Object.hasOwn(fixedRates,key)) return normalized(record,fixedRates[key]);
     if(unit==='90'&&rates.has(key)) return normalized(record,key);
@@ -63,7 +79,7 @@
     const known=records.filter(record=>number(record[key]));
     return {value:known.length?known.reduce((sum,record)=>sum+record[key],0):null,known:known.length,total:records.length,complete:records.length>0&&known.length===records.length};
   }
-  const api = {metric,per90,ratio,rates,fixedRates,ratios,perMatch,number,context,total};
+  const api = {metric,per90,ratio,rates,fixedRates,ratios,sums,differences,perMatch,number,context,total,sameSample};
   if (typeof module === 'object' && module.exports) module.exports = api;
   else root.GradaMetrics = api;
 })(typeof window === 'object' ? window : globalThis);

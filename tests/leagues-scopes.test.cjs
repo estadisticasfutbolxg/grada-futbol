@@ -43,7 +43,7 @@ test('team rankings aggregate player scores, while raw team differences retain s
  const d=combined.combine(f,e);assert.throws(()=>radar.profiles(d.teams,{kind:'team',profileKey:'TEAM_DEFENSE'}));
  assert.equal(metrics.metric(d.teams[1],'goalDifferencePerMatch'),-6/6);assert.equal(metrics.metric(d.teams[1],'xgDifferencePerMatch'),-3/6);
  const team=d.teams[1];team.metricContexts.conceded.source='ESPN';assert.equal(metrics.metric(team,'goalDifferencePerMatch'),null);
- assert.equal(radar.rankingDefinitions.filter(d=>d.kind==='team'&&!d.aggregateProfile).length,1);assert.equal(radar.rankingDefinitions.filter(d=>d.aggregateProfile).length,5);assert.equal(radar.rankingDefinitions.filter(d=>d.kind==='player').length,5);
+ assert.equal(radar.rankingDefinitions.filter(d=>d.kind==='team'&&!d.aggregateProfile).length,1);assert.equal(radar.rankingDefinitions.filter(d=>d.aggregateProfile).length,5);assert.deepEqual(radar.rankingDefinitions.filter(d=>d.roleKey).map(d=>d.key),['DEF_CB','DEF_FB']);
 });
 test('combined fields preserve their own minutes and matches after a later player profile changes the base sample',()=>{
  const {f,e}=fixtures('premier-league');f.players[0].metricContexts.tackles={source:'FotMob',minutes:100,matches:2,captured_at:f.metadata.imported_at};

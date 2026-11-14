@@ -14,9 +14,11 @@ Los ejes mantienen la definición y cobertura de `metrics.js`. En porteros, Efic
 
 ## Perfiles de centrocampistas
 
-Todos conservan el score MED. Dos índices auxiliares, calculados sobre sus acciones ofensivas y defensivas con las mismas referencias y mínimos, seleccionan el perfil estadístico dominante. Ofensivo si su índice ofensivo es mayor; defensivo si el defensivo es mayor. Diferencias inferiores a `1e-12` se consideran equilibradas y permiten aparecer en ambos grupos. Sin ambos índices completos, el perfil es desconocido.
+Todos conservan el score MED. Desde el 14 de noviembre, los dos índices auxiliares de acciones ofensivas y defensivas se convierten en percentiles de sus respectivas distribuciones MED, con referencia común y mínimos fijos. Una diferencia de hasta 10 puntos percentiles se considera equilibrada; por encima, domina el percentil mayor. Los equilibrados tienen ranking propio y pueden aparecer en ambos grupos. Sin ambos índices completos, el perfil es desconocido. Este umbral descriptivo no es un intervalo de confianza.
 
 Estos índices no se presentan como otro Score de jugador ni sustituyen su radar MED. Los rankings de ambos grupos se ordenan por su score MED. No se infiere una posición táctica real a partir de estadísticas. Los centros del campo de equipos muestran además el número de MED sin perfil verificable.
+
+Los filtros de puesto publicado —centrales, laterales, pivotes, interiores y otros— usan evidencia explícita de FotMob, conservan la posición canónica y no alteran el score. [Definiciones, cobertura y límites](ROLES_METRICS.md).
 
 ## Equipos
 
