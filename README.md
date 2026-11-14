@@ -57,7 +57,7 @@ Las pruebas aisladas nunca se publican como estadísticas. Al cambiar los datos 
 
 Empieza por [CONTRIBUTING.md](CONTRIBUTING.md), [AGENTS.md](AGENTS.md), [arquitectura](docs/ARCHITECTURE.md) y [el loop](loop/README.md). Skills del repositorio: `$grada-loop`, `$grada-data` y `$grada-review`.
 
-La web pública y sus versiones confirmadas están en [STATUS.md](docs/STATUS.md). El workflow opcional de GitHub Pages genera datos sin guardarlos en el historial; requiere que el propietario configure Settings → Pages → GitHub Actions. Su existencia no demuestra que esté activado o desplegado. El alojamiento principal actual es Sites.
+La web, privada para su propietario desde el 14 de noviembre de 2026, y sus versiones confirmadas están en [STATUS.md](docs/STATUS.md). El workflow opcional de GitHub Pages genera datos sin guardarlos en el historial; requiere que el propietario configure Settings → Pages → GitHub Actions. Su existencia no demuestra que esté activado o desplegado. El alojamiento principal actual es Sites.
 
 ## Herramientas de archivo
 
