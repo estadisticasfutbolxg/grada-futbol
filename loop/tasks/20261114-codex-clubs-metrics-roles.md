@@ -1,12 +1,12 @@
 # 20261114-codex · Clubes, coherencia de medidas y perfiles
 
-- Estado: `review`
+- Estado: `done`
 - Responsable: Codex
 - Revisor: autocontrol; sin revisión independiente
 - Rama: `fix/club-filters-and-metric-coherence`
 - Base Sites: `438418a046989f3574930636af3562630f9842ca`
 - Base GitHub: `4a22afb23ef7f9aa9ba42443656fec98fe0114a7`
-- PR: pendiente
+- PR: [#35 integrado](https://github.com/estadisticasfutbolxg/grada-futbol/pull/35)
 - Objetivo: corregir, revisar medidas y mejorar comparaciones, integrar y publicar en el Site privado
 
 ## Peticiones y alcance
@@ -20,7 +20,7 @@ El propietario ha restringido Sites a su cuenta el 14 de noviembre. Se ha verifi
 - [x] Selector basado en equipos reales por ID; las temporadas multiclub no crean equipos ni aportan sus totales a un solo club.
 - [x] Auditar unidades, denominadores, muestras y valores ausentes; corregir incompatibilidades reproducibles.
 - [x] Añadir medidas útiles solo con muestras válidas y distinguir posición táctica de perfil estadístico; declarar cobertura y límites.
-- [ ] Verificar score común, promedios, filtros, ficha, comparador, móvil y lectura privada; subir, integrar y publicar.
+- [x] Verificar score común, promedios, filtros, ficha, comparador, móvil y lectura privada; subir, integrar y publicar.
 
 ## Plan
 
@@ -51,4 +51,4 @@ El propietario ha restringido Sites a su cuenta el 14 de noviembre. Se ha verifi
 
 ## Revisión e integración
 
-Autocontrol sin revisión independiente. Pendientes push, PR, merge y despliegue privado; se registrarán al confirmarse. Las solicitudes de permiso por correo se han enviado en una acción independiente autorizada; su correspondencia y datos del remitente quedan fuera de Git. Envío no equivale a licencia concedida.
+Autocontrol sin revisión independiente. GitHub: rama comprobada en `ad0a16f923764086fa3a0cc1bba26950942bf8c5`, PR #35 limpio, sin checks/statuses configurados ni protección de main; squash autorizado en `e16d1c27da544eb17ec137cfb3fe011c8d8e525e` y main verificado. Los 27 archivos de esta tarea parten de blobs iguales entre las bases GitHub y Sites; no se sobrescribe trabajo de terceros. Sites: fuente subida y verificada `4909164260d3c1e61877bcbb1f10333d6814c67c`, archivo con manifiesto y Worker, versión **20**, despliegue `appgdep_6af8da5af8608191925431c42eda5582` terminado en `succeeded`, entorno revisión 1. La audiencia sigue `custom`, owner único, cero grupos/visitantes, revisión 3; HTTPS sin sesión devuelve 401 y no sirve la aplicación. La lectura del contenido privado requiere sesión del propietario; no se afirma una comprobación externa de hashes de cliente. Chromium sí verificó el artefacto final, SHA256 `6dc12f65382ff848e6b6a770df164b45b8ab2c8bef2ab2a19f775bc661d9229a`. El cierre documental no modifica ese Worker ni necesita otra publicación idéntica. Las solicitudes de permiso por correo se han enviado en una acción independiente autorizada; su correspondencia y datos del remitente quedan fuera de Git. Envío no equivale a licencia concedida.
