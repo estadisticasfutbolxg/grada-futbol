@@ -47,7 +47,7 @@ El manifiesto de SHA del origen incluido fue capturado durante la descarga media
 
 ## Publicación
 
-Un push es una operación de Git, un workflow es una ejecución y una URL publicada es otro resultado. Verifica los tres por separado cuando formen parte de la tarea. El Site público y las versiones confirmadas se registran en [STATUS.md](STATUS.md).
+Un push es una operación de Git, un workflow es una ejecución y una URL publicada es otro resultado. Verifica los tres por separado cuando formen parte de la tarea. Desde el 14 de noviembre el Site tiene acceso exclusivo del propietario. Las versiones y la audiencia confirmadas se registran en [STATUS.md](STATUS.md).
 
 ## Importación FBref independiente
 

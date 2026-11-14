@@ -31,6 +31,7 @@ docs/
   LEAGUES.md                      Ligas, ámbito conjunto y ocho perfiles de ranking
   FOTMOB.md                       Pase, defensa, ataque y portería LaLiga 2026/27
   COMBINED.md                     Fuentes, perfiles por posición, área y filtros
+  ROLES_METRICS.md                 Puestos publicados, perfiles y nuevas medidas
   fbref-source.json               Commit y SHA fijados del snapshot
   STATUS.md                       Hechos comprobados, pendientes y siguientes pasos
   decisions/                      Decisiones duraderas

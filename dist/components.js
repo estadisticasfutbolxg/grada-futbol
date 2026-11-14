@@ -10,9 +10,13 @@
     const date = ctx?.captured_at || metadata.sources?.[source]?.imported_at || metadata.imported_at;
     const when = dateFormat.format(new Date(date));
     const differentMatches = typeof ctx?.matches === 'number' && ctx.matches !== record.matches;
+    const componentCaptures=Object.entries(ctx?.componentCaptures||{}).filter(([,value])=>Number.isFinite(Date.parse(value)));
+    const differentCaptures=new Set(componentCaptures.map(([,value])=>Date.parse(value))).size>1;
+    const componentNames={goals:'goles',assists:'asistencias',xg:'xG',xa:'xA',shots:'tiros',conceded:'goles recibidos',xga:'xG recibidos'};
+    const captureNote=differentCaptures?' · misma muestra declarada; consultas por componente: '+componentCaptures.map(([key,value])=>(componentNames[key]||key)+' '+dateFormat.format(new Date(value))).join('; '):'';
     const method=ctx?.derived==='goals_prevented_identity'?' · xGOT = goles evitados + goles recibidos sin autogoles':ctx?.derived==='keeper_shotmap'?' · suma del mapa de tiros del portero':ctx?.derived==='player_shotmap'?' · recuento del mapa completo de tiros del jugador':ctx?.derived==='profile_counts'?' · cálculo con recuentos publicados':ctx?.derived==='same_source_per90'?' · tasa /90 con recuento y minutos de esta misma fuente':'';
     return {source,date,matches:ctx?.matches ?? null,label:source+(differentMatches?' · '+ctx.matches+' PJ':''),
-      text:source+' · captura '+when+' (Madrid)'+(typeof ctx?.matches === 'number'?' · '+ctx.matches+' PJ de origen':'')+(typeof ctx?.minutes==='number'?' · '+format(ctx.minutes)+' min de origen':ctx?.minutes===null?' · sin minutos de esta fuente para calcular /90':'')+(typeof ctx?.reportedPer90==='number'?' · tasa /90 publicada por el proveedor':'')+method+(Number.isFinite(ctx?.pairedConceded)?' · '+ctx.pairedConceded+' goles sin autogoles en la muestra xGOT':'')};
+      text:source+' · captura '+when+' (Madrid)'+(typeof ctx?.matches === 'number'?' · '+ctx.matches+' PJ de origen':'')+(typeof ctx?.minutes==='number'?' · '+format(ctx.minutes)+' min de origen':ctx?.minutes===null?' · sin minutos de esta fuente para calcular /90':'')+(typeof ctx?.reportedPer90==='number'?' · tasa /90 publicada por el proveedor':'')+method+captureNote+(Number.isFinite(ctx?.pairedConceded)?' · '+ctx.pairedConceded+' goles sin autogoles en la muestra xGOT':'')};
   }
   function sourceMark(record,key,metadata) {
     const info = provenance(record,key,metadata);

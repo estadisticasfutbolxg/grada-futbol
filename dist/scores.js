@@ -1,6 +1,7 @@
 (function(root){
  'use strict';
  const node=typeof module==='object'&&module.exports,radar=node?require('./radar.js'):root.GradaRadar,squads=node?require('./squads.js'):root.GradaSquads;
+ const tactical=node?require('./roles.js'):root.GradaRoles;
  const positionLabels={POR:'Portería',DEF:'Defensa',MED:'Centro del campo',DEL:'Delantera'};
  function build(data,{referencePlayers=data.players,referenceLabel='ligas disponibles'}={}){
   const players=radar.profiles(data.players,{referencePlayers}),indices=radar.midfieldIndices(data.players,{referencePlayers});
@@ -26,6 +27,7 @@
   if(definition.kind==='team')return Number.isFinite(record.matches)&&record.matches>=minimum&&(includePending||value(model,record,definition)!==null);
   if(value(model,record,definition)===null)return false;
   if(record.pos!==definition.position||!radar.rankingEligible(record,model.players.get(record),minimum))return false;
+  if(definition.roleKey&&!tactical.matches(record,definition.roleKey))return false;
   if(definition.key.startsWith('MED_'))return model.roles.get(record)===definition.key||model.roles.get(record)==='MED_BALANCED';
   return true;
  }

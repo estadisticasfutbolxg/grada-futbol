@@ -56,6 +56,7 @@
     const fTeams = new Map((f?.teams||[]).map(t=>[String(t.id),teamKey(t.name)]));
     const fTeamIndex = index(f?.teams||[],t=>teamKey(t.name));
     const matchedIDs = new Set(), matchedFotmobIDs = new Set();
+    const sourceMetadata={[primarySource]:u.metadata,ESPN:e.metadata,...(f?{FotMob:f.metadata}:{})};
     const stats = {matched_players:0,understat_only_players:0,ambiguous_players:0,conflicting_players:0,espn_matched_players:0,fotmob_matched_players:0};
     function merge(primary,other,kind,additional=null) {
       const row = {...primary,id:(kind === 'player'?'combined:':'')+primary.id,fieldSources:{name:primarySource,team:primarySource,pos:primarySource},metricContexts:{},sourceRecords:{[primarySource]:{...primary}}};
@@ -70,7 +71,7 @@
         if (source) {
           row.fieldSources[key] = source;
           const original=sourceRow.metricContexts?.[key];
-          row.metricContexts[key] = {...original,source,matches:original&&Object.hasOwn(original,'matches')?original.matches:sourceRow.matches??null,minutes:original&&Object.hasOwn(original,'minutes')?original.minutes:sourceRow.minutes??null};
+          row.metricContexts[key] = {...original,source,captured_at:original?.captured_at||sourceMetadata[source].imported_at,matches:original&&Object.hasOwn(original,'matches')?original.matches:sourceRow.matches??null,minutes:original&&Object.hasOwn(original,'minutes')?original.minutes:sourceRow.minutes??null};
         }
         if (new Set([primary,other,additional].filter(Boolean).map(r=>r[key]).filter(numeric)).size>1) differences.push(key);
       }
@@ -78,7 +79,7 @@
       // Derived values must describe the same numerator/denominator cohort.
       function derived(key,a,b,calculate) {
         if (row.metricContexts[key]?.reportedValue && numeric(row[key])) return;
-        if (numeric(row[a]) && numeric(row[b]) && row.fieldSources[a] === row.fieldSources[b]) {
+        if (numeric(row[a]) && numeric(row[b]) && metrics.sameSample(row.metricContexts[a],row.metricContexts[b])) {
           row[key] = calculate(row[a],row[b]);
           if (numeric(row[key])) { row.fieldSources[key] = row.fieldSources[a]; row.metricContexts[key] = {...row.metricContexts[a]}; return; }
         }

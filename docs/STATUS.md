@@ -1,5 +1,16 @@
 # Estado comprobado de GRADA
 
+## Revisión validada · 14 de noviembre de 2026 · publicación pendiente
+
+- El Site tiene **acceso exclusivo del propietario** desde el 14 de noviembre: política `custom`, revisión 3, un owner, sin grupos, editores adicionales ni visitantes externos. Se ha vuelto a comprobar antes de preparar esta publicación. Las entradas históricas de «pública» describen su audiencia anterior.
+- El selector usa equipos reales por ID. Giménez y Pablo García tienen agregados de varios clubes; se muestran y filtran como tales, sin crear un equipo ficticio ni asignar sus totales a un solo club.
+- [Puestos y nuevas medidas](ROLES_METRICS.md): filtros publicados de centrales/laterales, pivotes/interiores/mediapuntas y otros puestos, con cobertura y polivalencia explícitas. Rankings de centrales, laterales y MED equilibrados. Los perfiles MED comparan percentiles de sus índices; hasta 10 puntos de diferencia significa equilibrado. Todos conservan su score canónico, también en equipos.
+- Se añaden xG/tiro, G+A/90, xG+xA/90 y goles evitados/90 con fuente, muestra y denominadores compatibles. Los ceros son válidos; se conservan los ausentes y las fechas propias de los componentes. Las tasas publicadas no se normalizan de nuevo.
+- **0 jugadores nuevos, 0 cifras de juego sustituidas y 0 partidos actualizados**. Cambian puestos publicados de **2.136 registros FotMob** en 96 equipos: LaLiga 450, Premier 445, Serie A 476, Bundesliga 387, Ligue 1 378. En el combinado, 2.126/2.284 fichas tienen puestos y 2.113 son compatibles con su posición canónica. Trece discrepancias no se fuerzan. Se regeneran cinco SQLite y cinco combinados; las otras seis capturas permanecen intactas.
+- Se conservan exactamente las 2.284 posiciones y scores individuales de v19: **995 scores completos y 51 pendientes sobre el mínimo**. El cambio descriptivo de perfiles MED modifica candidatos y sus medias de bloque. Auditoría: 2.284 igualdades entre ámbitos, 714 medias y 2.514 contribuciones. La recuperación de posiciones conserva scores y referencias al cargar/actualizar.
+- Diecisiete archivos Node y siete tests Python correctos. Auditoría de 82 medidas con 390.320 comprobaciones total/90; cinco SQLite con `integrity_check` y concordancia de registros; sintaxis, documentación y diff correctos. Chromium sobre el Worker final verifica 30 rankings en seis ámbitos, filtros de clubes/puestos/métricas, ficha/comparador, caché sin puestos, portada y móvil, sin errores JS ni desbordamiento. Autocontrol sin revisión independiente. El validador histórico StatsBomb no corresponde a estos artefactos y sigue sin su captura local.
+- Integración GitHub y publicación privada pendientes de completar en la [tarea](../loop/tasks/20261114-codex-clubs-metrics-roles.md). Correspondencia, datos, bases y secretos quedan fuera de GitHub; los permisos de reutilización de proveedores siguen pendientes.
+
 ## Publicación verificada · 11 de noviembre de 2026 · 01:18 Madrid
 
 - [GRADA pública](https://grada-futbol-analitica.ivanmatema2.chatgpt.site), versión **19**, despliegue nativo `succeeded`. Auditoría de 2.284 registros de las cinco ligas, con 14 fichas FotMob contrastadas, dos biografías y una plantilla ESPN. [Informe con casos, pendientes e identidades](SCORE_AUDIT.md).

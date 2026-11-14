@@ -2,6 +2,7 @@
  'use strict';
  const node=typeof module==='object'&&module.exports,leagues=node?require('./leagues.js'):root.GradaLeagues;
  const positions=node?require('./positions.js'):root.GradaPositions;
+ const roles=node?require('./roles.js'):root.GradaRoles;
  const fields={successful_passes:['completed','number'],successful_passes_accuracy:['accuracy','percent'],shots:['shots','number'],shots_on_target:['shotsOnTarget','number'],expected_goals:['xg','fraction'],expected_assists:['xa','fraction'],expected_goals_on_target:['xgot','fraction'],line_breaking_passes:['lineBreakingPasses','number'],chances_created:['chancesCreated','number'],big_chances_created:['bigChancesCreated','number'],'matchstats.headers.tackles':['tackles','number'],interceptions:['interceptions','number'],recoveries:['recoveries','number'],clearances:['clearances','number'],blocked_shots:['blocks','number'],saves:['saves','number'],save_percentage:['savepct','percent'],goals_conceded:['conceded','number'],goals_prevented:['prevented','fraction'],clean_sheet_team_title:['clean','number'],penalty_saves:['penaltiesSaved','number'],keeper_high_claim:['highClaims','number'],keeper_sweeper:['sweeperActions','number'],yellow_cards:['yellowCards','number'],red_cards:['redCards','number'],expected_goals_against_while_on_pitch:['xga','fraction']};
  const rates={dribbles_succeeded:'dribblesPer90',long_balls_accurate:'longBallsPer90',fouls_committed:'foulsPer90'};
  function numeric(value,format,signed=false){
@@ -84,6 +85,7 @@
   if(!previous)return data;
   let sameLeague=false;try{sameLeague=leagues.resolve(data.metadata).id===leagues.resolve(previous.metadata).id;}catch(_){}
   if(!sameLeague||data.metadata.source!=='FotMob'||previous.metadata.source!=='FotMob'||data.metadata.season_id!==previous.metadata.season_id||data.metadata.league_id!==previous.metadata.league_id)return data;
+  data=roles.restore(data,previous);
   const oldById=new Map(previous.players.map(p=>[String(p.id),p]));let fields=0,positionsRetained=0;
   const players=data.players.map(player=>{
    const prior=oldById.get(String(player.id));

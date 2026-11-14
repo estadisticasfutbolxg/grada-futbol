@@ -3,6 +3,7 @@
  const node=typeof module==='object'&&module.exports,leagues=node?require('./leagues.js'):root.GradaLeagues;
  const profiles=node?require('./profiles.js'):root.GradaProfiles;
  const espn=node?require('./laliga.js'):root.GradaLaLiga;
+ const roles=node?require('./roles.js'):root.GradaRoles;
  const validators=node?{espn:require('./laliga.js').validate,fotmob:require('./fotmob.js').validate,understat:require('./understat.js').validate}:{espn:root.GradaLaLiga.validate,fotmob:root.GradaFotmob.validate,understat:root.GradaUnderstat.validate};
  const names={espn:'ESPN',fotmob:'FotMob',understat:'Understat'};
  function sources(league){return ['espn','fotmob',...(league.primary==='Understat'?['understat']:[])];}
@@ -39,7 +40,7 @@
   return value;
  }
  function playerValues(player){
-  return Object.fromEntries(Object.entries(player).filter(([key,value])=>value===null||typeof value!=='object'||['metricContexts','fieldSources'].includes(key)));
+  return {...Object.fromEntries(Object.entries(player).filter(([key,value])=>value===null||typeof value!=='object'||['metricContexts','fieldSources'].includes(key))),tacticalPositions:[...roles.info(player).codes].sort()};
  }
  function changes(before,after,project=value=>value){
   const old=new Map(before.map(row=>[String(row.id),row])),added=[],modified=[];

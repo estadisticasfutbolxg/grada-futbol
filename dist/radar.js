@@ -27,8 +27,11 @@
     {key:'DEL',label:'Delanteros',position:'DEL',kind:'player',minimum:450},
     {key:'POR',label:'Porteros',position:'POR',kind:'player',minimum:180},
     {key:'DEF',label:'Defensas',position:'DEF',kind:'player',minimum:450},
+    {key:'DEF_CB',label:'Centrales · score DEF',position:'DEF',roleKey:'CB',kind:'player',minimum:450},
+    {key:'DEF_FB',label:'Laterales y carrileros · score DEF',position:'DEF',roleKey:'FB',kind:'player',minimum:450},
     {key:'MED_DEF',label:'Centrocampistas · perfil defensivo',position:'MED',kind:'player',minimum:450},
     {key:'MED_ATT',label:'Centrocampistas · perfil ofensivo',position:'MED',kind:'player',minimum:450},
+    {key:'MED_BALANCED',label:'Centrocampistas · perfil equilibrado',position:'MED',kind:'player',minimum:450},
     {key:'TEAM_ATTACK',label:'Equipos · mejores ataques',kind:'team',minimum:5,aggregateProfile:'ATTACK'},
     {key:'TEAM_STRIKERS',label:'Equipos · mejor delantera',kind:'team',minimum:5,aggregateProfile:'DEL'},
     {key:'TEAM_DEFENSE',label:'Equipos · mejores defensas',kind:'team',minimum:5,aggregateProfile:'DEF'},
@@ -93,14 +96,15 @@
   function midfieldIndices(all,{referencePlayers=all}={}){
     return new Map(['MED_ATT','MED_DEF'].map(key=>{
       const plan=reference(referencePlayers,key);
-      return [key,new Map(all.filter(p=>p.pos==='MED').map(p=>[p,{...profile(p,referencePlayers,plan),kind:'index'}]))];
+      const distribution=referencePlayers.filter(p=>p.pos==='MED').map(p=>profile(p,referencePlayers,plan).score).filter(Number.isFinite);
+      return [key,new Map(all.filter(p=>p.pos==='MED').map(p=>{const index=profile(p,referencePlayers,plan);return [p,{...index,kind:'index',rolePercentile:Number.isFinite(index.score)&&distribution.length>=5?percentile(index.score,distribution):null}];}))];
     }));
   }
   function midfieldRole(player,indices){
     if(player.pos!=='MED')return null;
-    const attack=indices.get('MED_ATT')?.get(player)?.score,defense=indices.get('MED_DEF')?.get(player)?.score;
+    const attack=indices.get('MED_ATT')?.get(player)?.rolePercentile,defense=indices.get('MED_DEF')?.get(player)?.rolePercentile;
     if(!Number.isFinite(attack)||!Number.isFinite(defense))return null;
-    return Math.abs(attack-defense)<1e-12?'MED_BALANCED':attack>defense?'MED_ATT':'MED_DEF';
+    return Math.abs(attack-defense)<=10?'MED_BALANCED':attack>defense?'MED_ATT':'MED_DEF';
   }
   function rankingEligible(record,profile,minimum){
     if(!profile||profile.comparableArea===null||!Number.isFinite(minimum)||minimum<0)return false;
