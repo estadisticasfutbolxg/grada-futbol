@@ -11,7 +11,7 @@
     MED_ATT:{area:'midfieldAttackArea',coverage:'midfieldAttackPlayers',position:'MED',population:'centrocampistas',label:'Score del centro del campo ofensivo'},
     MED_DEF:{area:'midfieldDefenseArea',coverage:'midfieldDefensePlayers',position:'MED',population:'centrocampistas',label:'Score del centro del campo defensivo'}
   };
-  function unitDefinition(key){const config=unitKeys[key];return definition+' Incluye '+config.population+(config.position?' ('+config.position+')':'')+'.'+(['MED_ATT','MED_DEF','ATTACK'].includes(key)?' El perfil MED compara los percentiles de sus índices ofensivo y defensivo; hasta 10 puntos de diferencia se considera equilibrado. No cambia su score MED ni afirma una posición táctica. Los equilibrados pueden pertenecer a ambos perfiles.':'')+' Referencia común de ligas; mínimo 450 min por eje (180 min o 2 PJ en porteros).';}
+  function unitDefinition(key){const config=unitKeys[key];return definition+' Incluye '+config.population+(config.position?' ('+config.position+')':'')+'.'+(['MED_ATT','MED_DEF','ATTACK'].includes(key)?' El perfil MED compara los percentiles de sus índices ofensivo y defensivo; hasta 10 puntos de diferencia se considera equilibrado. Ese perfil selecciona los ejes de su score; el equipo usa exactamente esa misma puntuación y no afirma una posición táctica. Los equilibrados pueden pertenecer a ambos perfiles.':'')+' Referencia común de ligas; mínimo 450 min por eje (180 min o 2 PJ en porteros).';}
   const midfieldKeys=Object.fromEntries(Object.entries(unitKeys).filter(([key])=>key.startsWith('MED_'))),midfieldDefinition=unitDefinition('MED_ATT');
   function summarize(data,profiles=radar.profiles(data.players),{position=null,accept=()=>true}={}){
     if(new Set(data.teams.map(t=>String(t.id))).size!==data.teams.length||new Set(data.players.map(p=>String(p.id))).size!==data.players.length)throw new Error('Identidades duplicadas en la plantilla.');
@@ -23,7 +23,7 @@
       const value=profiles.get(player)?.comparableArea;
       const area=typeof value==='number'&&Number.isFinite(value)&&value>=0&&value<=1?value:null;
       const minutes=typeof player.minutes==='number'&&Number.isFinite(player.minutes)&&player.minutes>=0?player.minutes:null,included=area!==null&&minutes!==null&&minutes>0;
-      team.totalPlayers++;team.players.push({id:String(player.id),name:player.name,pos:player.pos,area,minutes,minutesSource:player.metricContexts?.minutes?.source||player.fieldSources?.minutes||data.metadata?.primary_source||data.metadata?.source||null,included,weight:null,contribution:null});
+      team.totalPlayers++;team.players.push({id:String(player.id),name:player.name,pos:player.pos,scoreProfile:profiles.get(player)?.profileKey||player.pos,scoreProfileLabel:profiles.get(player)?.profileLabel||null,area,minutes,minutesSource:player.metricContexts?.minutes?.source||player.fieldSources?.minutes||data.metadata?.primary_source||data.metadata?.source||null,included,weight:null,contribution:null});
       if(!included)team.missingPlayers++;
       else{team.weightedTotal+=area*minutes;team.minutes+=minutes;team.validPlayers++;}
     }

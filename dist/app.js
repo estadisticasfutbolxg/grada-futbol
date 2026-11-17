@@ -71,7 +71,7 @@ descriptions.shotsOnTarget='Tiros a puerta contados por ESPN o en el mapa comple
 descriptions.points='Puntos publicados en la clasificación de FotMob; se conserva su recuento y fecha.';descriptions.pointsPerMatch='Puntos divididos entre los partidos de la misma clasificación.';descriptions.bigChances='Grandes ocasiones de equipo publicadas por FotMob.';descriptions.bigChancesPerMatch='Grandes ocasiones divididas entre los PJ del mismo proveedor.';descriptions.shotsOnTargetPerMatch='Tiros a puerta por partido de equipo: tasa publicada por FotMob, sin reconstruir totales redondeados.';descriptions.goalsPerMatch='Goles marcados por el equipo divididos entre sus PJ del proveedor de esos goles.';descriptions.xgPerMatch='xG del equipo dividido entre sus PJ en la misma fuente.';descriptions.goalDifferencePerMatch='Diferencia entre goles a favor y en contra, por partido, con el mismo proveedor y cobertura.';descriptions.xgDifferencePerMatch='Diferencia entre xG a favor y recibidos, por partido, con el mismo modelo y cobertura.';descriptions.league='Liga de origen de este registro. En Todas las ligas se conservan fichas y estadísticas por competición.';
 descriptions.shotsPer90='Tiros realizados por 90 minutos, tasa publicada por FotMob. No se deduce un recuento a partir de su valor redondeado.';
 Object.assign(descriptions,GradaFotmob.descriptions,{
-  radarArea:'Score de jugador entre 0 y 1, calculado con el polígono del radar respecto al máximo (todos los ejes en percentil 100). Con radios r = percentil ÷ 100, se calcula la media de r[i] × r[i+1], cerrando el polígono. Se ofrece con todos los ejes comunes y muestra suficiente de su posición. Se usa una referencia común de ligas en tablas, fichas, rankings y equipos. Cada score mide rendimiento relativo a POR, DEF, MED o DEL; los subperfiles MED no lo recalculan. No es la probabilidad de jugar bien.',
+  radarArea:'Score de jugador entre 0 y 1, calculado con el polígono del radar respecto al máximo (todos los ejes en percentil 100). Con radios r = percentil ÷ 100, se calcula la media de r[i] × r[i+1], cerrando el polígono. Se ofrece con todos los ejes comunes y muestra suficiente de su posición. Se usa una referencia común de ligas en tablas, fichas, rankings y equipos. Cada score mide rendimiento relativo a su posición. En MED, se resuelve primero el perfil ofensivo, defensivo o equilibrado y se usan los ejes de ese perfil. Sin perfil verificable se declara general. Cambiar de ranking no lo recalcula. No es la probabilidad de jugar bien.',
   prevented:'Goles evitados publicados por FotMob: su comparación postiro entre goles esperados a puerta recibidos y goles encajados. Puede ser negativo. No se recalcula con goles de ESPN ni con xG de Understat, y no se infiere PSxG a partir del redondeo.'
 });
 const rates = GradaMetrics.rates;
@@ -97,8 +97,8 @@ function updateRadarProfiles(){
   const context=scoreContext(),target=data||context.reference,key=view==='rankings'?rankingProfile:null,def=GradaRadar.definition(key);
   if(!context.models.has(target))context.models.set(target,GradaScores.build(target,{referencePlayers:context.reference.players,referenceLabel:context.inputs.length+' ligas cargadas'}));
   scoreModel=context.models.get(target);squadAreas=scoreModel.overall;unitAreas=scoreModel.units;radarProfiles=new Map([...scoreModel.players,...scoreModel.teams]);
-  const sample=(isTeamView()?teams():players()).find(p=>isTeamView()||p.pos===GradaRadar.definition(rankingProfile).position);rankingAxisKeys=new Set(isTeamView()?[]:radarProfiles.get(sample)?.expectedAxes||[]);
-  $('#score-reference').textContent=loaded?'Score único por posición · referencia común: '+context.inputs.length+' ligas cargadas. Cambiar de liga filtra candidatos; conserva los scores.':'';
+  rankingAxisKeys=new Set(GradaScores.rankingAxes(scoreModel,def));
+  $('#score-reference').textContent=loaded?'Score único por jugador y perfil · referencia común: '+context.inputs.length+' ligas cargadas. Cambiar de liga filtra candidatos; conserva los scores.':'';
 }
 function squad(record){return scoreModel?.teams.has(record)?squadAreas.teams.get(String(record.id)):null;}
 function unitSummary(record,profileKey){return scoreModel?.teams.has(record)?unitAreas.get(profileKey)?.teams.get(String(record.id)):null;}
@@ -115,7 +115,7 @@ function primarySource(){return data?.metadata?.primary_source || leagueConfig()
 function isSeason() { return isLive() || isUnderstat() || isCombined(); }
 function selectedSource() { return currentLeague; }
 function source() { return loaded ? data.metadata.source : 'Sin datos'; }
-function metric(p,k) { if(squadMetricKeys.has(k))return squadMetric(p,k);if(k==='radarArea')return radarProfiles.get(p)?.score??null;if(view==='rankings'&&rankingAxisKeys.has(k))return radarProfiles.get(p)?.axes.find(a=>a.key===k)?.value??null;return GradaMetrics.metric(p,k,view==='rankings'?'total':unit); }
+function metric(p,k) { if(squadMetricKeys.has(k))return squadMetric(p,k);if(k==='radarArea')return radarProfiles.get(p)?.score??null;if(view==='rankings'&&rankingAxisKeys.has(k))return GradaMetrics.metric(p,k,GradaRadar.axis(k).unit);return GradaMetrics.metric(p,k,view==='rankings'?'total':unit); }
 function columnLabel(k,isTeam = isTeamView()) {
   if(k==='radarArea'&&isTeam)return 'Score de equipo';
   if(view==='rankings'&&rankingAxisKeys.has(k))return GradaRadar.axis(k).label;
@@ -194,7 +194,7 @@ function columns() {
   for(const rule of numericRules()) if(rule.value!==''&&labels[rule.key]&&!base.includes(rule.key)) base.push(rule.key);
   if(view==='rankings'){
     const mid=activeUnit(),config=GradaSquads.unitKeys[mid];
-    base=['name',...(isTeamView()?[]:['team']),...(isAll()?['league']:[]),...(isTeamView()?['teamArea','areaPlayers',...(mid?[config.area,config.coverage]:[])]:['radarArea']),isTeamView()?'matches':'minutes',...(isTeamView()?[]:radarProfiles.get(players().find(p=>p.pos===GradaRadar.definition(rankingProfile).position))?.expectedAxes||[])];
+    base=['name',...(isTeamView()?[]:['team']),...(isAll()?['league']:[]),...(isTeamView()?['teamArea','areaPlayers',...(mid?[config.area,config.coverage]:[])]:['radarArea']),isTeamView()?'matches':'minutes',...(isTeamView()?[]:[...rankingAxisKeys])];
   }
   if(isAll()&&!base.includes('league'))base.splice(1,0,'league');
   for(const rule of numericRules())if(rule.value!==''&&labels[rule.key]&&!base.includes(rule.key))base.push(rule.key);
@@ -222,7 +222,7 @@ function originMark(record,key) {
   if(key==='radarArea'&&isTeamView()&&metric(record,key)===null)return '<small class="metric-source">'+esc(indexPending(record))+'</small>';
   if(key==='radarArea'&&metric(record,key)!==null){
     const profile=radarProfiles.get(record);
-    return '<small class="metric-source" title="'+esc(profile.profileLabel+' · '+profile.axes.map(a=>a.label).join(', ')+' · comparar solo la misma posición y ejes')+'">GRADA · '+esc(profile.kind==='team'?'Equipo':record.pos)+' · '+profile.axes.length+' ejes</small>';
+    return '<small class="metric-source" title="'+esc(profile.profileLabel+' · '+profile.axes.map(a=>a.label).join(', ')+' · comparar solo la misma posición y ejes')+'">GRADA · '+esc(profile.kind==='team'?'Equipo':({MED_ATT:'MED ofensivo',MED_DEF:'MED defensivo',MED_BALANCED:'MED equilibrado',MED:'MED general'}[profile.profileKey]||record.pos))+' · '+profile.axes.length+' ejes</small>';
   }
   return isCombined()?GradaComponents.sourceMark(record,key,data.metadata):'';
 }
@@ -243,10 +243,10 @@ function combinationNote(record) {
 function statisticalProfileNote(record){
   if(record.pos!=='MED')return '';
   const kind=scoreModel.roles.get(record),attack=scoreModel.indices.get('MED_ATT')?.get(record)?.rolePercentile,defense=scoreModel.indices.get('MED_DEF')?.get(record)?.rolePercentile;
-  if(!kind)return '<p class="sub midfield-note">Perfil estadístico sin clasificar: faltan ejes o muestra de sus índices. La posición publicada y el score MED se conservan.</p>';
+  if(!kind)return '<p class="sub midfield-note">Perfil estadístico sin clasificar: faltan ejes o muestra de sus índices. Se usa el radar general de mediocampo si tiene datos suficientes; no se le atribuye un perfil ofensivo o defensivo.</p>';
   const label={MED_ATT:'ofensivo',MED_DEF:'defensivo',MED_BALANCED:'equilibrado'}[kind];
   const pct=new Intl.NumberFormat('es-ES',{maximumFractionDigits:1});
-  return '<p class="sub midfield-note">Perfil estadístico: '+label+' · índice ofensivo P'+pct.format(attack)+' / defensivo P'+pct.format(defense)+'. Hasta 10 puntos de diferencia se considera equilibrado. Describe sus cifras frente a otros MED; no determina si juega de pivote, interior o mediapunta. Conserva el mismo score MED.</p>';
+  return '<p class="sub midfield-note">Perfil estadístico: '+label+' · índice ofensivo P'+pct.format(attack)+' / defensivo P'+pct.format(defense)+'. Hasta 10 puntos de diferencia se considera equilibrado. Describe sus cifras frente a otros MED; no determina si juega de pivote, interior o mediapunta. Este perfil selecciona los ejes de su único score; cambiar de ranking no lo modifica.</p>';
 }
 function radarFor(record) { return GradaComponents.radar(record,players(),data.metadata,radarProfiles.get(record)); }
 function rows() {
@@ -303,7 +303,7 @@ function renderTable() {
   $('#tbody').innerHTML = a.map((p,i)=>'<tr><td>'+(view==='rankings'&&isTeamView()&&(sort==='radarArea'||squadMetricKeys.has(sort))&&metric(p,sort)===null?'—':String(i+1).padStart(2,'0'))+'</td>'+cols.map(k=>'<td class="'+(['goals','xg','saves'].includes(k)?'highlight':'')+'">'+(k === 'name' ? '<button class="namebtn" data-detail="'+esc(p.id)+'"><span class="initials">'+esc(initials(p.name))+'</span>'+esc(p.name)+'</button>' : k === 'tacticalRole' ? '<span class="role-label" title="'+esc(GradaRoles.info(p).label)+'">'+esc(GradaRoles.info(p).codes.join(' / ')||'—')+'</span>' : k === 'pos' ? '<span class="pos" tabindex="0" title="'+esc(GradaPositions.describe(p))+'">'+esc(p.pos)+'</span>' : k === 'team' ? '<span title="'+esc(GradaClubs.info(p,teams()).description)+'">'+esc(GradaClubs.info(p,teams()).label)+'</span>' : k==='league'?esc(p.league) : val(p,k)+originMark(p,k))+'</td>').join('')+'</tr>').join('') || '<tr><td colspan="'+(cols.length+1)+'" class="empty">'+(loaded ? 'No hay resultados con estos filtros.' : 'Aún no hay datos importados.')+'</td></tr>';
   $('#count').textContent = a.length+' '+(isTeamView()?'equipos':'jugadores')+' · '+source()+(isLive()?' · plantillas actuales':'')+(view==='rankings'?' · unidades por eje':unit === '90'?' · volumen por 90 min':'');
   $('#radar-table-note').hidden=false;
-  $('#radar-table-note').textContent=view==='rankings'&&activeUnit()?GradaSquads.unitDefinition(activeUnit())+' Los filtros y el mínimo de PJ del equipo no cambian los pesos.':isTeamView()?GradaSquads.definition+' Entre 0 y 1; cobertura en Jugadores ponderados. Los filtros no cambian pesos ni scores.':view==='rankings'?'Orden por el score único de su posición; muestra filtrada desde '+rankingMinimum+' minutos. La referencia y el score se mantienen al cambiar de ranking o liga.':'Score único por posición (POR, DEF, MED o DEL), entre 0 y 1; — si faltan ejes o muestra. La liga y los filtros no cambian la referencia.';
+  $('#radar-table-note').textContent=view==='rankings'&&activeUnit()?GradaSquads.unitDefinition(activeUnit())+' Los filtros y el mínimo de PJ del equipo no cambian los pesos.':isTeamView()?GradaSquads.definition+' Entre 0 y 1; cobertura en Jugadores ponderados. Los filtros no cambian pesos ni scores.':view==='rankings'?'Orden por el score único de su posición y perfil; muestra filtrada desde '+rankingMinimum+' minutos. La referencia y el score se mantienen al cambiar de ranking o liga.':'Score único por jugador y perfil, entre 0 y 1; — si faltan ejes o muestra. La liga y los filtros no cambian la referencia.';
   if(view==='rankings'&&GradaRadar.definition(rankingProfile).roleKey)$('#radar-table-note').textContent+=' Solo puestos publicados verificados; los polivalentes pueden aparecer en varios grupos. El score DEF se conserva.';
   $$('[data-sort]').forEach(b=>b.onclick=()=>{ direction = sort === b.dataset.sort ? -direction : -1; sort = b.dataset.sort; renderTable(); });
   $$('[data-detail]').forEach(b=>b.onclick=()=>detail(b.dataset.detail,isTeamView()));
@@ -340,7 +340,7 @@ function renderRankingPreviews(){
     const summary=p=>mid?unitSummary(p,mid):squad(p),score=p=>GradaScores.value(scoreModel,p,def);
     const ranked=records.filter(p=>GradaScores.eligible(scoreModel,p,def)).sort((a,b)=>score(b)-score(a)||a.name.localeCompare(b.name)).slice(0,5);
     $(target).innerHTML=ranked.map((p,i)=>{
-      const coverage=sum?summary(p):null,caption=sum?coverage.validPlayers+' / '+coverage.totalPlayers+' jugadores ponderados':p.team+' · '+p.pos;
+      const coverage=sum?summary(p):null,caption=sum?coverage.validPlayers+' / '+coverage.totalPlayers+' jugadores ponderados':p.team+' · '+(p.pos==='MED'?radarProfiles.get(p).profileLabel:p.pos);
       return '<div class="rank"><span class="ranknum">'+(i+1)+'</span><div class="rankname"><button class="namebtn" data-open-ranking="'+key+'" data-preview-id="'+esc(p.id)+'">'+esc(p.name)+'</button><small>'+esc([p.league,caption].filter(Boolean).join(' · '))+'</small></div><div class="rankscore">'+new Intl.NumberFormat('es-ES',{minimumFractionDigits:3,maximumFractionDigits:3}).format(score(p))+'<small class="rank-score-label">'+(sum?'Score ponderado':def.kind==='player'?'Score de jugador':'Score 0–1')+'</small></div></div>';
     }).join('')+(ranked.length?'':'<p class="empty">Sin candidatos con scores válidos y muestra suficiente.</p>')+'<button class="linkbtn" data-open-ranking="'+key+'" '+(!loaded?'disabled':'')+'>Ver ranking completo →</button>';
   }
@@ -392,7 +392,7 @@ function navigate(v,scroll=true,preserveSort=false){
   $('#overview').classList.toggle('hidden',v!=='overview');$('#listing').classList.toggle('hidden',!['overview','teams','players','rankings'].includes(v));$('#compare').classList.toggle('hidden',v!=='compare');$('#glossary').classList.toggle('hidden',v!=='glossary');
   $('#filters').classList.toggle('hidden',v==='glossary');$('#min-minutes').closest('label').classList.toggle('hidden',isTeamView());$('#positions').classList.toggle('hidden',isTeamView()||v==='rankings');$('#teamfilter').classList.toggle('hidden',isTeamView());$('#allplayers').classList.toggle('hidden',v!=='overview');
   $$('#filters .seg, #filters .divider').forEach(control=>control.classList.toggle('hidden',v==='overview'||v==='rankings'));$('#ranking-controls').classList.toggle('hidden',v!=='rankings');$('#ranking-min-caption').textContent=isTeamView()?'Partidos mínimos':'Minutos mínimos';$('#ranking-profile').value=rankingProfile;
-  $('#ranking-note').textContent=isTeamView()&&activeUnit()?GradaSquads.unitDefinition(activeUnit()):isTeamView()?GradaSquads.definition:GradaRadar.definition(rankingProfile).roleKey?'Solo candidatos con puesto publicado compatible. Los polivalentes pueden aparecer en varios grupos; conservan su mismo score DEF. No se conoce el reparto de minutos por puesto.':rankingProfile.startsWith('MED_')?'Perfil estadístico por percentiles de los índices ofensivo y defensivo. Hasta 10 puntos de diferencia: equilibrado, incluido también en ambos grupos. El orden y el score son siempre MED; no indica un puesto táctico. Sin ambos índices completos, queda pendiente.':'Un score único de su posición, con muestra suficiente y todos los ejes. La referencia común de ligas se conserva en tablas, fichas y rankings.';
+  $('#ranking-note').textContent=isTeamView()&&activeUnit()?GradaSquads.unitDefinition(activeUnit()):isTeamView()?GradaSquads.definition:GradaRadar.definition(rankingProfile).roleKey?'Solo candidatos con puesto publicado compatible. Los polivalentes pueden aparecer en varios grupos; conservan su mismo score DEF. No se conoce el reparto de minutos por puesto.':rankingProfile.startsWith('MED_')?'Perfil estadístico por percentiles de los índices ofensivo y defensivo. Hasta 10 puntos de diferencia: equilibrado, incluido también en ambos grupos. El perfil selecciona los ejes del score. Los equilibrados conservan su radar equilibrado incluso en los otros rankings; no indica un puesto táctico. Sin ambos índices completos, el perfil queda sin clasificar; puede tener un score general explícito.':'Un score único de su posición y perfil, con muestra suficiente y todos los ejes. La referencia común de ligas se conserva en tablas, fichas y rankings.';
   $('#tabletitle').textContent=v==='rankings'?GradaRadar.definition(rankingProfile).label:isTeamView()?'Ranking de equipos':'Ranking de jugadores';$('#tablesub').textContent=isTeamView()?'Scores de equipo ponderados por minutos, entre 0 y 1. Consulta pesos y contribuciones en la ficha.':activeLeaderKey?'Ranking de '+labels[activeLeaderKey]+(activeLeaderKey==='savesPer90'?' · porteros':' · jugadores de campo')+'. Misma selección que en portada.':'Selecciona un nombre para ver su radar. Score entre 0 y 1; — = no disponible.';
   if(v==='overview'){dashboard();renderLeaders();}
   syncPositions();renderTable();renderCompare();if(scroll)window.scrollTo({top:0,behavior:'smooth'});
@@ -496,7 +496,7 @@ async function refreshData(){
   }finally{refreshing=false;$('#league').disabled=false;updateRefreshButton();}
 }
 const terms = [
-  ['Puestos publicados y perfiles estadísticos',descriptions.tacticalRole+' El perfil ofensivo/defensivo/equilibrado compara percentiles de dos índices MED; una diferencia de hasta 10 puntos se considera equilibrada. No cambia el score MED.'],
+  ['Puestos publicados y perfiles estadísticos',descriptions.tacticalRole+' El perfil ofensivo/defensivo/equilibrado compara percentiles de dos índices MED; una diferencia de hasta 10 puntos se considera equilibrada. Selecciona los ejes del único score MED.'],
   ['Calidad de ocasión · xG por tiro',descriptions.xgPerShot],
   ['Participación en goles y producción esperada',descriptions.goalInvolvementsPer90+' '+descriptions.xgXaPer90],
   ['Fuentes y cobertura','Selector de ligas combinadas 2026/27. LaLiga prioriza Understat, ESPN y FotMob, en ese orden. Las demás ligas usan FotMob como fuente principal y ESPN como complemento. Los modelos de xG/xA pueden diferir entre proveedores; las cifras conservan origen, fecha y denominador. Solo se habilitan ligas con todas las familias de métricas verificadas.'],

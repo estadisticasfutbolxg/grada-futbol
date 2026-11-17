@@ -1,12 +1,12 @@
-# Score único por posición y promedios de equipo
+# Score único por jugador y perfil; promedios de equipo
 
-Definición vigente desde el 9 de noviembre de 2026. El modelo común es `dist/scores.js`; tablas, tarjetas, fichas, comparador, filtros y generador consumen sus resultados.
+Definición actualizada el 17 de noviembre de 2026, modelo `role_radar_area_v3`. Sustituye el score MED general usado para todos los perfiles desde el 9 de noviembre. El modelo común es `dist/scores.js`; tablas, tarjetas, fichas, comparador, filtros y generador consumen sus resultados.
 
 ## Jugadores
 
-Cada jugador tiene un único score para su posición resuelta con las fuentes: POR, DEF, MED o DEL. La resolución usa consenso entre proveedores y, sin acuerdo, la ficha FotMob cuando existe; conserva alternativas y procedencia según [COMBINED.md](COMBINED.md). No se recalcula al abrir otro ranking. La referencia usa los jugadores de todas las ligas cargadas, conservando fuente y denominadores por métrica. Seleccionar una liga solo filtra candidatos; el aviso de referencia indica cuántas ligas participan. Una actualización de las cifras propias o de las referencias sí puede cambiar los scores.
+Cada jugador tiene un único score. Primero se resuelve su posición con las fuentes: POR, DEF, MED o DEL. En MED se resuelve además su perfil estadístico y se eligen los ejes correspondientes antes de calcular el score. La posición usa consenso entre proveedores y, sin acuerdo, la ficha FotMob cuando existe; conserva alternativas y procedencia según [COMBINED.md](COMBINED.md). No se cambia la posición para obtener un score mejor. La referencia usa jugadores de esa misma posición de todas las ligas cargadas, conservando fuente y denominadores por métrica. Seleccionar una liga o ranking solo filtra candidatos; no cambia el perfil, los ejes o el score. Una actualización de cifras o referencias sí puede cambiarlos.
 
-`radar.js` selecciona hasta seis ejes comunes por posición. Cada eje requiere cinco referencias suficientes. Los percentiles usan rango medio para empates y se invierten cuando menos es mejor. El score es el área relativa del polígono: `media(r[i] × r[i+1])`, con `r = percentil / 100` y cierre del último eje con el primero. Está entre 0 y 1 y describe rendimiento relativo a su posición.
+`radar.js` selecciona hasta seis ejes comunes por posición/perfil. Cada eje requiere cinco referencias suficientes de la posición amplia: todos los MED con muestra válida son referencia de los ejes MED, no solo los candidatos visibles de un subgrupo. Los percentiles usan rango medio para empates y se invierten cuando menos es mejor. El score es el área relativa del polígono: `media(r[i] × r[i+1])`, con `r = percentil / 100` y cierre del último eje con el primero. Está entre 0 y 1 y describe rendimiento relativo según esos ejes; scores de perfiles distintos no representan una misma habilidad física ni una probabilidad.
 
 Solo hay score cuando existen al menos tres ejes, todos los ejes comunes tienen valor y tanto el jugador como cada métrica cumplen la muestra fija: 450 minutos en campo; 180 en porteros, o 2 PJ si su proveedor no publica minutos. La alternativa de 2 PJ no acredita un filtro adicional de 900 minutos. Un radar parcial puede dibujarse, pero su área parcial no se publica como score ni contribuye a equipos. La tabla y el radar explican si faltan métricas y qué fuente no cumple sus minutos propios. El modo total/90 y los filtros no cambian el score. Un valor publicado cero, incluido un score exactamente cero, es válido en tablas, rankings y ponderaciones. Un campo ausente o un cociente con denominador cero permanece desconocido y no se sustituye por cero.
 
@@ -14,9 +14,20 @@ Los ejes mantienen la definición y cobertura de `metrics.js`. En porteros, Efic
 
 ## Perfiles de centrocampistas
 
-Todos conservan el score MED. Desde el 14 de noviembre, los dos índices auxiliares de acciones ofensivas y defensivas se convierten en percentiles de sus respectivas distribuciones MED, con referencia común y mínimos fijos. Una diferencia de hasta 10 puntos percentiles se considera equilibrada; por encima, domina el percentil mayor. Los equilibrados tienen ranking propio y pueden aparecer en ambos grupos. Sin ambos índices completos, el perfil es desconocido. Este umbral descriptivo no es un intervalo de confianza.
+Desde el 14 de noviembre, los dos índices auxiliares de acciones ofensivas y defensivas se convierten en percentiles de sus respectivas distribuciones MED, con referencia común y mínimos fijos. Una diferencia de hasta 10 puntos percentiles se considera equilibrada; por encima, domina el percentil mayor. La regla de clasificación no cambia el 17 de noviembre. Este umbral descriptivo no es un intervalo de confianza.
 
-Estos índices no se presentan como otro Score de jugador ni sustituyen su radar MED. Los rankings de ambos grupos se ordenan por su score MED. No se infiere una posición táctica real a partir de estadísticas. Los centros del campo de equipos muestran además el número de MED sin perfil verificable.
+La corrección del 17 de noviembre hace que ese perfil determine los ejes del score mostrado. No se calculan scores alternativos para elegir el mayor ni se sustituye el score al abrir otro ranking.
+
+| Perfil MED | Ejes del score, en el orden del polígono |
+| --- | --- |
+| Ofensivo | xA/90, ocasiones creadas/90, grandes ocasiones creadas/90, tiros a puerta/90, regates logrados/90, goles/90 |
+| Defensivo | pases completados/90, precisión de pase, recuperaciones/90, entradas/90, intercepciones/90, pases rompelíneas/90 |
+| Equilibrado | pases completados/90, xA/90, ocasiones creadas/90, recuperaciones/90, entradas/90, intercepciones/90 |
+| Sin perfil verificable | General explícito: conserva los ejes generales anteriores (pases completados/90, precisión, xA/90, recuperaciones/90, entradas/90 e intercepciones/90 con las capturas actuales) |
+
+Sin ambos índices completos, el perfil es desconocido: no se atribuye ofensivo/defensivo por intuición. Puede tener un score general si sus propios ejes tienen muestra y datos suficientes, pero no entra en los rankings de subgrupos. Los equilibrados tienen ranking propio y pueden aparecer en ambos grupos, siempre conservando su score equilibrado. La tabla reúne los ejes de los perfiles presentes y muestra qué perfil produce cada score; no toma los ejes del primer MED de la captura.
+
+No se infiere una posición táctica real a partir de estadísticas. Álex Baena sigue MED por acuerdo ESPN/FotMob frente a DEL Understat, con esa discrepancia visible. Su perfil ofensivo selecciona un radar ofensivo: con las capturas actuales, score 0,751949 frente al anterior 0,174481. No se han descargado cifras nuevas para obtener ese cambio. Los centros del campo de equipos muestran además el número de MED sin perfil verificable.
 
 Los filtros de puesto publicado —centrales, laterales, pivotes, interiores y otros— usan evidencia explícita de FotMob, conservan la posición canónica y no alteran el score. [Definiciones, cobertura y límites](ROLES_METRICS.md).
 
@@ -51,7 +62,7 @@ Con las capturas publicadas al preparar este cambio hay 1.029 asistencias conoci
 
 ## Artefactos y reproducción
 
-`scores.build` calcula el modelo; `scores.value` y `scores.eligible` resuelven rankings. `squads.js` produce los promedios y sus contribuciones. `withScores` añade `playerScore`, `scorePosition`, `midfieldProfile` y scores/ledgers de equipo al JSON combinado. El modelo se identifica como `position_radar_area_v2` en `metadata.derived_metrics.playerScore`.
+`scores.build` calcula índices, perfil y score en ese orden; `scores.value`, `scores.eligible` y `scores.rankingAxes` resuelven rankings y columnas. `squads.js` produce los promedios y sus contribuciones con el perfil del score utilizado. `withScores` añade `playerScore`, `scorePosition`, `scoreProfile`, `scoreProfileLabel`, `midfieldProfile` y scores/ledgers de equipo al JSON combinado. El modelo se identifica como `role_radar_area_v3` en `metadata.derived_metrics.playerScore`.
 
 El generador lee las capturas verificadas de las ligas disponibles para compartir referencia. En una importación por etapas, `--reference-dir` aporta las otras ligas, y `import_leagues.py` recalcula todos los derivados tras completar las fuentes. No actualiza las fechas originales por recalcular scores. Todas las ligas descarta derivados anteriores y usa el modelo común. En el navegador, el modelo se invalida al cambiar una captura, no al cambiar de vista.
 

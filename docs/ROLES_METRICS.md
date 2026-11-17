@@ -1,5 +1,7 @@
 # Puestos publicados, perfiles y medidas · 14 de noviembre de 2026
 
+> Corrección del 17 de noviembre: el perfil estadístico MED ahora selecciona también los ejes de su único score. La descripción anterior de «solo filtra candidatos» queda sustituida por [SCORES.md](SCORES.md). Los puestos publicados siguen siendo evidencia táctica separada y no se deducen del rendimiento.
+
 ## Puesto táctico y perfil estadístico
 
 Se conservan las posiciones canónicas POR/DEF/MED/DEL y un único score por jugador, con referencia común de las cinco ligas. La separación adicional sirve para elegir candidatos; no recalcula ese score al cambiar de tabla.

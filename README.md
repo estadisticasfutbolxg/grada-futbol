@@ -1,6 +1,6 @@
 # GRADA · Estadísticas de fútbol
 
-> Definición vigente desde el 9 de noviembre: [score único por posición, referencia común, promedios de equipo y totales con cobertura](docs/SCORES.md). Las definiciones anteriores de subperfiles, índices independientes, referencias por liga o sumas que aparezcan en el registro histórico quedan sustituidas por ese modelo.
+> Definición vigente desde el 17 de noviembre: [score único por jugador con ejes de su perfil, referencia común, promedios de equipo y totales con cobertura](docs/SCORES.md). El perfil MED selecciona sus ejes antes de calcular el score; cambiar de ranking no lo recalcula.
 
 
 Web en español de estadísticas, perfiles y rankings por score del radar de jugadores y equipos. El selector ofrece **LaLiga, Premier League, Serie A, Bundesliga, Ligue 1** combinadas y **Todas las ligas**, temporada 2026/27. HTML/CSS/JavaScript en `dist/`, Python estándar para descargar datos reales y generar SQLite gratuitos.
@@ -9,7 +9,7 @@ Web en español de estadísticas, perfiles y rankings por score del radar de jug
 
 LaLiga prioriza Understat → ESPN → FotMob. Las otras ligas priorizan FotMob → ESPN, incluidos xG/xA FotMob, tras comprobar las mismas familias de métricas de pase, ataque, defensa y portería. Los modelos, capturas, PJ y minutos de cada campo se conservan. No hay datos de demostración; las ausencias siguen `null`.
 
-Las capturas verificadas reúnen 2.284 fichas jugador/liga y 96 equipos. En Todas las ligas se recalculan los percentiles sobre el conjunto seleccionado. Hay cinco perfiles de jugadores, tres índices de equipos y tres rankings de equipos por scores ponderados de su delantera y centrocampistas. Las scores individuales requieren todos los ejes comunes. Consulta [ligas y rankings](docs/LEAGUES.md), [combinación](docs/COMBINED.md) y [estado publicado](docs/STATUS.md).
+Las capturas verificadas reúnen 2.284 fichas jugador/liga y 96 equipos. Los percentiles usan una referencia común de las ligas cargadas. Hay rankings de delanteros, porteros, defensas, centrales, laterales y perfiles MED ofensivo/defensivo/equilibrado; los equipos usan promedios ponderados de esos mismos scores. Los scores individuales requieren todos los ejes de su posición/perfil. Consulta [ligas y rankings](docs/LEAGUES.md), [combinación](docs/COMBINED.md) y [estado publicado](docs/STATUS.md).
 
 ## Generar la web y las bases
 

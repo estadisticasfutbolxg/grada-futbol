@@ -13,7 +13,7 @@
         for(const [key,source] of Object.entries(row.fieldSources||{}))if(!metricContexts[key])metricContexts[key]={source,captured_at:m.sources[source]?.imported_at||m.imported_at,league_key:id};
         const copy={...row,id:id+':'+row.id,...(row.team_id!==undefined?{team_id:row.team_id===null?null:id+':'+row.team_id}:{}),league:m.competition,league_key:id,metricContexts};
         delete copy.teamArea;delete copy.teamAreaCoverage;delete copy.teamAreaContributions;delete copy.midfieldAreas;delete copy.attackArea;delete copy.teamAreaMinutes;
-        for(const key of ['playerScore','scorePosition','midfieldProfile','unitScores','keeperArea','keeperPlayers','defenseArea','defensePlayers','midfieldArea','midfieldPlayers','strikerArea','strikerPlayers','offenseArea','offensePlayers','midfieldAttackArea','midfieldAttackPlayers','midfieldDefenseArea','midfieldDefensePlayers'])delete copy[key];
+        for(const key of ['playerScore','scorePosition','scoreProfile','scoreProfileLabel','midfieldProfile','unitScores','keeperArea','keeperPlayers','defenseArea','defensePlayers','midfieldArea','midfieldPlayers','strikerArea','strikerPlayers','offenseArea','offensePlayers','midfieldAttackArea','midfieldAttackPlayers','midfieldDefenseArea','midfieldDefensePlayers'])delete copy[key];
         return copy;
       }
       players.push(...d.players.map(copy));teams.push(...d.teams.map(copy));

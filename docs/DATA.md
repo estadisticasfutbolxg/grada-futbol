@@ -1,5 +1,7 @@
 # Contrato de datos y métricas
 
+> Vigente desde el 17 de noviembre: [score único por jugador con ejes de su perfil MED](SCORES.md), modelo `role_radar_area_v3`. La posición y sus discrepancias siguen resolviéndose con fuentes; no se elige la posición ni el score para maximizar su puntuación.
+
 > Definición vigente desde el 9 de noviembre: [score único por posición, referencia común, promedios de equipo y totales con cobertura](SCORES.md). Las definiciones anteriores de subperfiles, índices independientes, referencias por liga o sumas que aparezcan en el registro histórico quedan sustituidas por ese modelo.
 
 > Actualización del 14 de noviembre: [puestos tácticos publicados, perfiles estadísticos equilibrados, muestras de métricas derivadas y agregados multiclub](ROLES_METRICS.md). Los puestos detallados no se deducen de estadísticas ni cambian el score canónico.

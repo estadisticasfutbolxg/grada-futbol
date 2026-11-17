@@ -22,6 +22,7 @@
     POR:['savepct','savesPerMatch','concededPerMatch','psxgEfficiency','prevented','highClaims','sweeperActions','cleanPerMatch','longBallsPer90','accuracy','completedPer90','passes'],
     MED_DEF:['completedPer90','accuracy','recoveries','tackles','interceptions','lineBreakingPasses'],
     MED_ATT:['xa','chancesCreated','bigChancesCreated','shotsOnTargetPer90','dribblesPer90','goals'],
+    MED_BALANCED:['completedPer90','xa','chancesCreated','recoveries','tackles','interceptions'],
   };
   const rankingDefinitions=[
     {key:'DEL',label:'Delanteros',position:'DEL',kind:'player',minimum:450},
@@ -70,7 +71,9 @@
     return {definition:def,minimum,samples,keys:[...samples.keys()].filter(k=>!(position==='POR'&&samples.has('psxgEfficiency')&&k==='prevented')).slice(0,6),peerCount:samePosition.filter(p=>candidates.some(key=>eligible(p,key)&&Number.isFinite(metrics.metric(p,key,axes[key][1])))).length};
   }
   function baseEligible(record,position,minimum){return Number.isFinite(record.minutes)?record.minutes>=minimum:position==='POR'&&Number.isFinite(record.matches)&&record.matches>=2;}
-  function profile(player,all,plan=reference(all,player.pos)) {
+  function profile(player,all,plan) {
+    if(!plan&&player.pos==='MED')return profiles([player],{referencePlayers:all}).get(player);
+    plan=plan||reference(all,player.pos);
     const values=[];
     for(const key of plan.keys){
       const [label,unit,lower]=axes[key],value=metrics.metric(player,key,unit),sample=plan.samples.get(key);
@@ -88,10 +91,17 @@
     return {axes:visible,area,score,comparableArea:score,expectedAxes:plan.keys,missingAxes:plan.keys.filter(k=>!values.some(a=>a.key===k)),sampleEnough,baseSampleEnough,insufficientSamples,minimumMinutes:plan.minimum,minimumMatches:null,kind:'player',profileKey:plan.definition.key,profileLabel:plan.definition.label,peerCount:plan.peerCount,availableAxes:values.length,
       referenceRule:player.pos==='POR'?'misma posición, mínimo 180 min o 2 PJ del proveedor de cada eje':'misma posición, mínimo 450 minutos'};
   }
-  function profiles(all,{referencePlayers=all,kind='player'}={}){
+  function profiles(all,{referencePlayers=all,kind='player',midfieldRoles=null}={}){
     if(kind!=='player')throw new Error('Los equipos usan promedios de sus jugadores en GradaScores.');
-    const plans=new Map([...new Set(all.map(p=>p.pos))].map(key=>[key,reference(referencePlayers,key)]));
-    return new Map(all.map(p=>[p,profile(p,referencePlayers,plans.get(p.pos))]));
+    const roles=midfieldRoles||new Map(),indices=midfieldRoles?null:midfieldIndices(all,{referencePlayers});
+    if(indices)for(const p of all)if(p.pos==='MED')roles.set(p,midfieldRole(p,indices));
+    const keyFor=p=>p.pos==='MED'&&['MED_ATT','MED_DEF','MED_BALANCED'].includes(roles.get(p))?roles.get(p):p.pos;
+    const plans=new Map([...new Set(all.map(keyFor))].map(key=>[key,reference(referencePlayers,key)]));
+    return new Map(all.map(p=>{
+      const key=keyFor(p),result=profile(p,referencePlayers,plans.get(key));
+      if(p.pos==='MED')result.profileLabel={MED_ATT:'Centrocampista · perfil ofensivo',MED_DEF:'Centrocampista · perfil defensivo',MED_BALANCED:'Centrocampista · perfil equilibrado',MED:'Centrocampista · perfil general (sin clasificar)'}[key];
+      return [p,result];
+    }));
   }
   function midfieldIndices(all,{referencePlayers=all}={}){
     return new Map(['MED_ATT','MED_DEF'].map(key=>{
@@ -119,7 +129,7 @@
   function explain(profile){
     if(!profile)return 'No hay una referencia suficiente para calcular el score.';
     if(profile.kind==='team')return Number.isFinite(profile.score)?'Score ponderado de sus jugadores con minutos suficientes; faltan posiciones para dibujar el radar completo.':'Faltan scores de jugadores con minutos positivos para ponderar este equipo.';
-    if(profile.score!==null&&Number.isFinite(profile.score))return 'Score completo de su posición. Los ceros publicados cuentan como valores válidos.';
+    if(profile.score!==null&&Number.isFinite(profile.score))return 'Score completo de '+profile.profileLabel+'. Los ceros publicados cuentan como valores válidos.';
     const parts=[];
     if(profile.baseSampleEnough===false)parts.push('La muestra del jugador no alcanza el mínimo de '+profile.minimumMinutes+' min'+(profile.profileKey==='POR'?' o 2 PJ de su fuente':''));
     if(profile.missingAxes?.length)parts.push('Faltan métricas publicadas: '+profile.missingAxes.map(k=>axis(k)?.label||k).join(', '));
