@@ -1,12 +1,12 @@
 # 20261117-codex · Perfil y score de mediocampo coherentes
 
-- Estado: `active`
+- Estado: `done`
 - Responsable: Codex
 - Revisor: autocontrol; sin revisión independiente
 - Rama: `fix/coherent-midfield-score`
 - Base Sites: `f4f3228e6d8e029be41b9852c26a8635f6e04e48`
 - Base GitHub: `f85e80667026097be727c97f5e2b51046ea28328`
-- PR: pendiente
+- PR: [#37 integrado](https://github.com/estadisticasfutbolxg/grada-futbol/pull/37)
 - Objetivo: corregir el score de Baena y casos equivalentes, integrar y publicar conservando acceso privado
 
 ## Evidencia y alcance
@@ -23,7 +23,7 @@ Archivos compartidos: radar.js, scores.js, squads.js, app.js, components.js, aud
 - [x] Perfil/score/reference se calculan una vez con referencia común y no cambian según vista, filtro o ranking.
 - [x] Balanced y desconocidos tienen tratamiento explícito, sin elegir scores alternativos por disponibilidad ni convertir ausentes en cero.
 - [x] Equipos reutilizan exactamente el score y los minutos de sus contribuyentes.
-- [ ] Auditar los 2.284 registros, regresiones de ceros/muestras/caché, artefactos derivados y casos de otras ligas; integrar/publicar privado y registrar recuentos.
+- [x] Auditar los 2.284 registros, regresiones de ceros/muestras/caché, artefactos derivados y casos de otras ligas; integrar/publicar privado y registrar recuentos.
 
 ## Plan
 
@@ -47,4 +47,6 @@ Archivos compartidos: radar.js, scores.js, squads.js, app.js, components.js, aud
 
 ## Integración
 
-Pendientes commit/push, PR, merge y despliegue privado. Autocontrol sin revisión independiente. Actualizar con identificadores y resultados reales al completarlos.
+Commit Sites `1e5eb8cd8ebeacbad7839e8e98c3e27ef74e1590` subido y verificado; GitHub `a0e2207f3a25878954006eef7d1aa5796fc9401a`, PR #37 limpio y fusionado por squash en `6e5499b71c626237ca5a8a6938ac2a2cfdf949df`, main comprobado. Dieciocho archivos de tarea, con blobs base iguales entre GitHub y Sites; no se sobrescribe trabajo ajeno. No hay checks/statuses configurados ni protección de main; se aplicó SHA esperado al merge. Autocontrol sin revisión independiente.
+
+Publicación privada en versión **21**, despliegue `appgdep_6afcbf28768c8191ac05589e131999d0` terminado en `succeeded`, entorno revisión 1. Versión `appgprj_6ae0b8b2eb1881918601230d00603255~appgver_443e1fc113188191bab42eec99f08a3c`, fuente exacta `1e5eb8cd8ebeacbad7839e8e98c3e27ef74e1590`. Worker SHA256 `c84d1e127211601b0186bbf6bd67f270390778164f533cba5c7758abaa5ce9d4`. Política comprobada después: `custom`, revisión 3, owner único, cero grupos/visitantes. No cambian contraseña, acceso o configuración. El cierre documental no modifica el Worker y no necesita otra publicación idéntica.
