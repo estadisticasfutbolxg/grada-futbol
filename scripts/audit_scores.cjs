@@ -1,7 +1,7 @@
 'use strict';
 // Read real provider captures. Never write changes back to them.
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
-const leagues=require('../dist/leagues.js'),combined=require('../dist/combined.js'),scopes=require('../dist/scopes.js'),scores=require('../dist/scores.js'),refresh=require('../dist/refresh.js'),profiles=require('../dist/profiles.js');
+const leagues=require('../dist/leagues.js'),combined=require('../dist/combined.js'),scopes=require('../dist/scopes.js'),scores=require('../dist/scores.js'),refresh=require('../dist/refresh.js'),profiles=require('../dist/profiles.js'),radar=require('../dist/radar.js');
 function audit(directory,{recovery=true,now=Date.now()}={}){
  const read=(file,key,league)=>refresh.validate(JSON.parse(fs.readFileSync(path.join(directory,file),'utf8')),key,league,{now});
  const sources=leagues.list().map(league=>({league,espn:read(league.espnFile,'espn',league),fotmob:read('fotmob-'+league.id+'-2026-27.json','fotmob',league),understat:league.primary==='Understat'?read('understat-'+league.id+'-2026-27.json','understat',league):null}));
@@ -12,12 +12,19 @@ function audit(directory,{recovery=true,now=Date.now()}={}){
  const records=all.players.map(p=>{
   const r=model.players.get(p);return {id:p.id,name:p.name,team:p.team,league:p.league,league_key:p.league_key,pos:p.pos,minutes:p.minutes,score:r.score,aboveMinimum:r.baseSampleEnough===true,missingAxes:r.missingAxes,insufficientSamples:r.insufficientSamples||[],position:p.positionResolution,sources:Object.fromEntries(Object.entries(p.sourceRecords||{}).map(([key,row])=>[key,{id:row.id,name:row.name,pos:row.pos,minutes:row.minutes,matches:row.matches}]))};
  });
- let scoreChecks=0,means=0,contributions=0;
+ let scoreChecks=0,means=0,contributions=0,profileChecks=0;
+ for(const p of all.players){
+  const profile=model.players.get(p),role=model.roles.get(p);
+  assert.equal(profile.profileKey,p.pos==='MED'?role||'MED':p.pos,'Declared profile and score axes disagree');
+  for(const definition of radar.rankingDefinitions.filter(d=>d.kind==='player'&&d.position===p.pos))assert.equal(scores.value(model,p,definition),profile.score,'Ranking changed the canonical score');
+  profileChecks++;
+ }
  for(const {league,data}of sets){
   const local=scores.build(data,{referencePlayers:all.players});
   for(const p of data.players){assert.equal(local.players.get(p).score,model.players.get(byId.get(league.id+':'+p.id)).score,'Score differs between league and all leagues');scoreChecks++;}
   for(const summary of [local.overall,...local.units.values()])for(const team of summary.teams.values()){
    const included=team.players.filter(p=>p.included);
+   for(const member of included){const p=data.players.find(p=>String(p.id)===member.id),profile=local.players.get(p);assert.equal(member.area,profile.score,'Contribution differs from the player score');assert.equal(member.scoreProfile,profile.profileKey,'Contribution uses another score profile');}
    if(!included.length){assert.equal(team.area,null);continue;}
    const mean=included.reduce((sum,p)=>sum+p.area*p.minutes,0)/included.reduce((sum,p)=>sum+p.minutes,0);
    assert(Math.abs(team.area-mean)<1e-12,'Team score is not the minute-weighted mean');
@@ -45,7 +52,7 @@ function audit(directory,{recovery=true,now=Date.now()}={}){
   scenarios.push({mode,simulation:true,positionChanges,scoreChanges,lost,gained});
  }
  const pending=records.filter(p=>p.aboveMinimum&&p.score===null);
- return {captured_at:new Date(now).toISOString(),summary:{players:records.length,valid:records.filter(p=>p.score!==null).length,pendingAboveMinimum:pending.length,leagues:sets.map(({league,data})=>({id:league.id,name:league.name,players:data.players.length,pending:pending.filter(p=>p.league_key===league.id).length,matches:data.metadata.imported_matches})),invariants:{scoreChecks,means,contributions}},pending,positionConflicts:records.filter(p=>p.position?.uncertain),unlinkedAboveMinimum:records.filter(p=>p.aboveMinimum&&Object.keys(p.sources).length===1),scenarios};
+ return {captured_at:new Date(now).toISOString(),summary:{players:records.length,valid:records.filter(p=>p.score!==null).length,pendingAboveMinimum:pending.length,leagues:sets.map(({league,data})=>({id:league.id,name:league.name,players:data.players.length,pending:pending.filter(p=>p.league_key===league.id).length,matches:data.metadata.imported_matches})),invariants:{scoreChecks,profileChecks,means,contributions}},pending,positionConflicts:records.filter(p=>p.position?.uncertain),unlinkedAboveMinimum:records.filter(p=>p.aboveMinimum&&Object.keys(p.sources).length===1),scenarios};
 }
 if(require.main===module){
  try{

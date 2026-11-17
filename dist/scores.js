@@ -4,8 +4,9 @@
  const tactical=node?require('./roles.js'):root.GradaRoles;
  const positionLabels={POR:'Portería',DEF:'Defensa',MED:'Centro del campo',DEL:'Delantera'};
  function build(data,{referencePlayers=data.players,referenceLabel='ligas disponibles'}={}){
-  const players=radar.profiles(data.players,{referencePlayers}),indices=radar.midfieldIndices(data.players,{referencePlayers});
+  const indices=radar.midfieldIndices(data.players,{referencePlayers});
   const roles=new Map(data.players.map(p=>[p,radar.midfieldRole(p,indices)]));
+  const players=radar.profiles(data.players,{referencePlayers,midfieldRoles:roles});
   const overall=squads.summarize(data,players),units=squads.unitSummaries(data,{profiles:players,indices,roles}),teams=new Map();
   for(const profile of players.values())profile.referenceRule+=' · referencia común: '+referenceLabel;
   for(const team of data.teams){
@@ -31,9 +32,14 @@
   if(definition.key.startsWith('MED_'))return model.roles.get(record)===definition.key||model.roles.get(record)==='MED_BALANCED';
   return true;
  }
+ function rankingAxes(model,definition){
+  if(definition.kind==='team')return [];
+  const profiles=model.data.players.filter(p=>eligible(model,p,definition)).map(p=>model.players.get(p)).sort((a,b)=>(a.profileKey===definition.key?0:1)-(b.profileKey===definition.key?0:1)||a.profileKey.localeCompare(b.profileKey));
+  return [...new Set(profiles.flatMap(p=>p.expectedAxes))];
+ }
  function withScores(data,options={}){
   const model=build(data,options),result=squads.withTeamAreas(data,model.overall,model.units,{reference:model.referenceLabel});
-  return {...result,metadata:{...result.metadata,derived_metrics:{...result.metadata.derived_metrics,playerScore:{method:'position_radar_area_v2',reference:model.referenceLabel,minimum_minutes:{POR:180,DEF:450,MED:450,DEL:450},definition:'Un score por posición POR/DEF/MED/DEL y referencia común. Los subperfiles MED solo seleccionan candidatos; no recalculan el score.'}}},players:data.players.map(p=>({...p,playerScore:model.players.get(p).score,scorePosition:p.pos,midfieldProfile:model.roles.get(p)}))};
+  return {...result,metadata:{...result.metadata,derived_metrics:{...result.metadata.derived_metrics,playerScore:{method:'role_radar_area_v3',reference:model.referenceLabel,minimum_minutes:{POR:180,DEF:450,MED:450,DEL:450},definition:'Un score por jugador y referencia común de su posición. En MED, su perfil estadístico se resuelve primero y selecciona ejes ofensivos, defensivos o equilibrados. Sin perfil verificable se usa el general explícito. Cambiar de ranking no recalcula el score.'}}},players:data.players.map(p=>({...p,playerScore:model.players.get(p).score,scorePosition:p.pos,scoreProfile:model.players.get(p).profileKey,scoreProfileLabel:model.players.get(p).profileLabel,midfieldProfile:model.roles.get(p)}))};
  }
- const api={build,value,eligible,withScores,positionLabels};if(node)module.exports=api;else root.GradaScores=api;
+ const api={build,value,eligible,rankingAxes,withScores,positionLabels};if(node)module.exports=api;else root.GradaScores=api;
 })(typeof window==='object'?window:globalThis);
