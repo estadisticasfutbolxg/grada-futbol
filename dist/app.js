@@ -3,8 +3,9 @@ const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAl
 let data = null, loaded = false;
 let currentLeague='laliga',initialLoadsComplete=false,rankingProfile='DEL',rankingMinimum=450;
 const datasets=new Map();
+let selectedClubs=new Set(),teamCompareChoices=[];
 const leagueConfig=()=>GradaLeagues.get(currentLeague);
-let liveData = null, understatData = null, fotmobData = null, combinedData = null, view = 'overview', pos = 'Todos', unit = 'total', sort = 'goals', direction = -1, choices = [], refreshing = false, interaction = 0;
+let liveData = null, understatData = null, fotmobData = null, combinedData = null, view = 'overview', pos = 'Todos', unit = 'total', sort = 'radarArea', direction = -1, choices = [], refreshing = false, interaction = 0;
 let radarProfiles = new Map(),rankingAxisKeys=new Set(),squadAreas={teams:new Map(),unassignedPlayerIds:[]},unitAreas=new Map();
 let scoreModel=null,scoreCache={inputs:[],reference:null,models:new WeakMap()};
 let activeLeaderKey=null;
@@ -177,7 +178,7 @@ function compare(a,b,key = sort) {
   const d = typeof x === 'string' ? x.localeCompare(y) : x-y;
   return d ? direction*d : a.name.localeCompare(b.name);
 }
-function keysFor(p,isTeam = false) { let keys=isTeam?teamkeys:p.pos==='POR'?keeperkeys:playerkeys;if(!isTeam)keys=[...keys,...(p.pos==='POR'?['savesPer90']:['goalsPer90','assistsPer90'])];if(!isTeam&&unit==='90')keys=[...new Set(keys.map(k=>per90Columns[k]||k))];return keys.filter(k=>unit!=='90'||!GradaMetrics.fixedRates[k]||!keys.includes(GradaMetrics.fixedRates[k])); }
+function keysFor(p,isTeam = false) { let keys=isTeam?teamkeys:p.pos==='POR'?keeperkeys:playerkeys;if(!isTeam)keys=[...keys,...(p.pos==='POR'?['savesPer90']:['goalsPer90','assistsPer90'])];if(!isTeam&&unit==='90')keys=[...new Set(keys.map(k=>per90Columns[k]||k))];const result=keys.filter(k=>unit!=='90'||!GradaMetrics.fixedRates[k]||!keys.includes(GradaMetrics.fixedRates[k]));const first=isTeam?'teamArea':'radarArea';return [first,...new Set(result.filter(k=>k!==first))]; }
 function columns() {
   let base;
   if (isTeamView()) base = ['name',...teamkeys];
@@ -202,7 +203,44 @@ function columns() {
   if(view!=='rankings'&&['goalsPer90','assistsPer90','savesPer90','completedPer90'].includes(sort)){base=base.filter(k=>k!==sort);base.splice(base.indexOf('name')+1,0,sort);}
   if(!isTeamView())base.splice(Math.max(base.indexOf('team')+1,1),0,'tacticalRole');
   base=[...new Set(base)];
-  return base;
+  const primary=isTeamView()?(view==='rankings'&&activeUnit()?GradaSquads.unitKeys[activeUnit()].area:'teamArea'):'radarArea';
+  return GradaExplore.scoreFirst(base,primary);
+}
+
+function clubOptions(){return data?GradaClubs.options(data).filter(o=>!isTeamView()||o.id!==GradaClubs.multiKey):[];}
+function selectedTeamIds(){const valid=new Set(teams().map(t=>String(t.id)));return [...selectedClubs].filter(id=>valid.has(id));}
+function updateClubSummary(){
+  const options=clubOptions(),chosen=options.filter(o=>selectedClubs.has(String(o.id)));
+  $('#club-filter-summary').textContent=chosen.length===1?chosen[0].label:chosen.length?chosen.length+' equipos':'Todos los equipos';
+  $('#compare-picked').disabled=selectedTeamIds().length!==2;
+}
+function searchClubOptions(){
+  const normalize=value=>String(value).normalize('NFKD').replace(/\p{M}/gu,'').toLowerCase();
+  const query=normalize($('#club-filter-search').value).trim();let visible=0;
+  $$('#club-options label').forEach(label=>{label.hidden=!normalize(label.textContent).includes(query);if(!label.hidden)visible++;});
+  $('#club-filter-empty').hidden=visible>0;
+}
+function renderClubOptions(){
+  $('#club-options').innerHTML='<legend class="visually-hidden">Equipos incluidos</legend>'+clubOptions().map(o=>'<label><input type="checkbox" value="'+esc(o.id)+'"'+(selectedClubs.has(String(o.id))?' checked':'')+'><span>'+esc(o.label)+'</span></label>').join('');
+  searchClubOptions();updateClubSummary();
+}
+function clearClubSelection(){
+  selectedClubs.clear();$('#club-filter-search').value='';
+  $$('#club-options input').forEach(input=>input.checked=false);searchClubOptions();updateClubSummary();
+}
+function renderTeamComparison(){
+  $('#team-comparison').hidden=view!=='teams';if(view!=='teams')return;
+  const ordered=[...teams()].sort((a,b)=>(squad(b)?.area??-1)-(squad(a)?.area??-1)||a.name.localeCompare(b.name));
+  teamCompareChoices=GradaExplore.pair(ordered,teamCompareChoices);
+  const alphabetical=[...teams()].sort((a,b)=>(a.league||'').localeCompare(b.league||'')||a.name.localeCompare(b.name));
+  for(const [i,id]of ['#compare-team-left','#compare-team-right'].entries()){
+    const select=$(id),options=alphabetical.map(t=>'<option value="'+esc(t.id)+'"'+(String(t.id)===teamCompareChoices[1-i]?' disabled':'')+'>'+esc((isAll()?t.league+' · ':'')+t.name)+'</option>').join('');
+    if(select.innerHTML!==options)select.innerHTML=options;
+    select.value=teamCompareChoices[i]||'';select.disabled=teams().length<2;
+  }
+  const details=new Map($$('#team-comparison-body details').map(el=>[el.id,el.open]));
+  $('#team-comparison-body').innerHTML=GradaExplore.renderTeamComparison(GradaExplore.compareTeams(scoreModel,teamCompareChoices));
+  $$('#team-comparison-body details').forEach(el=>{if(details.has(el.id))el.open=details.get(el.id);});
 }
 
 function numericRules() {
@@ -251,10 +289,11 @@ function statisticalProfileNote(record){
 }
 function radarFor(record) { return GradaComponents.radar(record,players(),data.metadata,radarProfiles.get(record)); }
 function rows() {
-  const search=$('#search').value.trim().toLocaleLowerCase('es'),tf=$('#teamfilter').value,rules=numericRules(),def=GradaRadar.definition(rankingProfile);
+  const search=$('#search').value.trim().toLocaleLowerCase('es'),rules=numericRules(),def=GradaRadar.definition(rankingProfile);
   return (isTeamView()?teams():players()).filter(p=>{
     if(view==='players'&&activeLeaderKey&&!leaderEligible(p,activeLeaderKey))return false;
-    if(!isTeamView()&&(pos!=='Todos'&&p.pos!==pos||!GradaClubs.matches(p,tf,teams())))return false;
+    if(!isTeamView()&&pos!=='Todos'&&p.pos!==pos)return false;
+    if(!GradaExplore.matchesTeams(p,selectedClubs,teams(),{team:isTeamView()}))return false;
     if(!isTeamView()&&!GradaRoles.matches(p,$('#rolefilter').value))return false;
     if(view==='rankings'&&!GradaScores.eligible(scoreModel,p,def,rankingMinimum,{includePending:isTeamView()}))return false;
     return GradaFilters.textMatches(p,search)&&GradaFilters.matches(p,rules,(record,key)=>(key==='radarArea'||squadMetricKeys.has(key))?metric(record,key):GradaMetrics.metric(record,key,'total'));
@@ -272,7 +311,7 @@ function hideHelp(force = false) {
 function showHelp(button) {
   clearTimeout(helpTimer);
   helpAnchor = button;
-  tooltip.textContent = description(button.dataset.help);
+  tooltip.textContent = GradaExplore.shortHelp(button.dataset.help,description(button.dataset.help),{team:isTeamView(),per90:view==='rankings'&&rankingAxisKeys.has(button.dataset.help)?GradaRadar.axis(button.dataset.help).unit==='90':unit==='90'&&rates.has(button.dataset.help)});
   tooltip.hidden = false;
   const rect = button.getBoundingClientRect(), width = tooltip.offsetWidth, height = tooltip.offsetHeight;
   tooltip.style.left = Math.max(8,Math.min(rect.left,window.innerWidth-width-8))+'px';
@@ -287,8 +326,6 @@ function bindHelp() {
     if (b.classList.contains('column-info')) b.onclick = () => showHelp(b);
   });
 }
-tooltip.onpointerenter = () => clearTimeout(helpTimer);
-tooltip.onpointerleave = () => { helpTimer = setTimeout(()=>hideHelp(),160); };
 document.addEventListener('keydown',e=>{ if (e.key === 'Escape') hideHelp(true); });
 document.addEventListener('pointerdown',e=>{ if (!e.target.closest('[data-help]') && !tooltip.contains(e.target)) hideHelp(true); });
 window.addEventListener('resize',()=>hideHelp(true));
@@ -300,8 +337,18 @@ function renderTable() {
   if(leaderRate){$('#leader-kpi-min').value=leaderMinimum(activeLeaderKey);$('#leader-kpi-note').textContent=labels[activeLeaderKey]+' · minutos de la fuente de esta tasa. El mismo mínimo se aplica en portada.';}
   hideHelp(true);
   const cols = columns(), a = rows();
-  $('#thead').innerHTML = '<tr><th scope="col"><button class="column-info" data-help="rank" aria-label="Descripción del puesto" aria-describedby="column-tooltip">#</button></th>'+cols.map(k=>'<th scope="col" aria-sort="'+(sort === k ? direction < 0 ? 'descending' : 'ascending' : 'none')+'"><div class="column-head"><button data-sort="'+k+'" data-help="'+k+'" aria-describedby="column-tooltip">'+columnLabel(k)+(sort === k ? direction < 0 ? ' ↓' : ' ↑' : '')+'</button><button class="column-info" data-help="'+k+'" aria-label="Descripción: '+esc(columnLabel(k))+'" aria-describedby="column-tooltip">ⓘ</button></div></th>').join('')+'</tr>';
-  $('#tbody').innerHTML = a.map((p,i)=>'<tr><td>'+(view==='rankings'&&isTeamView()&&(sort==='radarArea'||squadMetricKeys.has(sort))&&metric(p,sort)===null?'—':String(i+1).padStart(2,'0'))+'</td>'+cols.map(k=>'<td class="'+(['goals','xg','saves'].includes(k)?'highlight':'')+'">'+(k === 'name' ? '<button class="namebtn" data-detail="'+esc(p.id)+'"><span class="initials">'+esc(initials(p.name))+'</span>'+esc(p.name)+'</button>' : k === 'tacticalRole' ? '<span class="role-label" title="'+esc(GradaRoles.info(p).label)+'">'+esc(GradaRoles.info(p).codes.join(' / ')||'—')+'</span>' : k === 'pos' ? '<span class="pos" tabindex="0" title="'+esc(GradaPositions.describe(p))+'">'+esc(p.pos)+'</span>' : k === 'team' ? '<span title="'+esc(GradaClubs.info(p,teams()).description)+'">'+esc(GradaClubs.info(p,teams()).label)+'</span>' : k==='league'?esc(p.league) : val(p,k)+originMark(p,k))+'</td>').join('')+'</tr>').join('') || '<tr><td colspan="'+(cols.length+1)+'" class="empty">'+(loaded ? 'No hay resultados con estos filtros.' : 'Aún no hay datos importados.')+'</td></tr>';
+  $('#thead').innerHTML = '<tr>'+cols.map((k,i)=>k==='rank'?'<th scope="col" class="rank-column"><button class="column-info" data-help="rank" aria-label="Descripción del puesto" aria-describedby="column-tooltip">#</button></th>':'<th scope="col"'+(i===0?' class="score-main"':'')+' aria-sort="'+(sort===k?direction<0?'descending':'ascending':'none')+'"><div class="column-head"><button data-sort="'+k+'">'+esc(columnLabel(k))+(sort===k?direction<0?' ↓':' ↑':'')+'</button><button class="column-info" data-help="'+k+'" aria-label="Descripción: '+esc(columnLabel(k))+'" aria-describedby="column-tooltip">ⓘ</button></div></th>').join('')+'</tr>';
+  $('#tbody').innerHTML = a.map((p,i)=>'<tr>'+cols.map((k,column)=>{
+    let content;
+    if(k==='rank')content=view==='rankings'&&isTeamView()&&squadMetricKeys.has(sort)&&metric(p,sort)===null?'—':String(i+1).padStart(2,'0');
+    else if(k==='name')content='<button class="namebtn" data-detail="'+esc(p.id)+'"><span class="initials">'+esc(initials(p.name))+'</span>'+esc(p.name)+'</button>';
+    else if(k==='tacticalRole')content='<span class="role-label" title="'+esc(GradaRoles.info(p).label)+'">'+esc(GradaRoles.info(p).codes.join(' / ')||'—')+'</span>';
+    else if(k==='pos')content='<span class="pos" tabindex="0" title="'+esc(GradaPositions.describe(p))+'">'+esc(p.pos)+'</span>';
+    else if(k==='team')content='<span title="'+esc(GradaClubs.info(p,teams()).description)+'">'+esc(GradaClubs.info(p,teams()).label)+'</span>';
+    else if(k==='league')content=esc(p.league);
+    else content=(column===0?'<strong>'+val(p,k)+'</strong>':val(p,k))+originMark(p,k);
+    return '<td class="'+(column===0?'score-main':k==='rank'?'rank-column':['goals','xg','saves'].includes(k)?'highlight':'')+'">'+content+'</td>';
+  }).join('')+'</tr>').join('') || '<tr><td colspan="'+cols.length+'" class="empty">'+(loaded?'No hay resultados con estos filtros.':'Aún no hay datos importados.')+'</td></tr>';
   $('#count').textContent = a.length+' '+(isTeamView()?'equipos':'jugadores')+' · '+source()+(isLive()?' · plantillas actuales':'')+(view==='rankings'?' · unidades por eje':unit === '90'?' · volumen por 90 min':'');
   $('#radar-table-note').hidden=false;
   $('#radar-table-note').textContent=view==='rankings'&&activeUnit()?GradaSquads.unitDefinition(activeUnit())+' Los filtros y el mínimo de PJ del equipo no cambian los pesos.':isTeamView()?GradaSquads.definition+' Entre 0 y 1; cobertura en Jugadores ponderados. Los filtros no cambian pesos ni scores.':view==='rankings'?'Orden por el score único de su posición y perfil; muestra filtrada desde '+rankingMinimum+' minutos. La referencia y el score se mantienen al cambiar de ranking o liga.':'Score único por jugador y perfil, entre 0 y 1; — si faltan ejes o muestra. La liga y los filtros no cambian la referencia.';
@@ -328,10 +375,10 @@ function renderLeaders() {
     return '<article class="leadercard" data-leader-key="'+key+'"><h3>'+esc(title)+'</h3>'+(rate?'<p class="leader-sample-note">Mínimo '+leaderMinimum(key)+' min de su fuente</p>':'')+list.map((p,i)=>{const context=GradaMetrics.context(p,key),minutes=rate?' · '+(Number.isFinite(context?.minutes)?new Intl.NumberFormat('es-ES').format(context.minutes)+' min de la tasa':'minutos no publicados'):'';return '<div class="leaderrow"><span class="leaderplace">'+(i+1)+'</span><button class="namebtn" data-leader-profile="'+esc(p.id)+'"><span class="initials">'+esc(initials(p.name))+'</span><span>'+esc(p.name)+'<small>'+esc(p.team+minutes)+'</small></span></button><strong>'+format(p)+(key==='accuracy'?'%':'')+originMark(p,key)+'</strong></div>';}).join('')+(list.length?'':'<p class="empty">'+(loaded?'Sin datos con esta tasa y muestra mínima.':'Sin datos importados')+'</p>')+'<button class="leaderlink" data-leader-sort="'+key+'">Ver ranking →</button></article>';
   }).join('');
   $$('[data-leader-profile]').forEach(b=>b.onclick=()=>detail(b.dataset.leaderProfile,false));
-  $$('[data-leader-sort]').forEach(b=>b.onclick=()=>{sort=b.dataset.leaderSort;activeLeaderKey=sort;$('#rolefilter').value='';unit=Object.hasOwn(GradaMetrics.fixedRates,sort)?'90':'total';pos=sort==='savesPer90'?'POR':'Todos';direction=-1;$('#search').value='';$('#teamfilter').value='';$('#min-minutes').value='';$('#min-goals').value='';$('#metric-rules').innerHTML='';$('#add-rule').disabled=false;$$('[data-unit]').forEach(q=>q.classList.toggle('on',q.dataset.unit===unit));syncPositions();navigate('players');});
+  $$('[data-leader-sort]').forEach(b=>b.onclick=()=>{sort=b.dataset.leaderSort;activeLeaderKey=sort;$('#rolefilter').value='';unit=Object.hasOwn(GradaMetrics.fixedRates,sort)?'90':'total';pos=sort==='savesPer90'?'POR':'Todos';direction=-1;$('#search').value='';clearClubSelection();$('#min-minutes').value='';$('#min-goals').value='';$('#metric-rules').innerHTML='';$('#add-rule').disabled=false;$$('[data-unit]').forEach(q=>q.classList.toggle('on',q.dataset.unit===unit));syncPositions();navigate('players');});
 }
 function openRanking(key,id=null){
-  const def=GradaRadar.definition(key);rankingProfile=key;rankingMinimum=def.minimum;$('#ranking-min').value=rankingMinimum;$('#search').value='';$('#teamfilter').value='';$('#rolefilter').value='';$('#min-minutes').value='';$('#min-goals').value='';$('#metric-rules').innerHTML='';$('#add-rule').disabled=false;
+  const def=GradaRadar.definition(key);rankingProfile=key;rankingMinimum=def.minimum;$('#ranking-min').value=rankingMinimum;$('#search').value='';clearClubSelection();$('#rolefilter').value='';$('#min-minutes').value='';$('#min-goals').value='';$('#metric-rules').innerHTML='';$('#add-rule').disabled=false;
   navigate('rankings');if(id)detail(id,def.kind==='team');
 }
 function renderRankingPreviews(){
@@ -382,6 +429,7 @@ function detail(id,isTeam) {
   $('#detail').showModal();
 }
 function navigate(v,scroll=true,preserveSort=false){
+  if(['players','overview'].includes(v)&&view!==v&&!activeLeaderKey&&!preserveSort){sort='radarArea';direction=-1;}
   if(v!=='players')activeLeaderKey=null;
   const previous=view;view=v;
   if(v==='rankings'){const def=GradaRadar.definition(rankingProfile);if(def.kind==='player')pos=def.position;if(previous!==v){rankingMinimum=def.minimum;$('#ranking-min').value=rankingMinimum;}if(!preserveSort){sort=rankingSort();direction=-1;}}
@@ -391,12 +439,12 @@ function navigate(v,scroll=true,preserveSort=false){
   $('#crumb').textContent=info[0];$('#pagetitle').textContent=info[1];$('#pagesub').textContent=info[2];
   $$('nav button').forEach(b=>b.classList.toggle('active',b.dataset.view===v));
   $('#overview').classList.toggle('hidden',v!=='overview');$('#listing').classList.toggle('hidden',!['overview','teams','players','rankings'].includes(v));$('#compare').classList.toggle('hidden',v!=='compare');$('#glossary').classList.toggle('hidden',v!=='glossary');
-  $('#filters').classList.toggle('hidden',v==='glossary');$('#min-minutes').closest('label').classList.toggle('hidden',isTeamView());$('#positions').classList.toggle('hidden',isTeamView()||v==='rankings');$('#teamfilter').classList.toggle('hidden',isTeamView());$('#allplayers').classList.toggle('hidden',v!=='overview');
+  $('#filters').classList.toggle('hidden',v==='glossary');$('#min-minutes').closest('label').classList.toggle('hidden',isTeamView());$('#positions').classList.toggle('hidden',isTeamView()||v==='rankings');$('#allplayers').classList.toggle('hidden',v!=='overview');
   $$('#filters .seg, #filters .divider').forEach(control=>control.classList.toggle('hidden',v==='overview'||v==='rankings'));$('#ranking-controls').classList.toggle('hidden',v!=='rankings');$('#ranking-min-caption').textContent=isTeamView()?'Partidos mínimos':'Minutos mínimos';$('#ranking-profile').value=rankingProfile;
   $('#ranking-note').textContent=isTeamView()&&activeUnit()?GradaSquads.unitDefinition(activeUnit()):isTeamView()?GradaSquads.definition:GradaRadar.definition(rankingProfile).roleKey?'Solo candidatos con puesto publicado compatible. Los polivalentes pueden aparecer en varios grupos; conservan su mismo score individual, mixto para los laterales/carrileros. No se conoce el reparto de minutos por puesto.':rankingProfile.startsWith('MED_')?'Perfil estadístico por percentiles de los índices ofensivo y defensivo. Hasta 10 puntos de diferencia: equilibrado, incluido también en ambos grupos. El perfil selecciona los ejes del score. Los equilibrados conservan su radar equilibrado incluso en los otros rankings; no indica un puesto táctico. Sin ambos índices completos, el perfil queda sin clasificar; puede tener un score general explícito.':'Un score único de su posición y perfil, con muestra suficiente y todos los ejes. La referencia común de ligas se conserva en tablas, fichas y rankings.';
   $('#tabletitle').textContent=v==='rankings'?GradaRadar.definition(rankingProfile).label:isTeamView()?'Ranking de equipos':'Ranking de jugadores';$('#tablesub').textContent=isTeamView()?'Scores de equipo ponderados por minutos, entre 0 y 1. Consulta pesos y contribuciones en la ficha.':activeLeaderKey?'Ranking de '+labels[activeLeaderKey]+(activeLeaderKey==='savesPer90'?' · porteros':' · jugadores de campo')+'. Misma selección que en portada.':'Selecciona un nombre para ver su radar. Score entre 0 y 1; — = no disponible.';
   if(v==='overview'){dashboard();renderLeaders();}
-  syncPositions();renderTable();renderCompare();if(scroll)window.scrollTo({top:0,behavior:'smooth'});
+  syncPositions();renderClubOptions();renderTable();renderCompare();renderTeamComparison();if(v==='glossary')renderTerms();if(scroll)window.scrollTo({top:0,behavior:'smooth'});
 }
 function syncPositions() { $$('[data-pos]').forEach(b=>b.classList.toggle('on',b.dataset.pos === pos));refreshRoleOptions(); }
 function refreshRoleOptions(){
@@ -406,9 +454,11 @@ function refreshRoleOptions(){
   const coverage=GradaRoles.coverage(candidates);$('#role-filter-note').hidden=isTeamView();$('#role-filter-note').textContent=coverage.known+'/'+coverage.total+' fichas con puestos publicados; '+coverage.classified+' compatibles con su posición canónica. Un jugador polivalente puede aparecer en varios grupos, siempre con el mismo score. Puesto táctico y perfil estadístico son distintos.';
 }
 function applyData(next) {
+  const previousScope=data?.metadata?.league_key;
+  if(previousScope!==next?.metadata?.league_key){selectedClubs.clear();teamCompareChoices=[];$('#club-filter-search').value='';$('#teamfilter').open=false;}
   data = next; loaded = !!(data?.metadata && data.players?.length && Array.isArray(data.teams)); choices = [];
   updateRadarProfiles();
-  $('#search').value='';$('#teamfilter').innerHTML='<option value="">Todos los equipos</option>'+(data?GradaClubs.options(data):[]).map(c=>'<option value="'+esc(c.id)+'">'+esc(c.label)+'</option>').join('');
+  $('#search').value='';selectedClubs=GradaExplore.selection(data?GradaClubs.options(data):[],selectedClubs);renderClubOptions();
   $('#league').value = selectedSource(); $('#season').innerHTML = '<option>'+esc(loaded?data.metadata.season:'2026/27 · pendiente')+'</option>';
   $$('[data-source]').forEach(e=>e.textContent = source()); $('.sidefoot').textContent = 'GRADA / '+leagueConfig().name.toUpperCase()+' 2026/27';
   $('.status').textContent = source();
@@ -517,12 +567,16 @@ const terms = [
   ['Radar estadístico','Percentiles frente a jugadores de la misma posición: mínimo 450 minutos, o 180 para porteros (2 PJ si no hay minutos). Cada eje exige al menos cinco referencias; el gráfico necesita tres ejes. Los volúmenes usan /90 o /PJ según su etiqueta. En goles recibidos menos es mejor; el resto de ejes aumenta con el valor. Son estadísticas disponibles, no una valoración física.'],
   ['Actualizar datos','Consulta ESPN, FotMob y Understat cuando esa fuente se usa en la liga seleccionada. Las tres fuentes se consultan desde el servidor de GRADA, con caché breve. Solo el propietario identificado puede iniciar una actualización, tras desbloquearla con su contraseña. Cada captura se valida antes de combinar. Si falla una fuente se conserva su captura y fecha anterior. Las capturas válidas se guardan en este navegador y los scores se recalculan sin cambiar su fórmula.']
 ];
-function renderTerms(){ $('#terms').innerHTML = terms.map((item,i)=>{let t=[...item];if(t[0].startsWith('xG ·'))t[1]=description('xg');if(t[0]==='xA derivada de tiros')t=['xA · Asistencias esperadas',description('xa')];return t;}).map((t,i)=>'<article class="panel"><span class="badge">'+String(i+1).padStart(2,'0')+'</span><h2 class="detailtitle">'+esc(t[0])+'</h2><p>'+esc(t[1])+'</p></article>').join(''); }
+function renderTerms(){
+  const concepts=terms.map(item=>{let t=[...item];if(t[0].startsWith('xG ·'))t[1]=description('xg');if(t[0]==='xA derivada de tiros')t=['xA · Asistencias esperadas',description('xa')];return '<article class="panel"><h2 class="detailtitle">'+esc(t[0])+'</h2><p>'+esc(t[1])+'</p></article>';}).join('');
+  const fields=(keys,team)=>[...new Set(keys)].filter(k=>descriptions[k]).map(k=>'<div><dt>'+esc(k==='rank'?'Puesto (#)':columnLabel(k,team))+'</dt><dd>'+esc(description(k,team))+'</dd></div>').join('');
+  $('#terms').innerHTML=concepts+'<section class="panel glossary-definitions"><h2>Definiciones completas de las columnas</h2><p>Las ayudas de tabla son breves. Aquí puedes consultar las fórmulas, fuentes, muestras y límites.</p><details><summary>Columnas de jugadores</summary><dl>'+fields(['radarArea','rank',...Object.keys(labels).filter(k=>!squadMetricKeys.has(k))],false)+'</dl></details><details><summary>Columnas de equipos y líneas</summary><dl>'+fields(['teamArea','rank','name','league',...teamkeys],true)+'</dl></details></section>';
+}
 $('#ranking-profile').innerHTML=[['player','Jugadores'],['team','Equipos']].map(([kind,label])=>'<optgroup label="'+label+'">'+GradaRadar.rankingDefinitions.filter(d=>d.kind===kind).map(d=>'<option value="'+d.key+'">'+esc(d.label)+'</option>').join('')+'</optgroup>').join('');
 $('#ranking-profile').onchange=()=>{$('#rolefilter').value='';rankingProfile=$('#ranking-profile').value;rankingMinimum=GradaRadar.definition(rankingProfile).minimum;$('#ranking-min').value=rankingMinimum;navigate('rankings',false);};
 $('#ranking-min').oninput=()=>{rankingMinimum=Number($('#ranking-min').value);renderTable();};
 $$('nav button').forEach(b=>b.onclick=()=>{activeLeaderKey=null;navigate(b.dataset.view);});
-$$('[data-pos]').forEach(b=>b.onclick=()=>{activeLeaderKey=null;pos=b.dataset.pos;sort=pos==='Todos'?'goals':'radarArea';direction=-1;syncPositions();renderTable();});
+$$('[data-pos]').forEach(b=>b.onclick=()=>{activeLeaderKey=null;pos=b.dataset.pos;sort='radarArea';direction=-1;syncPositions();renderTable();});
 $$('[data-unit]').forEach(b=>b.onclick=()=>{activeLeaderKey=null;unit=b.dataset.unit;if(unit==='90')sort=per90Columns[sort]||(GradaMetrics.fixedRates[sort]&&!Object.values(per90Columns).includes(sort)&&sort!=='completedPer90'?GradaMetrics.fixedRates[sort]:sort);else sort=Object.keys(per90Columns).find(k=>per90Columns[k]===sort)||sort;$$('[data-unit]').forEach(q=>q.classList.toggle('on',q===b));dashboard();renderTable();renderLeaders();renderCompare();});
 $('#leader-field-min').oninput=()=>setLeaderMinimum('field',$('#leader-field-min').value);
 $('#leader-saves-min').oninput=()=>setLeaderMinimum('saves',$('#leader-saves-min').value);
@@ -532,7 +586,19 @@ $('#add-rule').onclick = addMetricRule;
 $('#metric-rules').oninput = renderTable; $('#metric-rules').onchange = renderTable;
 $('#metric-rules').onclick = e=>{ const button = e.target.closest('[data-rule-remove]'); if (button) { button.closest('.metric-rule').remove(); $('#add-rule').disabled = false; renderTable(); } };
 $('#clear-metrics').onclick = ()=>{ $('#min-minutes').value = ''; $('#min-goals').value = ''; $('#metric-rules').innerHTML = ''; $('#add-rule').disabled = false; renderTable(); };
-$('#rolefilter').onchange=renderTable; $('#search').oninput = renderTable; $('#teamfilter').onchange = renderTable; $('#allplayers').onclick = ()=>navigate('players'); $('.close').onclick = ()=>$('#detail').close();
+$('#rolefilter').onchange=renderTable; $('#search').oninput = renderTable;  $('#allplayers').onclick = ()=>navigate('players'); $('.close').onclick = ()=>$('#detail').close();
+$('#club-filter-search').oninput=searchClubOptions;
+$('#club-options').onchange=e=>{
+  const input=e.target.closest('input[type="checkbox"]');if(!input)return;
+  if(input.checked)selectedClubs.add(input.value);else selectedClubs.delete(input.value);
+  updateClubSummary();renderTable();
+};
+$('#clear-clubs').onclick=()=>{clearClubSelection();renderTable();};
+document.addEventListener('pointerdown',e=>{if(!e.target.closest('#teamfilter'))$('#teamfilter').open=false;});
+$('#teamfilter').onkeydown=e=>{if(e.key==='Escape'){$('#teamfilter').open=false;$('#teamfilter summary').focus();}};
+for(const [i,id]of ['#compare-team-left','#compare-team-right'].entries())$(id).onchange=()=>{teamCompareChoices[i]=$(id).value;renderTeamComparison();};
+$('#compare-picked').onclick=()=>{if(selectedTeamIds().length===2){teamCompareChoices=selectedTeamIds();renderTeamComparison();$('#team-comparison').scrollIntoView({behavior:'smooth',block:'start'});}};
+$('#team-comparison-body').onclick=e=>{const button=e.target.closest('[data-team-detail]');if(button)detail(button.dataset.teamDetail,true);};
 GradaOwner.init({onRefresh:refreshData});
 $('#refresh').onclick = () => GradaOwner.open();
 $('#league').onchange=()=>{if(refreshing){$('#league').value=currentLeague;return;}$('#refresh-status').textContent='';$('#refresh-report').hidden=true;activateLeague($('#league').value);};

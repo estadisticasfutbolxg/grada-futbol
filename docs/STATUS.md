@@ -1,5 +1,12 @@
 # Estado comprobado de GRADA
 
+## Score primero y comparación de equipos · 19 de noviembre de 2026 · validado, publicación pendiente
+
+- Score en la primera columna real y fijo al desplazar; los rankings de KPI conservan su orden. Ayudas desde ⓘ, de hasta 170 caracteres y sin capturar clics; definiciones completas en el glosario. Selector de varios equipos por IDs, con búsqueda y limpieza.
+- En Equipos, comparación de dos clubes por score general, portería, defensa, mediocampo y delantera, con pesos/cobertura y perfiles MED adicionales. Añade goles, recibidos y xG /90; balance xG, tiros a puerta, ocasiones y puntos por partido; porterías a cero y goles/xG. Tarjetas como sumas conocidas de jugadores asignados, FotMob, con cobertura parcial declarada. [Semántica y límites](EXPLORATION.md).
+- 21 archivos Node correctos y 14 casos nuevos de componentes/controladores. Capturas reales: 84 tablas de rankings, seis ámbitos, 4.568 igualdades individuales y 1.344 medias de líneas exactas. Once capturas fuente intactas, modelo v4 conservado, 1.017 scores válidos y 29 pendientes sobre el mínimo. **0 jugadores, 0 estadísticas, 0 partidos y 0 scores actualizados**; sin descargas de proveedores ni cambios de SQLite.
+- Worker y assets comprobados, sintaxis/documentación correctas. Modo managed sin `cua_repl.js`: sin nueva revisión visual de navegador; sí lógica, eventos con dobles DOM y HTML generado. Integración y publicación owner-private pendientes de confirmar. [Tarea](../loop/tasks/20261119-codex-score-first-team-comparison.md).
+
 ## Publicación privada verificada · 19 de noviembre de 2026 · 06:11 Madrid
 
 - Modelo `role_fairplay_radar_v4`: los laterales/carrileros DEF con puesto publicado usan un único radar de entradas, intercepciones, recuperaciones, goles, xG y xA por 90, con referencia fija de laterales verificados. Incluye polivalentes, sin elegir score según el ranking. Grimaldo, Atlético Madrid en las fuentes, pasa de **0,107 a 0,449**; conserva posición, 4 goles, xG y xA originales. [Fórmulas y cobertura](SCORES.md).

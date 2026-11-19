@@ -82,3 +82,7 @@ La vista combinada autorizada da prioridad a Understat y complementa coincidenci
 ## Worker y actualización general
 
 `worker/providers.cjs` conserva los formatos del importador Python. `dist/profiles.js` verifica identidad/club y temporada de las fichas; `dist/refresh.js` combina éxitos parciales y conserva las fuentes fallidas. `worker/app.cjs` limita rutas, host, origen, método y caché. `scripts/build_worker.py` empaqueta una lista explícita de archivos y capturas en un único Worker sin dependencias. La aplicación no muestra enlaces de descarga.
+
+## Exploración y comparación de equipos
+
+`dist/explore.js` contiene las funciones de presentación y selección para score primero, ayuda breve, varios clubes y comparación de dos equipos. Consume los resúmenes de `scores.js`/`squads.js` y los denominadores de `metrics.js`, sin mutar el modelo ni filtrar sus referencias. `app.js` conecta controles, tabla y glosario; `build_worker.py` incluye explícitamente el módulo. Consulta [EXPLORATION.md](EXPLORATION.md) para semántica, cobertura y límites.
