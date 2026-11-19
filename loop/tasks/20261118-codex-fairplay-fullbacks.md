@@ -1,12 +1,12 @@
 # 20261118-codex · Juego limpio y laterales equilibrados
 
-- Estado: `active`
+- Estado: `done`
 - Responsable: Codex
 - Revisor: autocontrol; sin revisión independiente
 - Rama: `feat/fair-play-and-balanced-fullbacks`
 - Base Sites: `9f4cc47edcbdc428ce5cd1f0da07de7e2d235d07`
 - Base GitHub: `3104b7fc463d6aa5c42d3257235d7210c22a3f9a`
-- PR: pendiente
+- PR: [#39 integrado](https://github.com/estadisticasfutbolxg/grada-futbol/pull/39)
 - Objetivo: añadir juego limpio moderado y un score mixto de lateral, integrar y publicar privado
 
 ## Petición y evidencia
@@ -26,7 +26,7 @@ Hay 1.871 fichas con amarillas y rojas de muestra emparejada, 987 de las 995 con
 - [x] Laterales tienen un radar mixto, basado en puestos publicados, estable entre ligas/vistas y sin elegir el score más alto.
 - [x] Más tarjetas nunca mejoran el score, rojas pesan más, ajuste acotado y nulos/muestras tratados explícitamente.
 - [x] Base, ajuste, score final y procedencia visibles y coherentes en tabla/ficha/comparador/equipos.
-- [ ] Verificar los 2.284 registros, casos reales, referencias, ceros/muestras y derivados; integrar y publicar conservando privacidad.
+- [x] Verificar los 2.284 registros, casos reales, referencias, ceros/muestras y derivados; integrar y publicar conservando privacidad.
 
 ## Validación y entrega
 
@@ -45,4 +45,8 @@ Hay 1.871 fichas con amarillas y rojas de muestra emparejada, 987 de las 995 con
 
 ## Integración
 
-Pendientes commit/push, PR, merge y despliegue privado. Autocontrol sin revisión independiente; registrar sus resultados cuando estén confirmados.
+Commit Sites `f7cf73fb4748642a7f67908c4793d69204013db1` subido y verificado. GitHub: `44e1ccb3205aac283b06353f4a87498827e34d95`, PR #39 limpio, squash en `81cb950cd9cc907cb21db3647249d82bc2dee046`, main comprobado. Sin checks/statuses configurados ni protección de main; merge con SHA esperado. Los 24 archivos parten de blobs base iguales entre los remotos, sin sobrescribir trabajo ajeno. Autocontrol sin revisión independiente.
+
+El intento de crear el árbol GitHub del 18 de noviembre no se ejecutó por límite de uso de la revisión automática (sin determinación de inseguridad). El propietario pidió continuar el 19; la misma operación nativa pasó revisión, sin usar otro canal para eludirla.
+
+Publicación privada confirmada el 19 de noviembre a las 06:11 Madrid, versión **22**, despliegue `appgdep_6afe84ec0d7481919371e1f3d48a1c32` en `succeeded`, entorno revisión 1. Versión `appgprj_6ae0b8b2eb1881918601230d00603255~appgver_8ccb80007c648191ad8ef70da4323185`, fuente exacta `f7cf73fb4748642a7f67908c4793d69204013db1`. Worker SHA256 `9dc7b8d463af4d436d86c77ca4298cc75e17562f443e4640637c1f0307e6b496`. Audiencia comprobada después: `custom`, revisión 3, owner único, cero grupos/visitantes. El cierre documental no modifica el Worker y no requiere otra publicación idéntica.
