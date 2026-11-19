@@ -129,3 +129,88 @@ button:hover{filter:none}
 @media(max-width:600px){aside{height:auto;display:block;padding:14px 16px 0}.logo{font-size:31px}nav{margin-top:9px;gap:0}nav button{padding:13px 9px;font-size:10px}header{height:48px;padding:0 16px}.content{padding:18px 12px}.intro{padding:25px 22px;min-height:146px}.intro>div{max-width:95%}h1{font-size:36px}.intro:before{right:-170px;opacity:.3}.intro:after{right:-50px;opacity:.3}.intro p{font-size:12px}.filters{gap:9px;padding:16px 0}.cards{gap:10px}.card{padding:14px}.card strong{font-size:34px}.databanner{padding:11px 13px;font-size:10px}.leader-samples{gap:10px;padding:12px}.ranking-previews .panelhead{min-height:0}.sectionhead .sub{font-size:10px;max-width:44%;text-align:right}#owner-dialog{padding:24px}}
 @media(prefers-reduced-motion:reduce){.refresh.is-refreshing svg{animation:none}*{scroll-behavior:auto!important}}
 @media(max-width:600px){#league{flex:1 1 100%}#season{flex:0 1 116px}.filters .seg{margin-left:auto}.logo-mark{margin-left:8px}.logo-mark svg{width:19px;height:24px}}
+
+/* Score-led exploration: compact help and a persistent first score column. */
+[hidden]{display:none!important}
+.visually-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
+#column-tooltip{pointer-events:none;max-width:min(280px,calc(100vw - 16px));padding:9px 12px;font-size:.875rem;line-height:1.4}
+#listing .tablepanel{overflow:visible}
+.score-table{font-size:.875rem}
+.score-table .score-main{position:sticky;left:0;z-index:2;min-width:132px;padding-left:18px;color:#174d35;background:#edf5ef;border-right:1px solid #cbded0;text-align:right}
+.score-table thead .score-main{z-index:3;background:#e2eee6}
+.score-main strong{font-size:1.125rem;font-variant-numeric:tabular-nums;color:#174d35}
+.score-table .score-main .metric-source{font-size:.75rem;white-space:normal;max-width:145px;line-height:1.4}
+.score-table .score-main .column-head button[data-sort]{white-space:normal;max-width:130px;line-height:1.3;text-align:right}
+.score-table .rank-column{color:#667269;min-width:42px;text-align:center}
+.score-table .column-info{min-width:30px;min-height:32px;font-size:.875rem}
+.score-table .column-head button[data-sort]{font-size:.875rem;min-height:36px}
+.score-table .column-head button[data-sort]:focus-visible,.column-info:focus-visible,.club-picker summary:focus-visible,.team-comparison button:focus-visible{outline:2px solid #257449;outline-offset:3px}
+
+/* A normal checkbox list: several clubs can be selected without modifier keys. */
+#teamfilter{position:relative;margin-left:auto;padding:0;max-width:none;width:min(100%,20rem);font-size:.875rem}
+.club-picker summary{padding:10px 12px;border:1px solid #c7d6cb;border-radius:6px;background:#fff;color:#1d4832;cursor:pointer;min-height:42px;line-height:1.4;box-sizing:border-box}
+.club-filter-panel{position:absolute;right:0;top:calc(100% + 8px);z-index:30;width:min(23rem,calc(100vw - 40px));box-sizing:border-box;padding:16px;border:1px solid #c7d6cb;border-radius:8px;background:#fff;box-shadow:0 8px 24px #173e291a;text-align:left;color:#263e2e}
+.club-filter-panel>label{display:block;font-weight:600;margin-bottom:8px;font-size:.875rem}
+.tabletools #club-filter-search{width:100%;min-height:42px;font-size:1rem;box-sizing:border-box}
+.club-filter-actions{display:flex;gap:12px;justify-content:space-between;align-items:center;padding:12px 0;font-size:.75rem;color:#586b5e}
+.club-filter-actions .linkbtn{font-size:.875rem;text-align:right}
+#club-options{border:0;margin:0;padding:0;max-height:18rem;overflow-y:auto;overscroll-behavior:contain}
+#club-options label{display:flex;gap:10px;align-items:center;min-height:42px;padding:4px;font-size:.875rem;line-height:1.4;cursor:pointer;box-sizing:border-box}
+.tabletools #club-options input{flex:none;accent-color:#205e3c;width:18px;height:18px;margin:0;padding:0;cursor:pointer}
+#club-options label:focus-within{outline:2px solid #257449;outline-offset:-2px;border-radius:4px}
+#club-options label:hover{background:#f0f5f1}
+#club-filter-empty{font-size:.875rem;line-height:1.5}
+
+/* Compare the canonical team averages, then explore their underlying context. */
+.team-comparison{margin:0 0 28px;padding:24px;min-width:0}
+.team-comparison .sectionhead{margin:0 0 20px;gap:16px;align-items:flex-start;flex-wrap:wrap}
+.team-comparison h2{margin:0;font-size:1.5rem}
+.team-comparison h4{margin:0 0 16px;font-size:1rem;color:#204732}
+.team-comparison .sub{font-size:.875rem;line-height:1.6}
+.team-comparison .linkbtn{font-size:.875rem;min-height:40px}
+.team-comparison .linkbtn:disabled{opacity:.5;cursor:default}
+.team-comparison-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-bottom:22px}
+.team-comparison-controls label{display:grid;gap:8px;font-size:.875rem;font-weight:600}
+.team-comparison-controls select{font-size:1rem;min-height:44px;padding:10px 12px;background-color:#fff;border:1px solid #c7d6cb;color:#204732;width:100%;box-sizing:border-box;text-overflow:ellipsis}
+.team-comparison-matrix{width:100%;font-size:.875rem;margin-bottom:24px}
+.team-comparison-matrix th,.team-comparison-matrix td{padding:14px 12px;text-align:right;vertical-align:top}
+.team-comparison-matrix thead th{font-size:.875rem;color:#42614c;background:#f0f5f1;white-space:normal;min-width:135px}
+.team-comparison-matrix th[scope=row]{text-align:left;min-width:160px;font-weight:500}
+.team-comparison-matrix .score-main{position:sticky;left:0;background:#edf5ef;z-index:2;color:#174d35}
+.team-comparison-matrix thead th:first-child{position:sticky;left:0;z-index:3;background:#e2eee6}
+.team-comparison-matrix small,.duel-line small,.duel-values small{display:block;font-size:.75rem;color:#607364;line-height:1.5;white-space:normal;font-weight:400}
+.unit-duels{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin:20px 0}
+.unit-duel{border:1px solid #dce6dd;border-radius:8px;padding:20px;background:#fbfcfa;min-width:0}
+.duel-line{display:grid;grid-template-columns:62px minmax(0,1fr);gap:12px;align-items:start;margin-bottom:16px;font-size:.875rem}
+.duel-line>strong{font-size:1.125rem;font-variant-numeric:tabular-nums;color:#174d35}
+.duel-line.right>strong{color:#425d7d}
+.duel-track{display:block;height:6px;background:#e2e9e3;border-radius:3px;margin:8px 0;overflow:hidden}
+.duel-track svg{display:block;width:100%;height:100%;fill:#347752}
+.duel-line.right .duel-track svg{fill:#637fa0}
+.duel-result{margin:0;font-size:.875rem;line-height:1.5;color:#45624e}
+.comparison-more{padding:16px 0;border-top:1px solid #dce6dd}
+.comparison-more>summary{cursor:pointer;font-size:1rem;font-weight:600;color:#204732;min-height:28px;line-height:1.5}
+.team-kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin:20px 0}
+.team-kpi{border:1px solid #dce6dd;border-radius:8px;padding:20px;min-width:0}
+.team-kpi h4{font-size:.875rem;line-height:1.5}
+.duel-values{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.duel-values span{font-size:.875rem;display:block;line-height:1.5;overflow-wrap:anywhere}
+.duel-values strong{display:block;font-size:1.5rem;color:#174d35;line-height:1.6;font-variant-numeric:tabular-nums}
+.duel-values>div+div strong{color:#425d7d}
+.glossary-definitions{grid-column:1/-1;font-size:1rem;line-height:1.65}
+.glossary-definitions details{padding:16px 0;border-top:1px solid #dce6dd}
+.glossary-definitions summary{font-weight:600;cursor:pointer}
+.glossary-definitions dl{margin-bottom:0}
+.glossary-definitions dl>div{padding:16px 0;border-bottom:1px solid #e5ece6}
+.glossary-definitions dt{font-weight:700;color:#204732}
+.glossary-definitions dd{margin:8px 0 0;max-width:90ch;overflow-wrap:anywhere}
+@media(max-width:700px){
+  .team-comparison{padding:16px}
+  .team-comparison-controls,.unit-duels,.team-kpis{grid-template-columns:minmax(0,1fr)}
+  .team-comparison-matrix th,.team-comparison-matrix td{padding:12px 10px}
+  #teamfilter{width:100%;margin-left:0}
+  .club-filter-panel{width:100%;left:0;right:auto}
+  .score-table .score-main{min-width:118px;padding-left:12px}
+  .score-table .score-main .metric-source{max-width:110px}
+  .score-table .score-main .column-head button[data-sort]{max-width:90px}
+}
