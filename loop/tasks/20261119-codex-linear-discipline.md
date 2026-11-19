@@ -1,12 +1,12 @@
 # 20261119-codex · Disciplina lineal con mayor peso de las expulsiones
 
-- Estado: `review`
+- Estado: `done`
 - Responsable: Codex
 - Revisor: autocontrol; sin revisión independiente
 - Rama: `fix/linear-discipline-score`
 - Base Sites: `8bc27bcba6e630ecf676853a75e5c1742812b76b`
 - Base GitHub: `c5811eeceb9645c45d701d760c8504285deb78d3`
-- PR: pendiente
+- PR: [#43 integrado](https://github.com/estadisticasfutbolxg/grada-futbol/pull/43)
 - Objetivo: sustituir la penalización indulgente, validar efectos y publicar owner-private
 
 ## Alcance y decisión
@@ -23,7 +23,7 @@ Se conservan mínimo de muestra, denominadores emparejados, posiciones, perfiles
 - [x] Mismos scores en tablas, fichas, comparadores, rankings y promedios de equipo; base, perfiles, posiciones y referencias intactos.
 - [x] Explicación de fórmula, pesos manuales y límites de expulsiones/sanciones coherente en la web y documentación.
 - [x] Pruebas, auditorías, combinados y Worker coherentes; cambios de scores y fuente conservada cuantificados.
-- [ ] GitHub integrado y Sites publicado con acceso exclusivo del propietario.
+- [x] GitHub integrado y Sites publicado con acceso exclusivo del propietario.
 
 ## Plan
 
@@ -45,4 +45,7 @@ Se conservan mínimo de muestra, denominadores emparejados, posiciones, perfiles
 - Once capturas fuente conservan hashes, fechas y cifras. **0 jugadores nuevos, 0 estadísticas de origen actualizadas y 0 partidos modificados**. Los 698 cambios son puntuaciones derivadas de un nuevo criterio. No se contacta a proveedores ni se regeneran SQLite fuente.
 - Cinco combinados regenerados por el generador en un directorio temporal, verificados contra el modelo (2.284 scores/base/factores y 96 medias), promovidos solo después de validar el conjunto. El entorno impide child_process.execFileSync desde Node; se ejecuta el mismo generador desde bash, sin cambiar permisos ni editar cifras a mano.
 - Worker: 37 assets, 11 módulos, SHA256 `4bffc21fae1e5e913aeb4f06bd889586f3e87fb1cbf920ce9136bc6205aa506a`. GET de módulo/app/CSS exactos, HTML con hashes de caché normalizados, orden de módulos y HEAD correctos. Modo managed sin cua_repl: sin nueva navegación visual ni producción autenticada; sí componentes/controladores y HTML real generado.
-- Pendientes: commit/push/PR/merge y publicación privada con lectura posterior. Sin cambios de acceso, contraseña, bindings o red. Autocontrol, sin revisión independiente.
+- Fuente Sites `e8e21644aa4b27d78343a0230b8b06c8b0441127` subida y verificada. [PR #43](https://github.com/estadisticasfutbolxg/grada-futbol/pull/43), 15 archivos, integrado por squash en main `a96bda6f4ab63ddb4af9b22c4b942f63124b9639`, comprobado. Head/base exactos y mergeable clean, sin checks/statuses configurados; main sin protección ni rulesets, sin modificarlos.
+- Publicación privada confirmada: versión **24**, despliegue `appgdep_6afe970995ac8191b8df112498ff80b0` en `succeeded`, revisión de entorno 1. Versión `appgprj_6ae0b8b2eb1881918601230d00603255~appgver_f13001de6a4c8191a96cca4bdee4c6b1`, fuente exacta `e8e21644aa4b27d78343a0230b8b06c8b0441127`. Worker SHA256 arriba; también fairplay.js, scores.js y components.js exactos al servir el artefacto.
+- Lectura posterior: [GRADA privada](https://grada-futbol-analitica.ivanmatema2.chatgpt.site) owner-only revisión **3**, un owner, cero editores, grupos y visitantes. Fuente/versión confirmadas por get_site_version. Sin cambios de acceso, contraseña, bindings o red. Autocontrol, sin revisión independiente.
+- Se cierra documentación con un incremento posterior sin redesplegar assets idénticos. No se afirma una nueva revisión visual o navegación de producción autenticada.
