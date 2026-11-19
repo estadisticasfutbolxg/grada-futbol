@@ -1,11 +1,11 @@
 # Estado comprobado de GRADA
 
-## Score primero y comparación de equipos · 19 de noviembre de 2026 · validado, publicación pendiente
+## Score primero y comparación de equipos · publicación privada verificada · 19 de noviembre de 2026 · 07:02 Madrid
 
 - Score en la primera columna real y fijo al desplazar; los rankings de KPI conservan su orden. Ayudas desde ⓘ, de hasta 170 caracteres y sin capturar clics; definiciones completas en el glosario. Selector de varios equipos por IDs, con búsqueda y limpieza.
 - En Equipos, comparación de dos clubes por score general, portería, defensa, mediocampo y delantera, con pesos/cobertura y perfiles MED adicionales. Añade goles, recibidos y xG /90; balance xG, tiros a puerta, ocasiones y puntos por partido; porterías a cero y goles/xG. Tarjetas como sumas conocidas de jugadores asignados, FotMob, con cobertura parcial declarada. [Semántica y límites](EXPLORATION.md).
 - 21 archivos Node correctos y 14 casos nuevos de componentes/controladores. Capturas reales: 84 tablas de rankings, seis ámbitos, 4.568 igualdades individuales y 1.344 medias de líneas exactas. Once capturas fuente intactas, modelo v4 conservado, 1.017 scores válidos y 29 pendientes sobre el mínimo. **0 jugadores, 0 estadísticas, 0 partidos y 0 scores actualizados**; sin descargas de proveedores ni cambios de SQLite.
-- Worker y assets comprobados, sintaxis/documentación correctas. Modo managed sin `cua_repl.js`: sin nueva revisión visual de navegador; sí lógica, eventos con dobles DOM y HTML generado. Integración y publicación owner-private pendientes de confirmar. [Tarea](../loop/tasks/20261119-codex-score-first-team-comparison.md).
+- Worker y assets comprobados, sintaxis/documentación correctas. Modo managed sin `cua_repl.js`: sin nueva revisión visual de navegador; sí lógica, eventos con dobles DOM y HTML generado. [PR #41](https://github.com/estadisticasfutbolxg/grada-futbol/pull/41) integrado en main `1fe75f3b1bae2941b17a49bdb5f6f3244ed2a55d`. [GRADA privada](https://grada-futbol-analitica.ivanmatema2.chatgpt.site), versión **23**, despliegue `appgdep_6afe90c9b6f48191aeaa5f215bc681ec` en `succeeded`. Fuente Sites `123bdd39e97e807cbcdfc96f0181b32ba94b4b42`; versión `appgprj_6ae0b8b2eb1881918601230d00603255~appgver_322d95dd36b88191b8e4394914aa7c60`. Worker SHA256 `424e6adc59cbdbf6d7db3cdd852ebb2fd89b445d69b0ac1e114618c8100b3aeb`. Política posterior owner-only revisión 3, un owner y cero grupos/visitantes. Sin cambios de contraseña, bindings ni permisos. [Tarea](../loop/tasks/20261119-codex-score-first-team-comparison.md).
 
 ## Publicación privada verificada · 19 de noviembre de 2026 · 06:11 Madrid
 
