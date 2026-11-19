@@ -76,12 +76,19 @@
         if (new Set([primary,other,additional].filter(Boolean).map(r=>r[key]).filter(numeric)).size>1) differences.push(key);
       }
       row.combination = {matched:!!other||!!additional,conflicting_fields:differences};
+      // A verified season with no shots and no goals has an empty xG sum.
+      // Preserve the raw source record and expose this as a proved derivation.
+      const shotProof=row.metricContexts.shots,goalProof=row.metricContexts.goals;
+      if(kind==='player'&&row.xg===null&&row.shots===0&&row.goals===0&&shotProof?.source==='FotMob'&&shotProof.profileVerified===true&&shotProof.reportedValue===true&&goalProof?.profileVerified===true&&goalProof.reportedValue===true&&metrics.sameSample(shotProof,goalProof)){
+        row.xg=0;row.fieldSources.xg='FotMob';
+        row.metricContexts.xg={...shotProof,reportedValue:false,derived:'zero_shot_xg',components:['shots','goals']};delete row.metricContexts.xg.reportedPer90;
+      }
       // Derived values must describe the same numerator/denominator cohort.
       function derived(key,a,b,calculate) {
         if (row.metricContexts[key]?.reportedValue && numeric(row[key])) return;
         if (numeric(row[a]) && numeric(row[b]) && metrics.sameSample(row.metricContexts[a],row.metricContexts[b])) {
           row[key] = calculate(row[a],row[b]);
-          if (numeric(row[key])) { row.fieldSources[key] = row.fieldSources[a]; row.metricContexts[key] = {...row.metricContexts[a]}; return; }
+          if (numeric(row[key])) { row.fieldSources[key] = row.fieldSources[a]; row.metricContexts[key] = {...row.metricContexts[a],reportedValue:false,derived:key==='delta'?'same_source_difference':'same_source_ratio',components:[a,b],componentCaptures:{[a]:row.metricContexts[a].captured_at,[b]:row.metricContexts[b].captured_at}};delete row.metricContexts[key].reportedPer90; return; }
         }
         row[key] = null; delete row.fieldSources[key]; delete row.metricContexts[key];
       }

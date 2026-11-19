@@ -1,6 +1,8 @@
 (function(root) {
   'use strict';
   const metrics = typeof module === 'object' && module.exports ? require('./metrics.js') : root.GradaMetrics;
+  const tactical = typeof module === 'object' && module.exports ? require('./roles.js') : root.GradaRoles;
+  const fairplay = typeof module === 'object' && module.exports ? require('./fairplay.js') : root.GradaFairPlay;
   const axes = {
     goals:['Goles /90','90'],xg:['xG /90','90'],xa:['xA /90','90'],shots:['Tiros /90','90'],assists:['Asistencias /90','90'],keypasses:['Pases clave /90','90'],
     completedPer90:['Pases completados /90','total'],recoveries:['Recuperaciones /90','90'],
@@ -19,6 +21,7 @@
     DEL:['goals','xg','shotsOnTargetPer90','xa','dribblesPer90','conversion','shots','keypasses'],
     MED:['completedPer90','accuracy','xa','recoveries','tackles','interceptions','keypasses','assists','progressive','passes','xg','goals','shots'],
     DEF:['tackles','interceptions','clearances','blocks','recoveries','completedPer90','accuracy','progressive','passes'],
+    DEF_FB:['tackles','interceptions','recoveries','goals','xg','xa'],
     POR:['savepct','savesPerMatch','concededPerMatch','psxgEfficiency','prevented','highClaims','sweeperActions','cleanPerMatch','longBallsPer90','accuracy','completedPer90','passes'],
     MED_DEF:['completedPer90','accuracy','recoveries','tackles','interceptions','lineBreakingPasses'],
     MED_ATT:['xa','chancesCreated','bigChancesCreated','shotsOnTargetPer90','dribblesPer90','goals'],
@@ -28,8 +31,8 @@
     {key:'DEL',label:'Delanteros',position:'DEL',kind:'player',minimum:450},
     {key:'POR',label:'Porteros',position:'POR',kind:'player',minimum:180},
     {key:'DEF',label:'Defensas',position:'DEF',kind:'player',minimum:450},
-    {key:'DEF_CB',label:'Centrales · score DEF',position:'DEF',roleKey:'CB',kind:'player',minimum:450},
-    {key:'DEF_FB',label:'Laterales y carrileros · score DEF',position:'DEF',roleKey:'FB',kind:'player',minimum:450},
+    {key:'DEF_CB',label:'Centrales',position:'DEF',roleKey:'CB',kind:'player',minimum:450},
+    {key:'DEF_FB',label:'Laterales y carrileros · ataque y defensa',position:'DEF',roleKey:'FB',kind:'player',minimum:450},
     {key:'MED_DEF',label:'Centrocampistas · perfil defensivo',position:'MED',kind:'player',minimum:450},
     {key:'MED_ATT',label:'Centrocampistas · perfil ofensivo',position:'MED',kind:'player',minimum:450},
     {key:'MED_BALANCED',label:'Centrocampistas · perfil equilibrado',position:'MED',kind:'player',minimum:450},
@@ -55,7 +58,7 @@
   function reference(all,key) {
     const def=definition(key),position=def.position,minimum=def.minimum;
     if(def.kind==='team')throw new Error('Los scores de equipo se calculan con los scores de sus jugadores en GradaScores.');
-    const samePosition = all.filter(p=>p.pos === position);
+    const samePosition = all.filter(p=>p.pos === position&&(!def.roleKey||tactical.matches(p,def.roleKey)));
     function eligible(record,key) {
       if(!baseEligible(record,position,minimum))return false;
       const ctx = metrics.context(record,key);
@@ -72,8 +75,7 @@
   }
   function baseEligible(record,position,minimum){return Number.isFinite(record.minutes)?record.minutes>=minimum:position==='POR'&&Number.isFinite(record.matches)&&record.matches>=2;}
   function profile(player,all,plan) {
-    if(!plan&&player.pos==='MED')return profiles([player],{referencePlayers:all}).get(player);
-    plan=plan||reference(all,player.pos);
+    if(!plan)return profiles([player],{referencePlayers:all}).get(player);
     const values=[];
     for(const key of plan.keys){
       const [label,unit,lower]=axes[key],value=metrics.metric(player,key,unit),sample=plan.samples.get(key);
@@ -89,18 +91,19 @@
     const baseSampleEnough=baseEligible(player,player.pos,plan.minimum),sampleEnough=baseSampleEnough&&!insufficientSamples.length;
     const score=values.length===plan.keys.length&&sampleEnough?area:null;
     return {axes:visible,area,score,comparableArea:score,expectedAxes:plan.keys,missingAxes:plan.keys.filter(k=>!values.some(a=>a.key===k)),sampleEnough,baseSampleEnough,insufficientSamples,minimumMinutes:plan.minimum,minimumMatches:null,kind:'player',profileKey:plan.definition.key,profileLabel:plan.definition.label,peerCount:plan.peerCount,availableAxes:values.length,
-      referenceRule:player.pos==='POR'?'misma posición, mínimo 180 min o 2 PJ del proveedor de cada eje':'misma posición, mínimo 450 minutos'};
+      referenceRule:plan.definition.key==='DEF_FB'?'laterales y carrileros con puesto publicado, mínimo 450 min por eje':player.pos==='POR'?'misma posición, mínimo 180 min o 2 PJ del proveedor de cada eje':'misma posición, mínimo 450 minutos'};
   }
   function profiles(all,{referencePlayers=all,kind='player',midfieldRoles=null}={}){
     if(kind!=='player')throw new Error('Los equipos usan promedios de sus jugadores en GradaScores.');
     const roles=midfieldRoles||new Map(),indices=midfieldRoles?null:midfieldIndices(all,{referencePlayers});
     if(indices)for(const p of all)if(p.pos==='MED')roles.set(p,midfieldRole(p,indices));
-    const keyFor=p=>p.pos==='MED'&&['MED_ATT','MED_DEF','MED_BALANCED'].includes(roles.get(p))?roles.get(p):p.pos;
+    const keyFor=p=>p.pos==='DEF'&&tactical.matches(p,'FB')?'DEF_FB':p.pos==='MED'&&['MED_ATT','MED_DEF','MED_BALANCED'].includes(roles.get(p))?roles.get(p):p.pos;
     const plans=new Map([...new Set(all.map(keyFor))].map(key=>[key,reference(referencePlayers,key)]));
     return new Map(all.map(p=>{
       const key=keyFor(p),result=profile(p,referencePlayers,plans.get(key));
       if(p.pos==='MED')result.profileLabel={MED_ATT:'Centrocampista · perfil ofensivo',MED_DEF:'Centrocampista · perfil defensivo',MED_BALANCED:'Centrocampista · perfil equilibrado',MED:'Centrocampista · perfil general (sin clasificar)'}[key];
-      return [p,result];
+      if(key==='DEF_FB')result.profileLabel='Lateral / carrilero · ataque y defensa';
+      return [p,fairplay.apply(p,result)];
     }));
   }
   function midfieldIndices(all,{referencePlayers=all}={}){

@@ -12,6 +12,14 @@ function fixtures(id){
  return {f,e};
 }
 
+test('zero xG is derived only from verified empty shooting samples and calculated differences keep their own rate',()=>{
+ const {f,e}=fixtures('premier-league'),p=f.players[0],ctx={source:'FotMob',captured_at:f.metadata.imported_at,minutes:p.minutes,matches:p.matches,reportedValue:true,profileVerified:true,reportedPer90:0};
+ p.goals=0;p.shots=0;p.xg=null;p.conversion=null;delete p.metricContexts.conversion;p.metricContexts.goals={...ctx};p.metricContexts.shots={...ctx};
+ const original=JSON.stringify(f),row=combined.combine(f,e).players[0];assert.equal(JSON.stringify(f),original);assert.equal(p.xg,null);assert.equal(row.xg,0);assert.equal(row.metricContexts.xg.derived,'zero_shot_xg');assert.equal(row.metricContexts.xg.reportedValue,false);assert(!Object.hasOwn(row.metricContexts.xg,'reportedPer90'));assert.equal(metrics.metric(row,'xg','90'),0);assert.equal(row.delta,0);assert.equal(metrics.metric(row,'goalsPerXg'),null);assert.equal(metrics.metric(row,'xgPerShot'),null);
+ p.metricContexts.shots.profileVerified=false;assert.equal(combined.combine(f,e).players[0].xg,null);p.metricContexts.shots.profileVerified=true;p.metricContexts.shots.matches++;assert.equal(combined.combine(f,e).players[0].xg,null);p.metricContexts.shots.matches--;p.shots=1;assert.equal(combined.combine(f,e).players[0].xg,null);
+ p.goals=2;p.shots=4;p.xg=1;p.metricContexts.goals.reportedPer90=2*90/p.minutes;const positive=combined.combine(f,e).players[0];assert.equal(positive.delta,1);assert(Math.abs(metrics.metric(positive,'delta','90')-90/p.minutes)<1e-12);assert.equal(positive.metricContexts.delta.reportedValue,false);
+});
+
 test('validates 18/20 teams, season identities, priority and source denominators',()=>{
  for(const id of ['premier-league','serie-a','bundesliga','ligue-1']){
   const {f,e}=fixtures(id);fotmob.validate(f);espn.validate(e);const d=combined.combine(f,e),p=d.players[0];
