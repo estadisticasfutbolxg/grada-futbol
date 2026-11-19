@@ -18,8 +18,8 @@ function audit(directory,{recovery=true,now=Date.now()}={}){
   assert.equal(profile.profileKey,p.pos==='DEF'&&tactical.matches(p,'FB')?'DEF_FB':p.pos==='MED'?role||'MED':p.pos,'Declared profile and score axes disagree');
   if(profile.baseScore===null)assert.equal(profile.score,null);
   else if(profile.fairPlay.status==='verified'){
-   assert(profile.score>=0.9*profile.baseScore-1e-12&&profile.score<=profile.baseScore,'Fair play exceeds its bounded penalty');
-   const c=profile.fairPlay,rate=(c.yellowCards+4*c.redCards)*90/c.minutes,expected=profile.baseScore*(1-0.1*rate/(1+rate));assert(Math.abs(profile.score-expected)<1e-12,'Wrong card counts or denominator');fairPlayChecks++;
+   assert(profile.score>=0&&profile.score<=profile.baseScore,'Fair play must stay between zero and the radar base');
+   const c=profile.fairPlay,raw=(0.10*c.yellowCards+1.00*c.redCards)*90/c.minutes,expected=profile.baseScore*Math.max(0,1-raw);assert(Math.abs(profile.score-expected)<1e-12,'Wrong linear card penalty or own denominator');assert.equal(c.method,'linear_cards_v2');assert(Math.abs(c.rawPenaltyFraction-raw)<1e-12);fairPlayChecks++;
   }else{assert.equal(profile.score,profile.baseScore);assert.equal(profile.fairPlay.factor,null,'Missing discipline became a clean record');}
   for(const definition of radar.rankingDefinitions.filter(d=>d.kind==='player'&&d.position===p.pos))assert.equal(scores.value(model,p,definition),profile.score,'Ranking changed the canonical score');
   profileChecks++;

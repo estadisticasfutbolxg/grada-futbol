@@ -1,6 +1,6 @@
 # GRADA · Estadísticas de fútbol
 
-> Definición vigente desde el 18 de noviembre: [score único por jugador con ejes de su perfil, referencia común, promedios de equipo y totales con cobertura](docs/SCORES.md). El perfil MED y el puesto de lateral seleccionan los ejes; juego limpio ajusta la base con tarjetas verificadas. Cambiar de ranking no recalcula el score.
+> Definición vigente desde el 19 de noviembre: [score único por jugador con ejes de su perfil, referencia común, promedios de equipo y totales con cobertura](docs/SCORES.md). El perfil MED y el puesto de lateral seleccionan los ejes; juego limpio aplica una penalización lineal con tarjetas verificadas y mayor peso de las rojas. Cambiar de ranking no recalcula el score.
 
 
 Web en español de estadísticas, perfiles y rankings por score del radar de jugadores y equipos. El selector ofrece **LaLiga, Premier League, Serie A, Bundesliga, Ligue 1** combinadas y **Todas las ligas**, temporada 2026/27. HTML/CSS/JavaScript en `dist/`, Python estándar para descargar datos reales y generar SQLite gratuitos.
