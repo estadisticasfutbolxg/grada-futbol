@@ -27,7 +27,7 @@ test('profile decisions, axis references and scores agree between a league, all 
   const joined=reference.players.find(q=>q.id==='a:'+p.id);assert.equal(local.roles.get(p),all.roles.get(joined));assert.equal(local.players.get(p).profileKey,all.players.get(joined).profileKey);assert.deepEqual(local.players.get(p).expectedAxes,all.players.get(joined).expectedAxes);assert.equal(local.players.get(p).score,all.players.get(joined).score);assert.equal(local.players.get(p).score,reversed.players.get(p).score);
  }
  const def=radar.definition('MED_ATT'),keys=scores.rankingAxes(local,def);assert(keys.includes('bigChancesCreated'));assert(keys.includes('recoveries'),'balanced candidates retain their own radar');assert(!keys.includes('accuracy'),'the first midfielder must not select all table axes');assert.deepEqual(keys,scores.rankingAxes(reversed,def));
- const generated=scores.withScores(a,{referencePlayers:reference.players});assert.equal(generated.metadata.derived_metrics.playerScore.method,'role_radar_area_v3');assert(generated.players.every((p,i)=>p.scoreProfile===local.players.get(a.players[i]).profileKey&&p.playerScore===local.players.get(a.players[i]).score));
+ const generated=scores.withScores(a,{referencePlayers:reference.players});assert.equal(generated.metadata.derived_metrics.playerScore.method,'role_fairplay_radar_v4');assert(generated.players.every((p,i)=>p.scoreProfile===local.players.get(a.players[i]).profileKey&&p.playerScore===local.players.get(a.players[i]).score));
 });
 test('unknown profiles are explicit general scores and do not fabricate subgroup membership; zeros stay valid',()=>{
  const data=fixture(),p=data.players.at(-1);p.bigChancesCreated=null;let model=scores.build(data);

@@ -1,5 +1,7 @@
 # Puestos publicados, perfiles y medidas · 14 de noviembre de 2026
 
+> Actualización del 18 de noviembre: los DEF con puesto de lateral/carrilero publicado usan un único radar mixto, con referencia de laterales. El score final aplica juego limpio cuando está verificado. [Fórmulas, muestras y casos polivalentes](SCORES.md) sustituyen las referencias anteriores a mantener el radar DEF general.
+
 > Corrección del 17 de noviembre: el perfil estadístico MED ahora selecciona también los ejes de su único score. La descripción anterior de «solo filtra candidatos» queda sustituida por [SCORES.md](SCORES.md). Los puestos publicados siguen siendo evidencia táctica separada y no se deducen del rendimiento.
 
 ## Puesto táctico y perfil estadístico

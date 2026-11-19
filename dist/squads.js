@@ -23,7 +23,7 @@
       const value=profiles.get(player)?.comparableArea;
       const area=typeof value==='number'&&Number.isFinite(value)&&value>=0&&value<=1?value:null;
       const minutes=typeof player.minutes==='number'&&Number.isFinite(player.minutes)&&player.minutes>=0?player.minutes:null,included=area!==null&&minutes!==null&&minutes>0;
-      team.totalPlayers++;team.players.push({id:String(player.id),name:player.name,pos:player.pos,scoreProfile:profiles.get(player)?.profileKey||player.pos,scoreProfileLabel:profiles.get(player)?.profileLabel||null,area,minutes,minutesSource:player.metricContexts?.minutes?.source||player.fieldSources?.minutes||data.metadata?.primary_source||data.metadata?.source||null,included,weight:null,contribution:null});
+      team.totalPlayers++;team.players.push({id:String(player.id),name:player.name,pos:player.pos,scoreProfile:profiles.get(player)?.profileKey||player.pos,scoreProfileLabel:profiles.get(player)?.profileLabel||null,baseScore:profiles.get(player)?.baseScore??area,fairPlayStatus:profiles.get(player)?.fairPlay?.status||'unavailable',fairPlayPenalty:profiles.get(player)?.fairPlay?.penaltyFraction??null,area,minutes,minutesSource:player.metricContexts?.minutes?.source||player.fieldSources?.minutes||data.metadata?.primary_source||data.metadata?.source||null,included,weight:null,contribution:null});
       if(!included)team.missingPlayers++;
       else{team.weightedTotal+=area*minutes;team.minutes+=minutes;team.validPlayers++;}
     }
