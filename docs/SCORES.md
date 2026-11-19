@@ -1,6 +1,6 @@
 # Score único por jugador y perfil; promedios de equipo
 
-Definición actualizada el 18 de noviembre de 2026, modelo `role_fairplay_radar_v4`. Añade un radar mixto de lateral y juego limpio al modelo de perfiles MED del 17 de noviembre. El modelo común es `dist/scores.js`; tablas, tarjetas, fichas, comparador, filtros y generador consumen sus resultados.
+Definición actualizada el 19 de noviembre de 2026, modelo `role_fairplay_radar_v5`. Sustituye la curva de disciplina de v4 por una penalización lineal más exigente; conserva los perfiles MED y el radar mixto de lateral. El modelo común es `dist/scores.js`; tablas, tarjetas, fichas, comparador, filtros y generador consumen sus resultados.
 
 ## Jugadores
 
@@ -22,15 +22,27 @@ Grimaldo figura en las capturas como Álex/Alejandro Grimaldo, Atlético Madrid,
 
 ## Juego limpio
 
-El ajuste es moderado y se aplica una sola vez después de calcular el radar. **Una roja pesa como cuatro amarillas**, con ponderación propia de GRADA. Se usan los recuentos publicados, sin reconstruir expulsiones por doble amarilla ni afirmar una clasificación oficial de disciplina.
+El ajuste se aplica una sola vez después del radar. Es una regla manual de GRADA para que la disciplina influya de forma apreciable en el score: una roja pesa **diez amarillas** y desaparece el límite indulgente del 10%. La frecuencia de amarillas recoge también el riesgo de indisponibilidad por acumulación, sin afirmar cuántas sanciones se han cumplido.
 
-`intensidad = (amarillas + 4 × rojas) × 90 / minutos propios`
+`intensidad = (amarillas + 10 × rojas) × 90 / minutos propios`
 
-`factor = 1 − 0,10 × intensidad / (1 + intensidad)`
+`descuento relativo = mínimo(1; 0,10 × intensidad)`
 
-`score final = base del radar × factor`
+`score final = base del radar × (1 − descuento relativo)`
 
-La penalización aumenta gradualmente con las tarjetas y está acotada al **10% relativo de la base**. Una intensidad de 1 punto por 90 descuenta un 5%; dos amarillas y una roja en 900 minutos descuentan un 3,75%. Cero tarjetas publicadas conservan la base. Un score base cero sigue siendo cero. No se añaden puntos de rendimiento por ser limpio: los jugadores más limpios conservan una mayor proporción de su base.
+Equivale a `descuento = 0,10 × amarillas/90 + 1,00 × rojas/90`, hasta el suelo natural de score 0. A igualdad de minutos, cada amarilla adicional añade la misma penalización y cada roja añade diez veces esa cantidad; no se reduce su efecto marginal al acumular tarjetas. Son porcentajes relativos de la base, no puntos absolutos de score. Jugar el doble de minutos con el doble de tarjetas conserva la penalización.
+
+| Tarjetas en 900 minutos | Descuento | Base 0,800 → final |
+| --- | --- | --- |
+| 0 amarillas, 0 rojas | 0% | 0,800 |
+| 5 amarillas, 0 rojas | 5% | 0,760 |
+| 0 amarillas, 1 roja | 10% | 0,720 |
+| 5 amarillas, 1 roja | 15% | 0,680 |
+| 5 amarillas, 2 rojas | 25% | 0,600 |
+
+Los coeficientes 0,10 y 1,00 son decisiones de diseño, pendientes de calibración estadística. Reflejan mayor gravedad disciplinaria; no miden el daño causal en goles o puntos. Las capturas agregadas no identifican el minuto/contexto de cada expulsión, una posible tarjeta en el banquillo, doble amarilla frente a roja directa, los ciclos por competición ni sanciones cumplidas. Por tanto **no se inventan minutos en inferioridad ni partidos perdidos**, ni se convierte cada cinco amarillas en una suspensión universal. Se conservan los recuentos publicados; no se reconstruyen expulsiones adicionales desde las amarillas.
+
+El límite de 100% solo impide scores negativos. La regla previa, v4, usaba roja de peso 4 y una curva saturada bajo el 10%; sus cifras quedan como historial. Cero tarjetas verificadas conservan la base y un score base cero sigue siendo cero.
 
 Amarillas y rojas deben tener misma fuente, minutos, PJ y muestra declarada. Se respetan sus fechas individuales; dos consultas de un mismo agregado no implican distinta muestra. Se exigen minutos propios suficientes (450 en campo, 180 en porteros). No se usan minutos de otro proveedor ni se estiman minutos desde PJ para este ajuste. Los índices MED auxiliares no reciben el ajuste: la disciplina no decide si un jugador es ofensivo o defensivo.
 
@@ -88,7 +100,7 @@ Con las capturas publicadas al preparar este cambio hay 1.029 asistencias conoci
 
 ## Artefactos y reproducción
 
-`scores.build` calcula índices MED, perfil, base del radar y ajuste de juego limpio en ese orden; `scores.value`, `scores.eligible` y `scores.rankingAxes` resuelven rankings y columnas. `fairplay.js` conserva fuente/muestra de ambas tarjetas. `squads.js` produce promedios y contribuciones con el score final y el perfil utilizado. `withScores` añade `playerScore`, `playerBaseScore`, `fairPlay`, `scorePosition`, `scoreProfile`, `scoreProfileLabel`, `midfieldProfile` y scores/ledgers de equipo al combinado. El modelo se identifica como `role_fairplay_radar_v4` en `metadata.derived_metrics.playerScore`. Todas las ligas descarta derivados previos antes de recalcular.
+`scores.build` calcula índices MED, perfil, base del radar y ajuste de juego limpio en ese orden; `scores.value`, `scores.eligible` y `scores.rankingAxes` resuelven rankings y columnas. `fairplay.js` conserva fuente/muestra de ambas tarjetas. `squads.js` produce promedios y contribuciones con el score final y el perfil utilizado. `withScores` añade `playerScore`, `playerBaseScore`, `fairPlay`, `scorePosition`, `scoreProfile`, `scoreProfileLabel`, `midfieldProfile` y scores/ledgers de equipo al combinado. El modelo se identifica como `role_fairplay_radar_v5` en `metadata.derived_metrics.playerScore`. Todas las ligas descarta derivados previos antes de recalcular.
 
 El generador lee las capturas verificadas de las ligas disponibles para compartir referencia. En una importación por etapas, `--reference-dir` aporta las otras ligas, y `import_leagues.py` recalcula todos los derivados tras completar las fuentes. No actualiza las fechas originales por recalcular scores. Todas las ligas descarta derivados anteriores y usa el modelo común. En el navegador, el modelo se invalida al cambiar una captura, no al cambiar de vista.
 

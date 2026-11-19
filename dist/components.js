@@ -11,7 +11,11 @@
       return '<p class="sub fairplay-note">Juego limpio sin ajuste: '+esc(reason)+'. Se conserva la base del radar.</p>';
     }
     const fixed=n=>new Intl.NumberFormat('es-ES',{minimumFractionDigits:3,maximumFractionDigits:3}).format(n),penalty=numberFormat.format(info.penaltyFraction*100),yellow=provenance(record,'yellowCards',metadata),red=provenance(record,'redCards',metadata),source=yellow?.date===red?.date?yellow?.text:'Amarillas: '+yellow?.text+'; rojas: '+red?.text;
-    return '<p class="sub fairplay-note">Juego limpio: '+info.yellowCards+(info.yellowCards===1?' amarilla y ':' amarillas y ')+info.redCards+(info.redCards===1?' roja · ':' rojas · ')+format(info.weightedCardsPer90)+' puntos /90 · descuento '+penalty+' %. '+(Number.isFinite(profile.baseScore)?'Base del radar '+fixed(profile.baseScore)+' × factor '+fixed(info.factor)+' ≈ score '+fixed(profile.score)+'. ':'')+'Una roja pesa como 4 amarillas; ajuste limitado al 10 %. '+esc(source||info.source)+' · muestra emparejada de ambas tarjetas.</p>';
+    return '<p class="sub fairplay-note">Juego limpio: '+info.yellowCards+(info.yellowCards===1?' amarilla y ':' amarillas y ')+info.redCards+(info.redCards===1?' roja · ':' rojas · ')+format(info.weightedCardsPer90)+' puntos /90 · descuento '+penalty+' %. '+
+      (Number.isFinite(profile.baseScore)?'Base del radar '+fixed(profile.baseScore)+' × factor '+fixed(info.factor)+' ≈ score '+fixed(profile.score)+'. ':'')+
+      'Descuento por amarillas: '+format(info.yellowPenaltyFraction*100)+' %; por rojas: '+format(info.redPenaltyFraction*100)+' % antes del mínimo de score 0. '+
+      'Una roja pesa como '+info.redWeight+' amarillas; penalización lineal de '+format(info.yellowPenaltyPer90*100)+' % por punto /90. Pesos propios de GRADA. '+
+      'No estima sanciones cumplidas ni minutos en inferioridad. '+esc(source||info.source)+' · muestra emparejada de ambas tarjetas.</p>';
   }
   function provenance(record,key,metadata) {
     const ctx = root.GradaMetrics.context(record,key), source = ctx?.source || record.fieldSources?.[key];

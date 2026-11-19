@@ -1,5 +1,12 @@
 # Estado comprobado de GRADA
 
+## Disciplina lineal y expulsiones · 19 de noviembre de 2026 · validado, publicación pendiente
+
+- Modelo `role_fairplay_radar_v5`: descuento relativo lineal `0,10 × (amarillas + 10 × rojas) × 90 / minutos propios`, con suelo de score 0. Una roja pesa diez amarillas; cada tarjeta añade la misma penalización hasta ese suelo. Se elimina la curva saturada bajo el 10%. Ejemplo 5 A + 1 R / 900 min: 15%, base 0,800 → 0,680. Ficha y glosario muestran fórmula, desglose por color y pesos manuales. No se infieren sanciones cumplidas, ciclos de cinco amarillas ni minutos en inferioridad. [Contrato y límites](SCORES.md).
+- **698 scores cambian**: LaLiga 164, Premier 152, Serie A 129, Bundesliga 122, Ligue 1 131; se actualizan los 96 promedios generales de equipo. Se mantienen los 1.017 scores válidos y 29 pendientes sobre el mínimo, posiciones/perfiles, ejes y bases de los 2.284 registros. Ocho scores continúan explícitamente sin ajuste por falta de tarjetas emparejadas suficientes.
+- 21 archivos Node correctos; siete casos de disciplina/laterales, auditorías de 2.284 perfiles/equivalencias, 1.009 ajustes, 714 medias, 2.558 contribuciones y 390.320 lecturas de métricas. Recuperación de datos conserva scores/posiciones; 84 tablas comprobadas en seis ámbitos. Cinco combinados regenerados y 2.284 scores/base/factores contrastados con el modelo; Worker verificado. StatsBomb histórico sigue sin su captura local, ajena a las fuentes actuales. Sin revisión visual de navegador en modo managed sin cua_repl.
+- **0 jugadores nuevos, 0 cifras de fuente y 0 partidos actualizados**. Once capturas y fechas intactas; sin consultas de proveedores ni cambios de SQLite. Integración y despliegue owner-private pendientes de confirmar. [Tarea y evidencia](../loop/tasks/20261119-codex-linear-discipline.md).
+
 ## Score primero y comparación de equipos · publicación privada verificada · 19 de noviembre de 2026 · 07:02 Madrid
 
 - Score en la primera columna real y fijo al desplazar; los rankings de KPI conservan su orden. Ayudas desde ⓘ, de hasta 170 caracteres y sin capturar clics; definiciones completas en el glosario. Selector de varios equipos por IDs, con búsqueda y limpieza.
