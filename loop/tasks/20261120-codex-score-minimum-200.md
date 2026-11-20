@@ -1,13 +1,13 @@
 # 20261120-codex · Scores desde 200 minutos
 
-- Estado: `review`
+- Estado: `done`
 - Responsable: Codex
 - Revisor: autocontrol; sin revisión independiente solicitada
 - Rama: `fix/score-minimum-200-minutes`
 - Base Sites: `1108a0441d2f341a88f0612a54d1ddc6949de135`
 - Base GitHub: `b14bdceef2c64397cc36f72abe61e0cd6383e3d1`
 - Issue: no creado
-- PR: pendiente
+- PR: [#47 integrado](https://github.com/estadisticasfutbolxg/grada-futbol/pull/47)
 - Objetivo de entrega: merge y despliegue privado, autorización vigente
 
 ## Objetivo y alcance
@@ -22,7 +22,7 @@ Archivos compartidos: radar, fairplay, scores, app, HTML, empaquetador, pruebas 
 - [x] Ceros reales válidos; faltantes o muestras insuficientes conservan `null` con explicación.
 - [x] Misma puntuación en liga/Todas, tabla/ficha/ranking/equipos; tarjetas usan minutos propios.
 - [x] Artefactos combinados regenerados y comprobados antes de promoción; fuentes intactas.
-- [ ] Push, PR, merge y publicación privada confirmados.
+- [x] Push, PR, merge y publicación privada confirmados.
 
 ## Plan
 
@@ -58,4 +58,8 @@ Autocontrol del diff, muestras propias, nulos/ceros, scores únicos, cobertura d
 
 ### Entrega
 
-Commit/push, PR/merge y publicación pendientes de confirmar. Audiencia comprobada: solo propietario, política revisión 3; cero editores/grupos/visitantes. No cambiar acceso ni variables.
+Código subido por API nativa a GitHub en `d1213b427a4bbbc6102e6005f7e820cf1b62d302`. PR #47 integrado con squash en `63ac40077193d242e328648819c74b1ebdfe4551`, main verificado. Antes de integrar: head/base exactos, mergeable clean, sin checks/statuses configurados ni protecciones/rulesets; no se han cambiado. Las pruebas locales constan arriba.
+
+Fuente Sites `0823e0f419885c65ac598c0bf02e9803af1043b0` subida y verificada. Archivo con solo hosting y Worker comprobado por SHA256. [GRADA privada](https://grada-futbol-analitica.ivanmatema2.chatgpt.site), versión **26**, despliegue `appgdep_6b00bd95ef5c8191b04a5d24493598e3` en `succeeded`, el 20 de noviembre a las 22:37 Madrid. Versión `appgprj_6ae0b8b2eb1881918601230d00603255~appgver_b378e5d904888191aa985d92ea83f6e0`; procedencia exacta confirmada con get_site_version. Variables runtime revisión 1, sin cambios.
+
+Audiencia posterior confirmada: solo propietario, política revisión 3; un owner, cero editores/grupos/visitantes. No se han cambiado permisos. Este cierre documental es posterior al código publicado; no exige volver a desplegar un Worker idéntico. Objetivo completo; pendientes de cobertura son datos ausentes reales, no errores resueltos con ceros.

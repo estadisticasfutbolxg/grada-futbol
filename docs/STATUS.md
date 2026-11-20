@@ -1,5 +1,12 @@
 # Estado comprobado de GRADA
 
+## Scores desde 200 minutos · publicación privada verificada · 20 de noviembre de 2026 · 22:37 Madrid
+
+- Modelo `role_fairplay_radar_v6`: mínimo **200 minutos inclusive** del jugador y de cada eje para cualquier posición. Solo ciertos ejes POR sin minutos conservan la alternativa de 2 PJ tras verificar los 200 min del jugador. Rankings/textos/metadatos y ajuste por tarjetas comparten la regla. [Contrato](SCORES.md).
+- **1.502 scores válidos**: 489 nuevos, 1.013 existentes recalculados; cuatro porteros de 180–199 min quedan pendientes. La referencia ampliada cambia 90 perfiles estadísticos MED; posiciones y fuentes intactas. 1.484 ajustes por tarjetas verificados y 18 bases con aviso; 76 candidatos sobre el mínimo aún sin todos los ejes/muestras necesarios.
+- 23 archivos Node y 10 tests Python correctos; umbrales 199/200/201, ceros/nulos, muestras propias, 741 medias y 3.809 contribuciones. 4.568 equivalencias de score entre ámbitos y 84 tablas comprobadas. Worker: 141 assets, 110 contenidos/MIME exactos; escudos/banderas conservados. Sin QA visual por falta de navegador; validador histórico StatsBomb limitado por captura ausente, auditorías actuales correctas.
+- **0 jugadores nuevos, 0 cifras de proveedor y 0 partidos actualizados**. Once capturas/fechas originales intactas. Cinco combinados regenerados desde caché y verificados antes de promoción; sin cambios de SQLite. [PR #47](https://github.com/estadisticasfutbolxg/grada-futbol/pull/47) integrado en `63ac40077193d242e328648819c74b1ebdfe4551`. [GRADA privada](https://grada-futbol-analitica.ivanmatema2.chatgpt.site), versión **26**, despliegue `appgdep_6b00bd95ef5c8191b04a5d24493598e3` en `succeeded`. Fuente `0823e0f419885c65ac598c0bf02e9803af1043b0`; Worker SHA256 `4412df90533b217ae8485aa8831b6b5aee93de008c066d6d612ee5627c520acf`. Audiencia posterior solo propietario, revisión 3, sin editores/grupos/visitantes. [Tarea y detalle](../loop/tasks/20261120-codex-score-minimum-200.md).
+
 ## Escudos y banderas · publicación privada verificada · 20 de noviembre de 2026 · 15:52 Madrid
 
 - 96 escudos reales de clubes por ID FotMob verificado, con imágenes locales en tablas, filtros, rankings, fichas y comparativas. Cinco banderas de competición: España, Inglaterra, Italia, Alemania y Francia; selector con país y banderas en Todas. No se infieren nacionalidades ni país de club. Fallback neutro para imágenes ausentes o agregados multiclub, texto accesible y score primero conservados. [Procedencia y generación](ASSETS.md).
