@@ -1,12 +1,12 @@
 # 20261120-codex · Escudos de clubes y banderas de competiciones
 
-- Estado: `review`
+- Estado: `done`
 - Responsable: Codex
 - Revisor: autocontrol; sin revisión independiente
 - Rama: `feat/club-crests-country-flags`
 - Base Sites: `adc4f0a50d57d5bda1e4a75660a918e1ed0b3d07`
 - Base GitHub: `d6c14be81f72150e758b05c65a7e027933f911db`
-- PR: pendiente
+- PR: [#45 integrado](https://github.com/estadisticasfutbolxg/grada-futbol/pull/45)
 - Objetivo: añadir imágenes coherentes de clubes y países, validar y publicar privado
 
 ## Alcance
@@ -21,7 +21,7 @@ Servir imágenes locales, sin nuevas peticiones de imágenes a terceros desde el
 - [x] Iconos integrados con legibilidad, controles accesibles, fallback y tamaños móviles; score primero y filtros intactos.
 - [x] Imágenes empaquetadas y servidas localmente, sin rutas externas arbitrarias, scripts SVG o relajación de CSP.
 - [x] Pruebas proporcionadas, estadísticas/modelo intactos y límites de revisión visual registrados.
-- [ ] GitHub integrado y Sites publicado con owner-only revisión 3.
+- [x] GitHub integrado y Sites publicado con owner-only revisión 3.
 
 ## Plan
 
@@ -42,4 +42,7 @@ Servir imágenes locales, sin nuevas peticiones de imágenes a terceros desde el
 - Worker: 140 assets, 11 módulos, SHA256 `61ce490a082fa4ae3cf19b2eb001a7af143a3c4b6e0ebae7a89f07b237a55aed`. GET de 96 PNG, cinco SVG, licencia, branding/app/CSS: 105 contenidos y MIME exactos; orden de scripts correcto y CSP sin dominios añadidos. PNG acotados, CRC y dimensiones; SVG pasivos sin referencias externas. Cache/logo fallback y texto accesible conservan controles.
 - **0 jugadores, 0 estadísticas de origen, 0 partidos y 0 scores actualizados**. Solo imágenes descargadas, sin consultas de estadísticas, regeneración de combinados/SQLite o cambios de permisos/contraseña/bindings. Los PNG/manifiesto y Worker quedan fuera de GitHub; generador, banderas/licencia y código sí se versionan.
 - Modo Sites managed sin cua_repl disponible: sin nueva revisión visual de navegador/móvil o producción autenticada. Sí lógica, controladores con dobles DOM, HTML real generado y artefacto servido. Autocontrol sin revisión independiente.
-- Pendientes: push/PR/merge y publicación privada, con lectura posterior de fuente, versión y audiencia.
+- Fuente Sites `55368bab9d6ffeced138fbb4276b58e9026ff448` subida y verificada. [PR #45](https://github.com/estadisticasfutbolxg/grada-futbol/pull/45), 23 archivos, integrado por squash en main `baebc8e53e3febb7ed1060e0247e8d2a19b01bc6`, comprobado. Head/base exactos, mergeable clean, sin checks/statuses configurados; main sin protección ni rulesets, sin modificarlos.
+- Publicación privada confirmada: versión **25**, despliegue `appgdep_6b005e9955d48191a4f568901554559b` en `succeeded`, revisión de entorno 1. Versión `appgprj_6ae0b8b2eb1881918601230d00603255~appgver_98ee26ce91c48191ac4c211082515d2d`, fuente exacta `55368bab9d6ffeced138fbb4276b58e9026ff448`. Worker SHA256 indicado arriba y paquete con manifiesto + Worker completo de imágenes.
+- Lectura posterior: [GRADA privada](https://grada-futbol-analitica.ivanmatema2.chatgpt.site), owner-only revisión **3**, un owner y cero editores, grupos y visitantes. get_site_version confirma versión/fuente publicadas. Sin cambios de permisos, contraseña o bindings. No existe open_in_codex disponible para el handoff y no se improvisa navegación de producción.
+- Cierre documental en incremento posterior sin volver a desplegar assets idénticos. Autocontrol; no se afirma revisión independiente ni navegación visual/authenticada.

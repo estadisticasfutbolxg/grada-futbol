@@ -1,10 +1,10 @@
 # Estado comprobado de GRADA
 
-## Escudos y banderas · 20 de noviembre de 2026 · validado, publicación pendiente
+## Escudos y banderas · publicación privada verificada · 20 de noviembre de 2026 · 15:52 Madrid
 
 - 96 escudos reales de clubes por ID FotMob verificado, con imágenes locales en tablas, filtros, rankings, fichas y comparativas. Cinco banderas de competición: España, Inglaterra, Italia, Alemania y Francia; selector con país y banderas en Todas. No se infieren nacionalidades ni país de club. Fallback neutro para imágenes ausentes o agregados multiclub, texto accesible y score primero conservados. [Procedencia y generación](ASSETS.md).
 - 22 archivos Node y 10 tests Python correctos; 192 identidades de equipo, 4.564 referencias de club y 2.284 scores intactos. 105 contenidos/MIME del Worker exactos, incluidos 96 PNG, cinco SVG y licencia; 140 assets en total. Once capturas originales intactas, sin cambios de modelo o referencias. Sin nueva revisión visual de navegador en modo managed sin cua_repl.
-- **0 jugadores, estadísticas, partidos o scores actualizados**. Solo descarga de imágenes, sin nuevas consultas estadísticas ni cambios de SQLite. Código/generador y banderas MIT versionados; PNG/manifiesto y Worker generados fuera de GitHub. Integración y publicación owner-private pendientes de confirmar. [Tarea](../loop/tasks/20261120-codex-club-crests-country-flags.md).
+- **0 jugadores, estadísticas, partidos o scores actualizados**. Solo descarga de imágenes, sin nuevas consultas estadísticas ni cambios de SQLite. Código/generador y banderas MIT versionados; PNG/manifiesto y Worker generados fuera de GitHub. [PR #45](https://github.com/estadisticasfutbolxg/grada-futbol/pull/45) integrado en main `baebc8e53e3febb7ed1060e0247e8d2a19b01bc6`. [GRADA privada](https://grada-futbol-analitica.ivanmatema2.chatgpt.site), versión **25**, despliegue `appgdep_6b005e9955d48191a4f568901554559b` en `succeeded`. Fuente Sites `55368bab9d6ffeced138fbb4276b58e9026ff448`; versión `appgprj_6ae0b8b2eb1881918601230d00603255~appgver_98ee26ce91c48191ac4c211082515d2d`. Worker SHA256 `61ce490a082fa4ae3cf19b2eb001a7af143a3c4b6e0ebae7a89f07b237a55aed`. Política posterior owner-only revisión 3, un owner y cero editores/grupos/visitantes. [Tarea](../loop/tasks/20261120-codex-club-crests-country-flags.md).
 
 ## Disciplina lineal y expulsiones · publicación privada verificada · 19 de noviembre de 2026 · 07:28 Madrid
 
