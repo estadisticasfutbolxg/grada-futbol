@@ -10,6 +10,8 @@ import hashlib
 import json
 from pathlib import Path
 import re
+import xml.etree.ElementTree as ET
+from download_club_badges import validate_png
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -39,7 +41,7 @@ def build():
 
     entry = include(ROOT / 'worker/app.cjs')
     assets = {}
-    client_files = ['index.html','style.css','leagues.json','leagues.js','metrics.js','fairplay.js','security.js','understat.js','laliga.js','roles.js','fotmob.js','identity.js','positions.js','combined.js','scopes.js','clubs.js','filters.js','radar.js','squads.js','scores.js','explore.js','components.js','profiles.js','refresh.js','owner.js','app.js']
+    client_files = ['index.html','style.css','leagues.json','leagues.js','metrics.js','fairplay.js','security.js','understat.js','laliga.js','roles.js','fotmob.js','identity.js','positions.js','combined.js','scopes.js','clubs.js','branding.js','filters.js','radar.js','squads.js','scores.js','explore.js','components.js','profiles.js','refresh.js','owner.js','app.js']
     files = [ROOT / 'dist' / filename for filename in client_files]
     client_bodies = {filename: (ROOT / 'dist' / filename).read_bytes() for filename in client_files}
     def version_asset(match):
@@ -58,10 +60,31 @@ def build():
             if not path.is_file():
                 raise ValueError('Missing real source capture: ' + filename)
             files.append(path)
+    # Only bounded local PNG crests and reviewed vector flags are deployable images.
+    asset_root = (ROOT / 'dist/assets').resolve()
+    for path in sorted((asset_root / 'clubs').glob('*.png')):
+        if not path.resolve().is_relative_to(asset_root) or not re.fullmatch(r'[1-9][0-9]{0,8}', path.stem):
+            raise ValueError('Unsafe crest path')
+        validate_png(path.read_bytes())
+        files.append(path)
+    for name in ['es', 'gb-eng', 'it', 'de', 'fr']:
+        path = asset_root / 'flags' / (name + '.svg')
+        body = path.read_bytes()
+        if len(body) > 128 * 1024 or b'<!' in body:
+            raise ValueError('Unexpected flag document')
+        flag = ET.fromstring(body)
+        for element in flag.iter():
+            if element.tag not in {'{http://www.w3.org/2000/svg}svg', '{http://www.w3.org/2000/svg}path', '{http://www.w3.org/2000/svg}g'}:
+                raise ValueError('Unsupported flag element')
+            if any(key.lower().startswith('on') or 'href' in key.lower() or 'url(' in value.lower() or '@import' in value.lower() for key, value in element.attrib.items()):
+                raise ValueError('Active or external flag content')
+        files.append(path)
+    files.append(asset_root / 'flags/LICENSE.txt')
     for path in files:
         body = client_bodies.get(path.name) if path.parent == ROOT / 'dist' else path.read_bytes()
-        mime = {'.html': 'text/html', '.css': 'text/css', '.js': 'text/javascript', '.json': 'application/json'}[path.suffix]
-        assets['/' + path.relative_to(ROOT / 'dist').as_posix()] = {'type': mime + '; charset=utf-8', 'sha': hashlib.sha256(body).hexdigest(), 'gzip': base64.b64encode(gzip.compress(body, mtime=0)).decode()}
+        mime = {'.html': 'text/html', '.css': 'text/css', '.js': 'text/javascript', '.json': 'application/json', '.png': 'image/png', '.svg': 'image/svg+xml', '.txt': 'text/plain'}[path.suffix]
+        content_type = mime if path.suffix == '.png' else mime + '; charset=utf-8'
+        assets['/' + path.relative_to(ROOT / 'dist').as_posix()] = {'type': content_type, 'sha': hashlib.sha256(body).hexdigest(), 'gzip': base64.b64encode(gzip.compress(body, mtime=0)).decode()}
     factories = ',\n'.join(json.dumps(k) + ':function(module,exports,require){\n' + v[0] + '\n}' for k, v in modules.items())
     dependency_map = {k: v[1] for k, v in modules.items()}
     bundle = 'const factories={' + factories + '};\nconst dependencies=' + json.dumps(dependency_map) + ';\n'

@@ -1,0 +1,13 @@
+# Escudos de clubes y banderas
+
+Los escudos se resuelven exclusivamente con `sourceRecords.FotMob.id` de un **registro de equipo**, tras el cruce ya validado de proveedores. Se usan esos mismos IDs en liga y Todas. Para un jugador se busca primero su club canónico por ID; un agregado de varios clubes o un club sin asignar conserva un monograma neutro. No se usan coincidencias nuevas de nombres ni un ID de jugador como ID de equipo.
+
+`python scripts/download_club_badges.py` lee las cinco capturas FotMob locales y descarga PNG de `https://images.fotmob.com/image_resources/logo/teamlogo/<id>.png`. Son imágenes publicadas por FotMob y marcas de sus clubes; esa procedencia no les atribuye la licencia MIT de las banderas. La descarga valida ID, tamaño máximo de 512 KiB, dimensiones hasta 512×512, estructura y CRC de PNG, limita concurrencia a cuatro y conserva imágenes válidas en caché. Los redirects a otras URLs se rechazan. El manifiesto registra ID, club, liga, URL, hash y dimensiones. No consulta ni cambia estadísticas.
+
+Los 96 escudos se guardan en `dist/assets/clubs/`, ignorado en GitHub, y se empaquetan en el Worker publicado. El código del generador sí se versiona. Después de generar las capturas, una instalación nueva ejecuta la descarga de escudos antes de `build_worker.py`; una imagen que falte conserva el nombre y un monograma, sin sustituirlo por otro club.
+
+Las cinco banderas proceden de [flag-icons v7.5.0](https://github.com/lipis/flag-icons/tree/v7.5.0/flags/4x3), bajo [MIT](../dist/assets/flags/LICENSE.txt): `es`, `gb-eng`, `it`, `de`, `fr`. SVG y licencia quedan versionados y se sirven desde la propia web. El empaquetador solo admite gráficos pasivos sin scripts, eventos o referencias externas.
+
+Las banderas indican el **país de la competición**: España, Inglaterra, Italia, Alemania y Francia. Premier League usa Inglaterra, no Reino Unido. La bandera francesa de Ligue 1 no declara que el AS Monaco sea un club francés. No se infieren nacionalidades de jugadores. El selector nativo mantiene opciones de texto con país y muestra la bandera junto a la selección; Todas muestra las cinco banderas.
+
+`dist/branding.js` genera marcado escapado, tamaños consistentes, nombres accesibles y eventos de carga/error sin handlers inline. Los escudos son decorativos junto al nombre; la bandera tiene el país como texto visible o accesible. Si falla una imagen se oculta y se mantiene su identificación textual. Tablas, filtros, rankings, fichas y comparativas comparten este módulo. El score permanece en la primera columna y no cambia ningún dato, score, referencia, permiso o CSP.

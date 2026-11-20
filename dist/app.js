@@ -1,5 +1,6 @@
 'use strict';
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+GradaBranding.init(document);
 let data = null, loaded = false;
 let currentLeague='laliga',initialLoadsComplete=false,rankingProfile='DEL',rankingMinimum=450;
 const datasets=new Map();
@@ -221,7 +222,7 @@ function searchClubOptions(){
   $('#club-filter-empty').hidden=visible>0;
 }
 function renderClubOptions(){
-  $('#club-options').innerHTML='<legend class="visually-hidden">Equipos incluidos</legend>'+clubOptions().map(o=>'<label><input type="checkbox" value="'+esc(o.id)+'"'+(selectedClubs.has(String(o.id))?' checked':'')+'><span>'+esc(o.label)+'</span></label>').join('');
+  $('#club-options').innerHTML='<legend class="visually-hidden">Equipos incluidos</legend>'+clubOptions().map(o=>'<label><input type="checkbox" value="'+esc(o.id)+'"'+(selectedClubs.has(String(o.id))?' checked':'')+'><span>'+GradaBranding.teamLabel(teams().find(t=>String(t.id)===String(o.id))||{name:o.label},{label:o.label})+'</span></label>').join('');
   searchClubOptions();updateClubSummary();
 }
 function clearClubSelection(){
@@ -341,11 +342,11 @@ function renderTable() {
   $('#tbody').innerHTML = a.map((p,i)=>'<tr>'+cols.map((k,column)=>{
     let content;
     if(k==='rank')content=view==='rankings'&&isTeamView()&&squadMetricKeys.has(sort)&&metric(p,sort)===null?'—':String(i+1).padStart(2,'0');
-    else if(k==='name')content='<button class="namebtn" data-detail="'+esc(p.id)+'"><span class="initials">'+esc(initials(p.name))+'</span>'+esc(p.name)+'</button>';
+    else if(k==='name')content='<button class="namebtn" data-detail="'+esc(p.id)+'">'+(isTeamView()?GradaBranding.teamLabel(p):'<span class="initials">'+esc(initials(p.name))+'</span>'+esc(p.name))+'</button>';
     else if(k==='tacticalRole')content='<span class="role-label" title="'+esc(GradaRoles.info(p).label)+'">'+esc(GradaRoles.info(p).codes.join(' / ')||'—')+'</span>';
     else if(k==='pos')content='<span class="pos" tabindex="0" title="'+esc(GradaPositions.describe(p))+'">'+esc(p.pos)+'</span>';
-    else if(k==='team')content='<span title="'+esc(GradaClubs.info(p,teams()).description)+'">'+esc(GradaClubs.info(p,teams()).label)+'</span>';
-    else if(k==='league')content=esc(p.league);
+    else if(k==='team')content=GradaBranding.playerClub(p,teams());
+    else if(k==='league')content=GradaBranding.leagueLabel(p.league_key,p.league);
     else content=(column===0?'<strong>'+val(p,k)+'</strong>':val(p,k))+originMark(p,k);
     return '<td class="'+(column===0?'score-main':k==='rank'?'rank-column':['goals','xg','saves'].includes(k)?'highlight':'')+'">'+content+'</td>';
   }).join('')+'</tr>').join('') || '<tr><td colspan="'+cols.length+'" class="empty">'+(loaded?'No hay resultados con estos filtros.':'Aún no hay datos importados.')+'</td></tr>';
@@ -372,7 +373,7 @@ function renderLeaders() {
     const value=p=>GradaMetrics.metric(p,key,'total'),rate=Object.hasOwn(GradaMetrics.fixedRates,key);
     const list=players().filter(p=>leaderEligible(p,key)).sort((a,b)=>value(b)-value(a)||a.name.localeCompare(b.name)).slice(0,5);
     const format=p=>new Intl.NumberFormat('es-ES',{maximumFractionDigits:rate?2:['xg','xa','accuracy'].includes(key)?1:0}).format(value(p));
-    return '<article class="leadercard" data-leader-key="'+key+'"><h3>'+esc(title)+'</h3>'+(rate?'<p class="leader-sample-note">Mínimo '+leaderMinimum(key)+' min de su fuente</p>':'')+list.map((p,i)=>{const context=GradaMetrics.context(p,key),minutes=rate?' · '+(Number.isFinite(context?.minutes)?new Intl.NumberFormat('es-ES').format(context.minutes)+' min de la tasa':'minutos no publicados'):'';return '<div class="leaderrow"><span class="leaderplace">'+(i+1)+'</span><button class="namebtn" data-leader-profile="'+esc(p.id)+'"><span class="initials">'+esc(initials(p.name))+'</span><span>'+esc(p.name)+'<small>'+esc(p.team+minutes)+'</small></span></button><strong>'+format(p)+(key==='accuracy'?'%':'')+originMark(p,key)+'</strong></div>';}).join('')+(list.length?'':'<p class="empty">'+(loaded?'Sin datos con esta tasa y muestra mínima.':'Sin datos importados')+'</p>')+'<button class="leaderlink" data-leader-sort="'+key+'">Ver ranking →</button></article>';
+    return '<article class="leadercard" data-leader-key="'+key+'"><h3>'+esc(title)+'</h3>'+(rate?'<p class="leader-sample-note">Mínimo '+leaderMinimum(key)+' min de su fuente</p>':'')+list.map((p,i)=>{const context=GradaMetrics.context(p,key),minutes=rate?' · '+(Number.isFinite(context?.minutes)?new Intl.NumberFormat('es-ES').format(context.minutes)+' min de la tasa':'minutos no publicados'):'';return '<div class="leaderrow"><span class="leaderplace">'+(i+1)+'</span><button class="namebtn" data-leader-profile="'+esc(p.id)+'"><span class="initials">'+esc(initials(p.name))+'</span><span>'+esc(p.name)+'<small>'+GradaBranding.playerClub(p,teams(),{size:'xs'})+esc(minutes)+'</small></span></button><strong>'+format(p)+(key==='accuracy'?'%':'')+originMark(p,key)+'</strong></div>';}).join('')+(list.length?'':'<p class="empty">'+(loaded?'Sin datos con esta tasa y muestra mínima.':'Sin datos importados')+'</p>')+'<button class="leaderlink" data-leader-sort="'+key+'">Ver ranking →</button></article>';
   }).join('');
   $$('[data-leader-profile]').forEach(b=>b.onclick=()=>detail(b.dataset.leaderProfile,false));
   $$('[data-leader-sort]').forEach(b=>b.onclick=()=>{sort=b.dataset.leaderSort;activeLeaderKey=sort;$('#rolefilter').value='';unit=Object.hasOwn(GradaMetrics.fixedRates,sort)?'90':'total';pos=sort==='savesPer90'?'POR':'Todos';direction=-1;$('#search').value='';clearClubSelection();$('#min-minutes').value='';$('#min-goals').value='';$('#metric-rules').innerHTML='';$('#add-rule').disabled=false;$$('[data-unit]').forEach(q=>q.classList.toggle('on',q.dataset.unit===unit));syncPositions();navigate('players');});
@@ -388,8 +389,8 @@ function renderRankingPreviews(){
     const summary=p=>mid?unitSummary(p,mid):squad(p),score=p=>GradaScores.value(scoreModel,p,def);
     const ranked=records.filter(p=>GradaScores.eligible(scoreModel,p,def)).sort((a,b)=>score(b)-score(a)||a.name.localeCompare(b.name)).slice(0,5);
     $(target).innerHTML=ranked.map((p,i)=>{
-      const coverage=sum?summary(p):null,caption=sum?coverage.validPlayers+' / '+coverage.totalPlayers+' jugadores ponderados':p.team+' · '+(p.pos==='MED'||radarProfiles.get(p).profileKey==='DEF_FB'?radarProfiles.get(p).profileLabel:p.pos);
-      return '<div class="rank"><span class="ranknum">'+(i+1)+'</span><div class="rankname"><button class="namebtn" data-open-ranking="'+key+'" data-preview-id="'+esc(p.id)+'">'+esc(p.name)+'</button><small>'+esc([p.league,caption].filter(Boolean).join(' · '))+'</small></div><div class="rankscore">'+new Intl.NumberFormat('es-ES',{minimumFractionDigits:3,maximumFractionDigits:3}).format(score(p))+'<small class="rank-score-label">'+(sum?'Score ponderado':def.kind==='player'?'Score de jugador':'Score 0–1')+'</small></div></div>';
+      const coverage=sum?summary(p):null,caption=sum?coverage.validPlayers+' / '+coverage.totalPlayers+' jugadores ponderados':(p.pos==='MED'||radarProfiles.get(p).profileKey==='DEF_FB'?radarProfiles.get(p).profileLabel:p.pos);
+      return '<div class="rank"><span class="ranknum">'+(i+1)+'</span><div class="rankname"><button class="namebtn" data-open-ranking="'+key+'" data-preview-id="'+esc(p.id)+'">'+(sum?GradaBranding.teamLabel(p):esc(p.name))+'</button><small>'+[p.league?GradaBranding.leagueLabel(p.league_key,p.league):'',sum?'':GradaBranding.playerClub(p,teams(),{size:'xs'}),esc(caption)].filter(Boolean).join(' · ')+'</small></div><div class="rankscore">'+new Intl.NumberFormat('es-ES',{minimumFractionDigits:3,maximumFractionDigits:3}).format(score(p))+'<small class="rank-score-label">'+(sum?'Score ponderado':def.kind==='player'?'Score de jugador':'Score 0–1')+'</small></div></div>';
     }).join('')+(ranked.length?'':'<p class="empty">Sin candidatos con scores válidos y muestra suficiente.</p>')+'<button class="linkbtn" data-open-ranking="'+key+'" '+(!loaded?'disabled':'')+'>Ver ranking completo →</button>';
   }
   $$('#overview [data-open-ranking]').forEach(button=>button.onclick=()=>openRanking(button.dataset.openRanking,button.dataset.previewId));
@@ -417,7 +418,7 @@ function renderCompare() {
   if (!choices.length || choices.some(id=>!a.find(p=>String(p.id) === String(id)))) choices = a.slice(0,2).map(p=>String(p.id));
   $('#comparegrid').innerHTML = choices.map((id,i)=>{
     const p = a.find(p=>String(p.id) === String(id));
-    return '<div class="panel"><p class="sub">JUGADOR '+(i+1)+'</p><select class="compareselect" data-compare="'+i+'" aria-label="Jugador '+(i+1)+'">'+a.map(q=>'<option value="'+esc(q.id)+'" '+(String(q.id) === String(id)?'selected':'')+'>'+esc(q.name)+' · '+esc(q.team)+'</option>').join('')+'</select><h2>'+esc(p.name)+'</h2><p class="sub">'+esc(GradaClubs.info(p,teams()).label)+' · '+esc(p.pos)+'</p>'+combinationNote(p)+radarFor(p)+keysFor(p).map(k=>'<div class="comparestat"><span>'+columnLabel(k,false)+'</span><b>'+val(p,k)+originMark(p,k)+'</b></div>').join('')+'</div>';
+    return '<div class="panel"><p class="sub">JUGADOR '+(i+1)+'</p><select class="compareselect" data-compare="'+i+'" aria-label="Jugador '+(i+1)+'">'+a.map(q=>'<option value="'+esc(q.id)+'" '+(String(q.id) === String(id)?'selected':'')+'>'+esc(q.name)+' · '+esc(q.team)+'</option>').join('')+'</select><h2>'+esc(p.name)+'</h2><p class="sub">'+GradaBranding.playerClub(p,teams())+' · '+esc(p.pos)+'</p>'+combinationNote(p)+radarFor(p)+keysFor(p).map(k=>'<div class="comparestat"><span>'+columnLabel(k,false)+'</span><b>'+val(p,k)+originMark(p,k)+'</b></div>').join('')+'</div>';
   }).join('');
   $$('[data-compare]').forEach(e=>e.onchange=()=>{ choices[+e.dataset.compare] = e.value; renderCompare(); });
 }
@@ -425,7 +426,7 @@ function unitCard(record,profile){return GradaComponents.squadArea(unitSummary(r
 function detail(id,isTeam) {
   const p = (isTeam?teams():players()).find(p=>String(p.id) === String(id));
   if (!p) return;
-  $('#detailbody').innerHTML = '<span class="badge">'+esc(source())+'</span><h1 class="detailtitle">'+esc(p.name)+'</h1><p class="sub">'+esc(isTeam?data.metadata.competition:GradaClubs.info(p,teams()).label)+(p.league?' · '+esc(p.league):'')+' · '+esc(data.metadata.season)+(unit === '90'?' · volumen por 90 min':'')+'</p>'+combinationNote(p)+(isTeam?GradaComponents.squadArea(squad(p)):'')+(isTeam&&view==='rankings'&&activeUnit()?unitCard(p,activeUnit()):isTeam?radarFor(p)+Object.keys(GradaSquads.unitKeys).map(key=>unitCard(p,key)).join(''):radarFor(p))+'<div class="detailstats">'+keysFor(p,isTeam).map(k=>'<div class="comparestat"><span>'+columnLabel(k,isTeam)+'</span><b>'+val(p,k)+originMark(p,k)+'</b></div>').join('')+'</div><p class="sub note">'+(isSeason()?esc(data.metadata.notes):'— = no disponible. Las tasas /90 usan los minutos de juego. PSxG y goles evitados no se calculan para StatsBomb. xA derivada del xG de tiros asistidos.')+'</p>';
+  $('#detailbody').innerHTML = '<span class="badge">'+esc(source())+'</span><h1 class="detailtitle">'+(isTeam?GradaBranding.teamLabel(p,{size:'lg'}):esc(p.name))+'</h1><p class="sub">'+(isTeam?esc(data.metadata.competition):GradaBranding.playerClub(p,teams()))+(' · '+GradaBranding.leagueLabel(p.league_key||currentLeague,p.league||leagueConfig().name))+' · '+esc(data.metadata.season)+(unit === '90'?' · volumen por 90 min':'')+'</p>'+combinationNote(p)+(isTeam?GradaComponents.squadArea(squad(p)):'')+(isTeam&&view==='rankings'&&activeUnit()?unitCard(p,activeUnit()):isTeam?radarFor(p)+Object.keys(GradaSquads.unitKeys).map(key=>unitCard(p,key)).join(''):radarFor(p))+'<div class="detailstats">'+keysFor(p,isTeam).map(k=>'<div class="comparestat"><span>'+columnLabel(k,isTeam)+'</span><b>'+val(p,k)+originMark(p,k)+'</b></div>').join('')+'</div><p class="sub note">'+(isSeason()?esc(data.metadata.notes):'— = no disponible. Las tasas /90 usan los minutos de juego. PSxG y goles evitados no se calculan para StatsBomb. xA derivada del xG de tiros asistidos.')+'</p>';
   $('#detail').showModal();
 }
 function navigate(v,scroll=true,preserveSort=false){
@@ -459,7 +460,7 @@ function applyData(next) {
   data = next; loaded = !!(data?.metadata && data.players?.length && Array.isArray(data.teams)); choices = [];
   updateRadarProfiles();
   $('#search').value='';selectedClubs=GradaExplore.selection(data?GradaClubs.options(data):[],selectedClubs);renderClubOptions();
-  $('#league').value = selectedSource(); $('#season').innerHTML = '<option>'+esc(loaded?data.metadata.season:'2026/27 · pendiente')+'</option>';
+  $('#league').value = selectedSource();$('#league-country').innerHTML=GradaBranding.countryLabel(currentLeague); $('#season').innerHTML = '<option>'+esc(loaded?data.metadata.season:'2026/27 · pendiente')+'</option>';
   $$('[data-source]').forEach(e=>e.textContent = source()); $('.sidefoot').textContent = 'GRADA / '+leagueConfig().name.toUpperCase()+' 2026/27';
   $('.status').textContent = source();
   if (loaded) {
@@ -479,8 +480,8 @@ function updateRefreshButton(){
 }
 function updateLeagueOptions(){
   const available=GradaLeagues.list().filter(l=>datasets.has(l.id));
-  $('#league').innerHTML=(initialLoadsComplete&&available.length>1?'<option value="all">Todas las ligas · Combinadas</option>':'')+(available.length?available.map(l=>'<option value="'+l.id+'">'+esc(l.name)+' · Combinada</option>').join(''):'<option value="" disabled>Cargando ligas combinadas…</option>');
-  $('#league').value=isAll()||datasets.has(currentLeague)?currentLeague:available[0]?.id||'';$('#league').disabled=!available.length||refreshing||!initialLoadsComplete;
+  $('#league').innerHTML=(initialLoadsComplete&&available.length>1?'<option value="all">Todas las ligas · Combinadas</option>':'')+(available.length?available.map(l=>'<option value="'+l.id+'">'+esc(l.name)+' · '+esc(GradaBranding.country(l.id)?.name||'')+' · Combinada</option>').join(''):'<option value="" disabled>Cargando ligas combinadas…</option>');
+  $('#league').value=isAll()||datasets.has(currentLeague)?currentLeague:available[0]?.id||'';$('#league').disabled=!available.length||refreshing||!initialLoadsComplete;$('#league-country').innerHTML=GradaBranding.countryLabel($('#league').value);
 }
 function activateLeague(id){
   if(id==='all'){

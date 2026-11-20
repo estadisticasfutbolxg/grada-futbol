@@ -86,3 +86,8 @@ La vista combinada autorizada da prioridad a Understat y complementa coincidenci
 ## Exploración y comparación de equipos
 
 `dist/explore.js` contiene las funciones de presentación y selección para score primero, ayuda breve, varios clubes y comparación de dos equipos. Consume los resúmenes de `scores.js`/`squads.js` y los denominadores de `metrics.js`, sin mutar el modelo ni filtrar sus referencias. `app.js` conecta controles, tabla y glosario; `build_worker.py` incluye explícitamente el módulo. Consulta [EXPLORATION.md](EXPLORATION.md) para semántica, cobertura y límites.
+
+
+## Identidad visual de clubes y competiciones
+
+`dist/branding.js` resuelve escudos desde IDs FotMob de equipos verificados, clubes canónicos de jugadores y banderas por liga; no participa en matching ni métricas. `scripts/download_club_badges.py` genera una caché de PNG validada, ignorada en Git. `build_worker.py` incluye escudos locales, cinco SVG pasivos y su licencia, con rutas limitadas; la UI conserva texto/fallback y no amplía CSP ni pide imágenes externas. [Procedencia y reproducción](ASSETS.md).
