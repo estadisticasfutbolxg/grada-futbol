@@ -2,7 +2,7 @@
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
 GradaBranding.init(document);
 let data = null, loaded = false;
-let currentLeague='laliga',initialLoadsComplete=false,rankingProfile='DEL',rankingMinimum=450;
+let currentLeague='laliga',initialLoadsComplete=false,rankingProfile='DEL',rankingMinimum=GradaRadar.minimumScoreMinutes;
 const datasets=new Map();
 let selectedClubs=new Set(),teamCompareChoices=[];
 const leagueConfig=()=>GradaLeagues.get(currentLeague);
@@ -565,7 +565,7 @@ const terms = [
   ['Score general de equipo',descriptions.teamArea],
   ['Centros del campo y delantera',GradaSquads.definition+' Los perfiles describen acciones y pueden solaparse; no identifican una posición detallada ni valoran el sistema táctico completo.'],
   ['Pases rompelíneas y métricas FotMob',descriptions.lineBreakingPasses+' '+descriptions.shotsOnTargetPer90+' '+descriptions.chancesCreated+' Más métricas disponibles en la ficha y en Añadir otra métrica; no todas las páginas publican todos los jugadores.'],
-  ['Radar estadístico','Percentiles frente a jugadores de la misma posición: mínimo 450 minutos, o 180 para porteros (2 PJ si no hay minutos). Cada eje exige al menos cinco referencias; el gráfico necesita tres ejes. Los volúmenes usan /90 o /PJ según su etiqueta. En goles recibidos menos es mejor; el resto de ejes aumenta con el valor. Son estadísticas disponibles, no una valoración física.'],
+  ['Radar estadístico','Percentiles frente a jugadores de la misma posición: mínimo '+GradaRadar.minimumScoreMinutes+' minutos verificados del jugador y de cada eje (en porteros, 2 PJ por eje si su proveedor no publica minutos). Cada eje exige al menos cinco referencias; el gráfico necesita tres ejes. Los volúmenes usan /90 o /PJ según su etiqueta. En goles recibidos menos es mejor; el resto de ejes aumenta con el valor. Son estadísticas disponibles, no una valoración física.'],
   ['Actualizar datos','Consulta ESPN, FotMob y Understat cuando esa fuente se usa en la liga seleccionada. Las tres fuentes se consultan desde el servidor de GRADA, con caché breve. Solo el propietario identificado puede iniciar una actualización, tras desbloquearla con su contraseña. Cada captura se valida antes de combinar. Si falla una fuente se conserva su captura y fecha anterior. Las capturas válidas se guardan en este navegador y los scores se recalculan sin cambiar su fórmula.']
 ];
 function renderTerms(){

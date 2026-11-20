@@ -1,5 +1,7 @@
 # LaLiga combinada, radar y filtros
 
+> Desde el 20 de noviembre de 2026 el mínimo de score es **200 minutos inclusive** para todas las posiciones, tanto del jugador como de cada eje. Se mantienen 2 PJ solo para ejes de portero sin minutos propios, tras verificar los 200 minutos del jugador. [Contrato vigente y referencia común](SCORES.md); los mínimos anteriores del registro histórico quedan sustituidos.
+
 > Definición vigente desde el 18 de noviembre: [score único por jugador con ejes de su perfil, referencia común, promedios de equipo y totales con cobertura](SCORES.md). Las definiciones anteriores de subperfiles, índices independientes, referencias por liga o sumas que aparezcan en el registro histórico quedan sustituidas por ese modelo.
 
 
