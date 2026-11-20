@@ -214,3 +214,41 @@ button:hover{filter:none}
   .score-table .score-main .metric-source{max-width:110px}
   .score-table .score-main .column-head button[data-sort]{max-width:90px}
 }
+
+/* Club artwork is local; text remains the accessible identity. */
+.club-identity,.league-identity,.country-identity{display:inline-flex;align-items:center;gap:.5rem;vertical-align:middle;min-width:0}
+.club-label{text-align:left;overflow-wrap:anywhere}
+.club-badge{display:inline-grid;place-items:center;position:relative;flex:none;border-radius:50%;background:#edf3ee;color:#47614e;line-height:1;font-size:.75rem;vertical-align:middle;overflow:hidden}
+.club-badge-sm{width:1.5rem;height:1.5rem}
+.club-badge-xs{width:1.125rem;height:1.125rem}
+.club-badge-lg{width:3rem;height:3rem}
+.club-badge img{position:absolute;inset:0;display:block;width:100%;height:100%;object-fit:contain;opacity:0;background:#fff;box-sizing:border-box;padding:1px}
+.club-badge.is-ready{background:transparent}
+.club-badge.is-ready img{opacity:1}
+.club-badge.is-ready .club-monogram{visibility:hidden}
+.country-flag{display:inline-block;flex:none;width:1.25rem;height:.9375rem;object-fit:contain;border:1px solid #d4dfd6;border-radius:2px;box-sizing:content-box;vertical-align:middle}
+.country-identity{font-size:.875rem;line-height:1.4;white-space:nowrap}
+.league-flags{display:inline-flex;gap:4px;align-items:center}
+.league-choice{display:flex;align-items:center;gap:12px;min-width:0;flex-wrap:wrap}
+.filters .league-choice select{font-size:.875rem;min-height:44px;min-width:16rem;max-width:100%;flex:1}
+#league-country{display:inline-flex;align-items:center;min-height:32px}
+.score-table .club-identity,.team-comparison-matrix .club-identity{font-size:.875rem;line-height:1.4}
+#club-options .club-identity{gap:10px}
+#club-options .club-label{white-space:normal}
+.rankname .namebtn .club-identity{font-size:.875rem}
+.rankname small .club-identity,.leaderrow small .club-identity{font-size:.75rem;line-height:1.5}
+.rankname small .league-identity{font-size:.75rem}
+.detailtitle .club-identity{gap:14px}
+.detailtitle .club-label{font:inherit}
+#detailbody>.sub .club-identity,#comparegrid .panel>.sub .club-identity{font-size:.875rem;line-height:1.5}
+.duel-values .club-identity,.duel-line .club-identity{display:inline-flex;gap:6px;font-size:.875rem}
+.duel-values .club-badge{display:inline-grid}
+.duel-values .club-label{display:inline;line-height:1.4}
+.team-comparison-matrix th[scope=row] .namebtn{font-size:.875rem}
+footer{flex-wrap:wrap}
+.asset-credit{flex-basis:100%;font-size:.75rem;line-height:1.5}
+@media(max-width:700px){
+  .filters .league-choice{width:100%;gap:6px}
+  .filters .league-choice select{width:100%;min-width:0;flex-basis:100%}
+  .club-badge-lg{width:2.5rem;height:2.5rem}
+}

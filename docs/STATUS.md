@@ -1,5 +1,11 @@
 # Estado comprobado de GRADA
 
+## Escudos y banderas · 20 de noviembre de 2026 · validado, publicación pendiente
+
+- 96 escudos reales de clubes por ID FotMob verificado, con imágenes locales en tablas, filtros, rankings, fichas y comparativas. Cinco banderas de competición: España, Inglaterra, Italia, Alemania y Francia; selector con país y banderas en Todas. No se infieren nacionalidades ni país de club. Fallback neutro para imágenes ausentes o agregados multiclub, texto accesible y score primero conservados. [Procedencia y generación](ASSETS.md).
+- 22 archivos Node y 10 tests Python correctos; 192 identidades de equipo, 4.564 referencias de club y 2.284 scores intactos. 105 contenidos/MIME del Worker exactos, incluidos 96 PNG, cinco SVG y licencia; 140 assets en total. Once capturas originales intactas, sin cambios de modelo o referencias. Sin nueva revisión visual de navegador en modo managed sin cua_repl.
+- **0 jugadores, estadísticas, partidos o scores actualizados**. Solo descarga de imágenes, sin nuevas consultas estadísticas ni cambios de SQLite. Código/generador y banderas MIT versionados; PNG/manifiesto y Worker generados fuera de GitHub. Integración y publicación owner-private pendientes de confirmar. [Tarea](../loop/tasks/20261120-codex-club-crests-country-flags.md).
+
 ## Disciplina lineal y expulsiones · publicación privada verificada · 19 de noviembre de 2026 · 07:28 Madrid
 
 - Modelo `role_fairplay_radar_v5`: descuento relativo lineal `0,10 × (amarillas + 10 × rojas) × 90 / minutos propios`, con suelo de score 0. Una roja pesa diez amarillas; cada tarjeta añade la misma penalización hasta ese suelo. Se elimina la curva saturada bajo el 10%. Ejemplo 5 A + 1 R / 900 min: 15%, base 0,800 → 0,680. Ficha y glosario muestran fórmula, desglose por color y pesos manuales. No se infieren sanciones cumplidas, ciclos de cinco amarillas ni minutos en inferioridad. [Contrato y límites](SCORES.md).

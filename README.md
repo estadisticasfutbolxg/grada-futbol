@@ -17,6 +17,7 @@ Requiere Python 3.11+, Node 22+ e Internet, sin instalar paquetes ni contratar u
 
 ```sh
 python scripts/import_leagues.py --all --profiles
+python scripts/download_club_badges.py
 python scripts/build_worker.py
 node scripts/serve.mjs 8000
 ```
@@ -30,6 +31,8 @@ python scripts/import_leagues.py --league premier-league
 El proceso genera JSON de cada proveedor, JSON combinado y SQLite FotMob comprimido. LaLiga mantiene además su JSON/SQLite Understat. Los JSON sirven para cargar la web; la interfaz no muestra enlaces de descarga de CSV, JSON o SQLite. **Las bases y los datos generados no se incluyen en GitHub**. Los importadores separados aceptan `--league`: `scripts/import_fotmob.py`, `scripts/import_laliga.py` y `scripts/build_combined.cjs`.
 
 Una fuente no disponible no se sustituye por datos ficticios. El proceso `--all` continúa con las ligas que pasan los controles e informa de las omitidas; falla si no puede generar ninguna. Understat puede reutilizar su captura existente con su fecha original. Si está en mantenimiento y no hay captura local, LaLiga no se habilita hasta disponer de ella. El selector solo ofrece combinados validados. [LEAGUES.md](docs/LEAGUES.md) describe reproducción desde cachés reales y todos los campos.
+
+Los escudos y banderas se sirven localmente. [Procedencia, generación y fallback de imágenes](docs/ASSETS.md).
 
 ## Navegación y scores
 

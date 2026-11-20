@@ -32,3 +32,9 @@ test('a league switch clears stale club filters and pair while a same-league upd
  h.run('applyData(input);');assert.equal(h.run('[...selectedClubs].join()'),'1');assert.equal(h.run('teamCompareChoices.join()'),'2,1');
  const next=fixture();next.metadata.league_key='other';h.run('applyData(next);',{next});assert.equal(h.run('selectedClubs.size'),0);assert.equal(h.run('teamCompareChoices.length'),0);assert.equal(h.node('#club-filter-search').value,'');assert.equal(h.node('#teamfilter').open,false);
 });
+test('crests appear in player/team tables and multi-select without moving the first score column',()=>{
+ const h=loaded();h.run("data.teams[0].sourceRecords={FotMob:{id:'8634'}};data.teams[1].sourceRecords={FotMob:{id:'9825'}};renderClubOptions();renderTable();");
+ assert.match(h.node('#tbody').innerHTML,/assets\/clubs\/8634.png/);assert.match(h.node('#club-options').innerHTML,/assets\/clubs\/9825.png/);
+ h.run("view='teams';renderTable();renderTeamComparison();");assert.match(h.node('#thead').innerHTML.match(/<th\b[\s\S]*?<\/th>/)[0],/teamArea/);assert.match(h.node('#team-comparison-body').innerHTML,/assets\/clubs\/8634.png/);assert((h.node('#team-comparison-body').innerHTML.match(/assets\/clubs\/8634.png/g)||[]).length>3);
+ h.run("currentLeague='premier-league';datasets.set('premier-league',{combined:data});initialLoadsComplete=true;updateLeagueOptions();");assert.match(h.node('#league-country').innerHTML,/gb-eng.svg/);assert.match(h.node('#league').innerHTML,/Inglaterra/);
+});
