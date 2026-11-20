@@ -18,8 +18,8 @@ test('radar needs three real axes and five same-position references',()=>{
  assert.equal(radar.profile(p,peers.slice(0,4)).axes.length,0);
  assert.equal(radar.profile({pos:'DEL',minutes:100},peers).axes.length,0);
 });
-test('keeper radar supports appearances when the source has no minutes',()=>{
- const peers=Array.from({length:6},(_,i)=>({id:i,pos:'POR',minutes:null,matches:3,saves:9,conceded:3,savepct:75}));
+test('keeper radar supports axis appearances after verifying the player minutes',()=>{
+ const peers=Array.from({length:6},(_,i)=>({id:i,pos:'POR',minutes:200,matches:3,saves:9,conceded:3,savepct:75,metricContexts:Object.fromEntries(['saves','conceded','savepct'].map(key=>[key,{source:'Isolated test',minutes:null,matches:3}]))}));
  const profile=radar.profile(peers[0],peers);assert.equal(profile.axes.length,3);assert(profile.axes.some(a=>a.key==='concededPerMatch'&&a.lowerBetter));
 });
 

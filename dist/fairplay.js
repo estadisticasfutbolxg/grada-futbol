@@ -1,9 +1,10 @@
 (function(root){
   'use strict';
   const metrics=typeof module==='object'&&module.exports?require('./metrics.js'):root.GradaMetrics;
+  const {minimumScoreMinutes}=typeof module==='object'&&module.exports?require('./sampling.js'):root.GradaSampling;
   // GRADA design parameters, not observed suspension lengths or causal estimates.
   const method='linear_cards_v2',yellowPenaltyPer90=0.10,redWeight=10,maximumPenalty=1;
-  function evaluate(record,minimumMinutes=record.pos==='POR'?180:450){
+  function evaluate(record,minimumMinutes=minimumScoreMinutes){
     const yellow=record.yellowCards,red=record.redCards;
     const a=metrics.context(record,'yellowCards'),b=metrics.context(record,'redCards');
     const count=value=>Number.isSafeInteger(value)&&value>=0?value:null;

@@ -3,6 +3,7 @@
   const metrics = typeof module === 'object' && module.exports ? require('./metrics.js') : root.GradaMetrics;
   const tactical = typeof module === 'object' && module.exports ? require('./roles.js') : root.GradaRoles;
   const fairplay = typeof module === 'object' && module.exports ? require('./fairplay.js') : root.GradaFairPlay;
+  const {minimumScoreMinutes} = typeof module === 'object' && module.exports ? require('./sampling.js') : root.GradaSampling;
   const axes = {
     goals:['Goles /90','90'],xg:['xG /90','90'],xa:['xA /90','90'],shots:['Tiros /90','90'],assists:['Asistencias /90','90'],keypasses:['Pases clave /90','90'],
     completedPer90:['Pases completados /90','total'],recoveries:['Recuperaciones /90','90'],
@@ -28,14 +29,14 @@
     MED_BALANCED:['completedPer90','xa','chancesCreated','recoveries','tackles','interceptions'],
   };
   const rankingDefinitions=[
-    {key:'DEL',label:'Delanteros',position:'DEL',kind:'player',minimum:450},
-    {key:'POR',label:'Porteros',position:'POR',kind:'player',minimum:180},
-    {key:'DEF',label:'Defensas',position:'DEF',kind:'player',minimum:450},
-    {key:'DEF_CB',label:'Centrales',position:'DEF',roleKey:'CB',kind:'player',minimum:450},
-    {key:'DEF_FB',label:'Laterales y carrileros · ataque y defensa',position:'DEF',roleKey:'FB',kind:'player',minimum:450},
-    {key:'MED_DEF',label:'Centrocampistas · perfil defensivo',position:'MED',kind:'player',minimum:450},
-    {key:'MED_ATT',label:'Centrocampistas · perfil ofensivo',position:'MED',kind:'player',minimum:450},
-    {key:'MED_BALANCED',label:'Centrocampistas · perfil equilibrado',position:'MED',kind:'player',minimum:450},
+    {key:'DEL',label:'Delanteros',position:'DEL',kind:'player',minimum:minimumScoreMinutes},
+    {key:'POR',label:'Porteros',position:'POR',kind:'player',minimum:minimumScoreMinutes},
+    {key:'DEF',label:'Defensas',position:'DEF',kind:'player',minimum:minimumScoreMinutes},
+    {key:'DEF_CB',label:'Centrales',position:'DEF',roleKey:'CB',kind:'player',minimum:minimumScoreMinutes},
+    {key:'DEF_FB',label:'Laterales y carrileros · ataque y defensa',position:'DEF',roleKey:'FB',kind:'player',minimum:minimumScoreMinutes},
+    {key:'MED_DEF',label:'Centrocampistas · perfil defensivo',position:'MED',kind:'player',minimum:minimumScoreMinutes},
+    {key:'MED_ATT',label:'Centrocampistas · perfil ofensivo',position:'MED',kind:'player',minimum:minimumScoreMinutes},
+    {key:'MED_BALANCED',label:'Centrocampistas · perfil equilibrado',position:'MED',kind:'player',minimum:minimumScoreMinutes},
     {key:'TEAM_ATTACK',label:'Equipos · mejores ataques',kind:'team',minimum:5,aggregateProfile:'ATTACK'},
     {key:'TEAM_STRIKERS',label:'Equipos · mejor delantera',kind:'team',minimum:5,aggregateProfile:'DEL'},
     {key:'TEAM_DEFENSE',label:'Equipos · mejores defensas',kind:'team',minimum:5,aggregateProfile:'DEF'},
@@ -43,7 +44,7 @@
     {key:'TEAM_MED_DEF',label:'Equipos · centro del campo defensivo',kind:'team',minimum:5,aggregateProfile:'MED_DEF'},
     {key:'TEAM_OVERALL',label:'Equipos · rendimiento global',kind:'team',minimum:5}
   ];
-  function definition(key){return rankingDefinitions.find(d=>d.key===key)||{key,label:key==='MED'?'Centrocampistas':key,position:key,kind:'player',minimum:450};}
+  function definition(key){return rankingDefinitions.find(d=>d.key===key)||{key,label:key==='MED'?'Centrocampistas':key,position:key,kind:'player',minimum:minimumScoreMinutes};}
   function percentile(value,reference,lowerBetter=false) {
     if (!Number.isFinite(value) || !reference.length) return null;
     const below = reference.filter(v=>v<value).length, equal = reference.filter(v=>v===value).length;
@@ -60,7 +61,7 @@
     if(def.kind==='team')throw new Error('Los scores de equipo se calculan con los scores de sus jugadores en GradaScores.');
     const samePosition = all.filter(p=>p.pos === position&&(!def.roleKey||tactical.matches(p,def.roleKey)));
     function eligible(record,key) {
-      if(!baseEligible(record,position,minimum))return false;
+      if(!baseEligible(record,minimum))return false;
       const ctx = metrics.context(record,key);
       const minutes = ctx && Object.hasOwn(ctx,'minutes') ? ctx.minutes : record.minutes;
       const matches = ctx && Object.hasOwn(ctx,'matches') ? ctx.matches : record.matches;
@@ -73,7 +74,7 @@
     }
     return {definition:def,minimum,samples,keys:[...samples.keys()].filter(k=>!(position==='POR'&&samples.has('psxgEfficiency')&&k==='prevented')).slice(0,6),peerCount:samePosition.filter(p=>candidates.some(key=>eligible(p,key)&&Number.isFinite(metrics.metric(p,key,axes[key][1])))).length};
   }
-  function baseEligible(record,position,minimum){return Number.isFinite(record.minutes)?record.minutes>=minimum:position==='POR'&&Number.isFinite(record.matches)&&record.matches>=2;}
+  function baseEligible(record,minimum){return Number.isFinite(record.minutes)&&record.minutes>=minimum;}
   function profile(player,all,plan) {
     if(!plan)return profiles([player],{referencePlayers:all}).get(player);
     const values=[];
@@ -88,10 +89,10 @@
       const enough=Number.isFinite(minutes)?minutes>=plan.minimum:player.pos==='POR'&&Number.isFinite(matches)&&matches>=2;
       return enough?[]:[{key:a.key,source:c?.source||null,minutes:Number.isFinite(minutes)?minutes:null,matches:Number.isFinite(matches)?matches:null}];
     });
-    const baseSampleEnough=baseEligible(player,player.pos,plan.minimum),sampleEnough=baseSampleEnough&&!insufficientSamples.length;
+    const baseSampleEnough=baseEligible(player,plan.minimum),sampleEnough=baseSampleEnough&&!insufficientSamples.length;
     const score=values.length===plan.keys.length&&sampleEnough?area:null;
     return {axes:visible,area,score,comparableArea:score,expectedAxes:plan.keys,missingAxes:plan.keys.filter(k=>!values.some(a=>a.key===k)),sampleEnough,baseSampleEnough,insufficientSamples,minimumMinutes:plan.minimum,minimumMatches:null,kind:'player',profileKey:plan.definition.key,profileLabel:plan.definition.label,peerCount:plan.peerCount,availableAxes:values.length,
-      referenceRule:plan.definition.key==='DEF_FB'?'laterales y carrileros con puesto publicado, mínimo 450 min por eje':player.pos==='POR'?'misma posición, mínimo 180 min o 2 PJ del proveedor de cada eje':'misma posición, mínimo 450 minutos'};
+      referenceRule:(plan.definition.key==='DEF_FB'?'laterales y carrileros con puesto publicado':'misma posición')+', mínimo '+plan.minimum+' min del jugador y de cada eje'+(player.pos==='POR'?' (2 PJ por eje si su proveedor no publica minutos)':'')};
   }
   function profiles(all,{referencePlayers=all,kind='player',midfieldRoles=null}={}){
     if(kind!=='player')throw new Error('Los equipos usan promedios de sus jugadores en GradaScores.');
@@ -122,10 +123,10 @@
   function rankingEligible(record,profile,minimum){
     if(!profile||profile.comparableArea===null||!Number.isFinite(minimum)||minimum<0)return false;
     const team=profile.kind==='team',base=team?record.matches:record.minutes;
-    if(Number.isFinite(base)?base<minimum:team||record.pos!=='POR'||minimum>180||!Number.isFinite(record.matches)||record.matches<2)return false;
+    if(!Number.isFinite(base)||base<minimum)return false;
     return profile.axes.every(a=>{
       const ctx=metrics.context(record,a.key),minutes=ctx&&Object.hasOwn(ctx,'minutes')?ctx.minutes:record.minutes,matches=ctx&&Object.hasOwn(ctx,'matches')?ctx.matches:record.matches;
-      return team?Number.isFinite(matches)&&matches>=minimum:Number.isFinite(minutes)?minutes>=minimum:record.pos==='POR'&&minimum<=180&&Number.isFinite(matches)&&matches>=2;
+      return team?Number.isFinite(matches)&&matches>=minimum:Number.isFinite(minutes)?minutes>=minimum:record.pos==='POR'&&minimum<=minimumScoreMinutes&&Number.isFinite(matches)&&matches>=2;
     });
   }
   const axis=key=>axes[key]?{label:axes[key][0],unit:axes[key][1],lowerBetter:!!axes[key][2]}:null;
@@ -134,12 +135,12 @@
     if(profile.kind==='team')return Number.isFinite(profile.score)?'Score ponderado de sus jugadores con minutos suficientes; faltan posiciones para dibujar el radar completo.':'Faltan scores de jugadores con minutos positivos para ponderar este equipo.';
     if(profile.score!==null&&Number.isFinite(profile.score))return 'Score completo de '+profile.profileLabel+'. Los ceros publicados cuentan como valores válidos.';
     const parts=[];
-    if(profile.baseSampleEnough===false)parts.push('La muestra del jugador no alcanza el mínimo de '+profile.minimumMinutes+' min'+(profile.profileKey==='POR'?' o 2 PJ de su fuente':''));
+    if(profile.baseSampleEnough===false)parts.push('La muestra del jugador no alcanza el mínimo de '+profile.minimumMinutes+' min');
     if(profile.missingAxes?.length)parts.push('Faltan métricas publicadas: '+profile.missingAxes.map(k=>axis(k)?.label||k).join(', '));
     if(profile.insufficientSamples?.length)parts.push('Muestra insuficiente por métrica (mínimo '+profile.minimumMinutes+' min): '+profile.insufficientSamples.map(a=>(axis(a.key)?.label||a.key)+(a.source?' · '+a.source:'')+' · '+(a.minutes===null?'sin minutos':a.minutes+' min')).join('; '));
     if((profile.expectedAxes?.length||0)<3)parts.push('No hay al menos tres ejes con cinco referencias suficientes');
     return (parts.join('. ')||'Faltan métricas o muestra suficiente de su posición')+'. Los ceros reales sí se incluyen; un dato ausente no se sustituye por cero.';
   }
-  const api = {profile,profiles,midfieldIndices,midfieldRole,percentile,relativeArea,rankingDefinitions,definition,rankingEligible,axis,explain};
+  const api = {profile,profiles,midfieldIndices,midfieldRole,percentile,relativeArea,rankingDefinitions,definition,rankingEligible,axis,explain,minimumScoreMinutes};
   if (typeof module === 'object' && module.exports) module.exports = api; else root.GradaRadar = api;
 })(typeof window === 'object' ? window : globalThis);

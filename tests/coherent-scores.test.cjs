@@ -44,9 +44,9 @@ test('totals keep known values and real zero with explicit partial coverage, wit
  assert.deepEqual(metrics.total([{saves:3},{saves:0},{saves:null},{saves:'4'}],'saves'),{value:3,known:2,total:4,complete:false});
  assert.deepEqual(metrics.total([{assists:0}],'assists'),{value:0,known:1,total:1,complete:true});assert.equal(metrics.total([{assists:null}],'assists').value,null);assert.equal(metrics.total([],'saves').value,null);
 });
-test('keeper appearance fallback is consistent in score and ranking, while missing minutes never become team weights',()=>{
+test('keepers require verified player minutes; appearances alone never qualify or supply team weights',()=>{
  const data=fixture();for(const p of data.players)if(p.pos==='POR')p.minutes=null;
- const model=scores.build(data),p=data.players.find(p=>p.pos==='POR');assert.notEqual(model.players.get(p).score,null);assert(scores.eligible(model,p,radar.definition('POR')));assert(!scores.eligible(model,p,radar.definition('POR'),900));assert.equal(model.units.get('POR').teams.get('1').area,null);
+ const model=scores.build(data),p=data.players.find(p=>p.pos==='POR');assert.equal(model.players.get(p).score,null);assert(!scores.eligible(model,p,radar.definition('POR')));assert(!scores.eligible(model,p,radar.definition('POR'),0));assert.equal(model.units.get('POR').teams.get('1').area,null);
 });
 test('published zero metrics and a zero score remain valid in ranking and weighted team contributions',()=>{
  for(const position of ['POR','DEF','MED','DEL']){
@@ -61,8 +61,8 @@ test('published zero metrics and a zero score remain valid in ranking and weight
  }
 });
 test('pending score explanations identify the missing metric or its own insufficient provider sample',()=>{
- const data=fixture(),p=data.players.find(p=>p.pos==='DEL');p.metricContexts={dribblesPer90:{source:'FotMob',minutes:434,matches:8}};
- let profile=scores.build(data).players.get(p);assert.equal(profile.score,null);assert.deepEqual(profile.insufficientSamples.map(a=>a.key),['dribblesPer90']);assert.match(radar.explain(profile),/FotMob · 434 min/);assert.match(radar.explain(profile),/450/);
+ const data=fixture(),p=data.players.find(p=>p.pos==='DEL');p.metricContexts={dribblesPer90:{source:'FotMob',minutes:199,matches:8}};
+ let profile=scores.build(data).players.get(p);assert.equal(profile.score,null);assert.deepEqual(profile.insufficientSamples.map(a=>a.key),['dribblesPer90']);assert.match(radar.explain(profile),/FotMob · 199 min/);assert.match(radar.explain(profile),/200/);
  p.metricContexts.dribblesPer90.minutes=600;p.dribblesPer90=null;profile=scores.build(data).players.get(p);assert.equal(profile.score,null);assert.match(radar.explain(profile),/Faltan métricas publicadas: Regates logrados/);assert.match(radar.explain(profile),/ceros reales sí se incluyen/);
  p.dribblesPer90=0;profile=scores.build(data).players.get(p);assert.notEqual(profile.score,null);assert.match(radar.explain(profile),/ceros publicados cuentan/);
 });
