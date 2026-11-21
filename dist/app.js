@@ -501,11 +501,9 @@ async function readProvider(key,league){
   const response=await fetch('/api/source/'+key+'?league='+encodeURIComponent(league.id),{signal:AbortSignal.timeout(120000),cache:'no-store'});
   if(!response.ok)throw new Error('No se pudo consultar '+GradaRefresh.names[key]+'.');
   const data=await response.json();if(key!=='fotmob')return data;
-  const profiles=[];let cursor=0,done=0;
-  async function worker(){while(cursor<data.players.length){const player=data.players[cursor++];try{
-    const r=await fetch('/api/player/fotmob?league='+encodeURIComponent(league.id)+'&player='+encodeURIComponent(player.id),{signal:AbortSignal.timeout(30000),cache:'no-store'});if(r.ok)profiles.push(await r.json());
-  }catch(_){}finally{done++;$('#refresh-status').textContent=league.name+' · FotMob: fichas '+done+'/'+data.players.length;}}}
-  await Promise.all([worker(),worker(),worker()]);return GradaFotmob.validate(GradaProfiles.apply(data,profiles,datasets.get(league.id)?.fotmob));
+  GradaFotmob.validate(data);
+  const profiles=await GradaRefresh.loadProfiles(data,league,{onProgress:(done,total)=>{$('#refresh-status').textContent=league.name+' · FotMob: fichas '+done+'/'+total;}});
+  return GradaFotmob.validate(GradaProfiles.apply(data,profiles,datasets.get(league.id)?.fotmob));
 }
 function showRefreshReport(outcomes,ids){
   let changed=0,added=0,removed=0;
@@ -617,10 +615,11 @@ async function loadLeague(l){
     l.primary==='Understat'?readCapture('understat-'+l.id+'-2026-27.json',GradaUnderstat.validate):Promise.resolve(null)
   ]);
   const state={espn,fotmob,understat,combined:null};
-  for(const key of publishedCapture?[]:GradaRefresh.sources(l)){
-    const cached=await captureStore.get(l.id,key),candidates=[cached];
+  const saved=await Promise.all((publishedCapture?[]:GradaRefresh.sources(l)).map(async key=>[key,await captureStore.get(l.id,key)]));
+  for(const [key,cached] of saved){
+    const candidates=[cached];
     if(key==='espn')try{candidates.push(JSON.parse(localStorage.getItem(cacheKey(l.id))));}catch(_){}
-    for(const candidate of candidates)try{const selected=GradaRefresh.selectCapture(state[key],candidate,key,l),next={...state,[key]:selected};joinSources(next);state[key]=selected;}catch(_){}
+    for(const candidate of candidates)if(candidate)try{const selected=GradaRefresh.selectCapture(state[key],candidate,key,l),next={...state,[key]:selected};joinSources(next);state[key]=selected;}catch(_){}
   }
   for(const raw of [state.espn,state.fotmob,state.understat].filter(Boolean))if(GradaLeagues.resolve(raw.metadata).id!==l.id)throw new Error('Captura de otra liga rechazada.');
   state.combined=joinSources(state);
@@ -630,8 +629,7 @@ async function start(){
   try{
     await GradaLeagues.ready;applyData(null);updateLeagueOptions();
     const failures=[];
-    try{await loadLeague(GradaLeagues.get('laliga'));}catch(e){failures.push('LaLiga: '+e.message);}
-    await Promise.all(GradaLeagues.list().filter(l=>l.id!=='laliga').map(async l=>{try{await loadLeague(l);}catch(e){failures.push(l.name+': '+e.message);}}));
+    await Promise.all(GradaLeagues.list().map(async l=>{try{await loadLeague(l);}catch(e){failures.push(l.name+': '+e.message);}}));
     const requestedLeague=initialQuery.get('liga');if(datasets.has(requestedLeague))currentLeague=requestedLeague;
     initialLoadsComplete=true;updateLeagueOptions();if(datasets.size)activateLeague(datasets.has(currentLeague)?currentLeague:GradaLeagues.list().find(l=>datasets.has(l.id)).id);
     if(!loaded)$('#data-status').textContent='No hay capturas combinadas completas publicadas. Ejecuta los importadores incluidos. '+failures.join(' ');

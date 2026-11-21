@@ -33,6 +33,8 @@ El importador usa Python de biblioteca estándar; no existe un build de npm. El 
 
 Desde el 9 de noviembre, el modelo de [SCORES.md](SCORES.md) es común a todas las vistas y al generador. La referencia se construye una vez con las ligas cargadas y los modelos se conservan mientras no cambien sus capturas. Ninguna tarjeta o ficha calcula otro score. El HTML empaquetado versiona los módulos por hash para evitar mezclar código de publicaciones diferentes.
 
+Desde el 21 de noviembre, el empaquetador conserva el orden de esos módulos en un único script versionado. Las ligas se cargan en paralelo y las fichas FotMob se consultan en lotes acotados con las mismas validaciones. [Medición, caché y equivalencia de resultados](PERFORMANCE.md).
+
 ## Puntos de coordinación
 
 `dist/app.js` consume los nombres y tipos de [DATA.md](DATA.md). Si una tarea cambia un campo, el responsable del importador coordina la actualización del consumidor y del validador. La UI no corrige cifras por su cuenta.

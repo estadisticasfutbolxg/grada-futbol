@@ -108,5 +108,7 @@
   });
   return {...data,players,metadata:{...data.metadata,capture_recovery:{fields,positions:positionsRetained,from:previous.metadata.imported_at,definition:'Se conservan posiciones conocidas y campos de fichas verificadas para el mismo ID y club, liga y temporada. Cada campo mantiene su fecha y muestra originales.'}}};
  }
- const api={parse,apply,restore};if(node)module.exports=api;else root.GradaProfiles=api;
+ // Six profiles keep redirects, cache work and auth below Worker subrequest limits.
+ const batchSize=6;
+ const api={parse,apply,restore,batchSize};if(node)module.exports=api;else root.GradaProfiles=api;
 })(typeof window==='object'?window:globalThis);
