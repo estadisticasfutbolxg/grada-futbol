@@ -1,12 +1,13 @@
 # 20261121-codex · Carga y actualización más rápidas
 
-- Estado: `review`
+- Estado: `done`
 - Responsable: Codex
 - Revisor: autocontrol, sin revisión independiente solicitada
 - Rama: `perf/loading-and-refresh`
 - Base Sites: `2d506d8cec3a179135b2e12bf2f0816228c1aed6`
 - Base GitHub: `d385ad7e1d3c07998e7d2491bd927c3ea509cd9a`
-- Issue/PR: no creados
+- Issue: no creado
+- PR: [#49 integrado](https://github.com/estadisticasfutbolxg/grada-futbol/pull/49)
 - Entrega: merge y publicación privada, autorización vigente
 
 ## Objetivo y coordinación
@@ -21,7 +22,7 @@ Archivos compartidos previstos: `dist/app.js`, módulos de cálculo si la medida
 - [x] Mismos cruces, posiciones, scores, muestras, ausencias, ceros y promedios para los 2.284 registros y 96 equipos.
 - [x] Refresco mantiene todas las fichas, autorización, límites y capturas válidas ante fallos.
 - [x] Carga y caché respetan ligas, datos guardados, modo publicado e invalidación de código.
-- [ ] Pruebas, push/PR/merge y despliegue privado confirmados.
+- [x] Pruebas, push/PR/merge y despliegue privado confirmados.
 
 ## Plan
 
@@ -55,4 +56,10 @@ Base publicada v26: 1.502 scores válidos, 2.284 registros jugador/liga, cinco l
 
 ### Revisión y entrega
 
-Autocontrol de equivalencia, límites, caché por origen/captura, memoria, identidad y fallos parciales. No equivale a revisión independiente. Audiencia anterior owner-only, revisión 3, cero editores/grupos/visitantes. Push/PR/merge y publicación privada pendientes de confirmar.
+Autocontrol de equivalencia, límites, caché por origen/captura, memoria, identidad y fallos parciales. No equivale a revisión independiente. Audiencia anterior owner-only, revisión 3, cero editores/grupos/visitantes. Código subido a GitHub en `3bb7f2d950a40ad0627ed57644d9a8c891424fea`. [PR #49](https://github.com/estadisticasfutbolxg/grada-futbol/pull/49) integrado con squash en `100f0c47211a47e0a24690effad05feac34b7c02`, main verificado. PR limpio, head/base exactos, sin checks/statuses configurados ni protecciones/rulesets; sin modificar configuración. No se afirma aprobación independiente.
+
+Fuente Sites `2a5cd6b134fd58fa8afb40744155ac678a7f1357` subida y verificada; archivo exacto con hosting y Worker. [GRADA privada](https://grada-futbol-analitica.ivanmatema2.chatgpt.site), versión **27**, despliegue `appgdep_6b021307c4d08191a00ca982bb7cbc39` en `succeeded`, 21 de noviembre a las **22:54 Madrid**. Versión `appgprj_6ae0b8b2eb1881918601230d00603255~appgver_1f1e0783f87881918d6dfffcb3d420cc`; procedencia confirmada. Runtime revisión 1 sin cambios.
+
+HTTP autenticado posterior: HTML y bundle 200, gzip de una sola capa, un script propio, 69.322 bytes transmitidos, caché inmutable y SHA256 de ambos cuerpos exactamente iguales al Worker comprobado. Bundle `8613cd477b543971b0ec9e360c8e876f56f31c2329b75d7563092b1d9c191437`. No se ejecutó un refresco contra proveedores para comprobarlo. Audiencia posterior: owner-only revisión 3, un owner, cero editores/grupos/visitantes. Contraseña y permisos conservados.
+
+Este cierre documental es posterior al código publicado y no requiere otro despliegue de un Worker idéntico. Objetivo completo. La latencia externa y la falta de QA visual siguen declaradas como límites.

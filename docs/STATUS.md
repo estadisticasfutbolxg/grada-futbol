@@ -1,5 +1,12 @@
 # Estado comprobado de GRADA
 
+## Carga y actualización optimizadas · publicación privada verificada · 21 de noviembre de 2026 · 22:54 Madrid
+
+- 25 scripts agrupados en un bundle de 69.322 bytes gzip y caché por hash. Cinco ligas e IndexedDB cargan en paralelo. Fichas en lotes de seis: mismas 2.285 fichas con 383 peticiones normales al Site, manteniendo tres trabajos por lote y dos ligas. Autorización, validación, TTL, recuperación y ruta individual preservados. Gzip directo y plantillas deduplicadas. [Detalle y reproducción](PERFORMANCE.md).
+- Mediana local de CPU **1.603 → 600 ms (−62,6 %)**, sin incluir red ni navegador. Cruces por pasada, percentiles exactos con referencias ordenadas e informes sin serializaciones duplicadas. Cinco salidas completas e informes idénticos por SHA256, mismos 2.284 registros/1.502 scores/96 equipos. **0 jugadores, estadísticas, partidos o scores actualizados**; once capturas y fechas intactas, sin consultas de proveedores ni cambios de SQLite.
+- 24 archivos Node y 10 tests Python correctos, nueve casos nuevos; 84 tablas, cinco arranques del bundle en VM, 741 medias, 3.809 contribuciones y 390.320 lecturas de métricas. Sin QA visual disponible. HTTP real posterior: HTML y bundle 200, gzip correcto, un script, caché inmutable y cuerpos exactos al Worker; la actualización completa sigue dependiendo de las fuentes externas.
+- [PR #49](https://github.com/estadisticasfutbolxg/grada-futbol/pull/49) integrado en `100f0c47211a47e0a24690effad05feac34b7c02`. [GRADA privada](https://grada-futbol-analitica.ivanmatema2.chatgpt.site), versión **27**, despliegue `appgdep_6b021307c4d08191a00ca982bb7cbc39` en `succeeded`. Fuente `2a5cd6b134fd58fa8afb40744155ac678a7f1357`; Worker SHA256 `a0b6ca616b245f9defa3eb9dce7702991004d9c7640d4ed28f47380b85a27de2`, 142 assets/11 módulos. Audiencia posterior solo propietario, revisión 3; cero editores/grupos/visitantes, variables sin cambios. [Tarea y evidencia](../loop/tasks/20261121-codex-loading-refresh-performance.md).
+
 ## Scores desde 200 minutos · publicación privada verificada · 20 de noviembre de 2026 · 22:37 Madrid
 
 - Modelo `role_fairplay_radar_v6`: mínimo **200 minutos inclusive** del jugador y de cada eje para cualquier posición. Solo ciertos ejes POR sin minutos conservan la alternativa de 2 PJ tras verificar los 200 min del jugador. Rankings/textos/metadatos y ajuste por tarjetas comparten la regla. [Contrato](SCORES.md).
