@@ -1,10 +1,10 @@
 # Rendimiento de carga y actualización
 
-Revisión del 21 de noviembre de 2026. Se conservan el modelo de score v6, los datos, sus fechas, las muestras, las prioridades de fuentes y el acceso privado del propietario.
+Revisión del 21 de noviembre de 2026. Se conservan el modelo de score v6, los datos, sus fechas, las muestras, las prioridades de fuentes y el acceso privado del propietario. La revisión posterior de acceso del mismo día retira la contraseña adicional; los lotes siguen exigiendo al propietario identificado.
 
 ## Cambios
 
-- El Worker agrupa los **25 scripts** del HTML en un archivo de 69.322 bytes gzip, con el mismo orden y una URL versionada por hash. Los módulos individuales siguen disponibles. El código versionado permite caché inmutable; el HTML y las capturas conservan sus reglas de actualización.
+- El Worker agrupa los **25 scripts** del HTML en un archivo con el mismo orden y una URL versionada por hash: 69.322 bytes gzip en la medición inicial, reducidos a 68.629 tras retirar el formulario de contraseña. Los módulos individuales siguen disponibles. El código versionado permite caché inmutable; el HTML y las capturas conservan sus reglas de actualización.
 - Las cinco ligas comienzan a cargar en paralelo. El selector y los scores se activan cuando termina esa carga, conservando la referencia común. Las lecturas independientes de IndexedDB también se agrupan; la selección, validación y recuperación de cada fuente mantienen su orden.
 - Los percentiles ordenan sus referencias una vez por plan y cuentan con búsqueda binaria. La fórmula, empates, inversión de ejes y área no cambian. La API pública de percentiles sigue admitiendo arrays mutables.
 - El cruce prepara nombres, tokens, alias y claves una vez por pasada. La caché se descarta al terminar; conserva unicidad mutua, clubes y compatibilidad de portería.
@@ -12,7 +12,7 @@ Revisión del 21 de noviembre de 2026. Se conservan el modelo de score v6, los d
 - Las fichas FotMob usan lotes de **hasta seis** jugadores. Con las plantillas guardadas son 2.285 fichas y 383 peticiones normales al Site, frente a 2.285 peticiones individuales. El servidor mantiene tres trabajos simultáneos por lote; se mantiene un lote por liga y dos ligas durante el refresco. No se omiten jugadores ni se aumentan las descargas simultáneas al proveedor. Las fichas mantienen su caché de una hora, fallos de dos minutos y deduplicación. Si un lote falla, las fichas válidas y los campos anteriores se conservan; existe respaldo por la ruta individual y no se reintenta por ella ante 401/403.
 - Los assets ya comprimidos pueden servirse directamente cuando el cliente acepta gzip. `Vary`, ETags por representación, HEAD y 304 mantienen una respuesta coherente. Las plantillas de servidor comparten una sola decodificación por captura.
 
-La ruta de lotes es GET, exige sesión del propietario desbloqueada, mismo origen, liga admitida y todos los IDs en su plantilla verificada. Rechaza duplicados, parámetros adicionales y más de seis jugadores antes de consultar al proveedor. No añade escrituras públicas ni cambia permisos.
+La ruta de lotes es GET, exige la identidad del propietario, mismo origen, liga admitida y todos los IDs en su plantilla verificada. Rechaza duplicados, parámetros adicionales y más de seis jugadores antes de consultar al proveedor. No añade escrituras públicas ni cambia permisos.
 
 ## Medición y equivalencia
 

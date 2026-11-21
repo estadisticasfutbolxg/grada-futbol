@@ -118,11 +118,8 @@ button:hover{filter:none}
 .owner-eyebrow{display:block;font-size:10px;letter-spacing:1.8px;color:#6c8160;margin:8px 0 16px}
 #owner-title{font-size:31px;color:#1d4230}
 #owner-description,#owner-message{font-size:13px;line-height:1.7;margin:12px 0;color:#637068;overflow-wrap:anywhere}
-#owner-form label{display:block;font-size:12px;margin:16px 0 7px}
-#owner-form input{width:100%;font-size:16px}
 .owner-primary{display:block;text-align:center;text-decoration:none;background:#236347;border:1px solid #236347;color:#fff;border-radius:6px;margin-top:20px;font-size:12px;padding:12px 15px;width:100%}
 .owner-primary:hover{background:#184a32}
-#owner-lock{display:block;margin:14px auto 0;padding:6px}
 .owner-switch{font-size:11px;color:#58714c;display:block;margin-top:20px;text-align:center}
 #owner-dialog [hidden]{display:none}
 @media(max-width:900px){aside{padding:0 20px;gap:24px;overflow:auto}.intro>div{max-width:85%}nav button{padding:27px 10px}}
