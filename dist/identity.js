@@ -6,14 +6,15 @@
  const particles=new Set(['de','del','da','das','do','dos','di','van','von','der','den','la','le']);
  function tokens(value){return (text(value).match(/[a-z0-9]+/g)||[]).map(t=>t==='jr'?'junior':t).filter(t=>!particles.has(t));}
  function compatibleRole(a,b){const known=p=>['POR','DEF','MED','DEL'].includes(p.pos);return !known(a)||!known(b)||(a.pos==='POR')===(b.pos==='POR');}
- function sameTokens(a,b){return a.length===b.length&&[...a].sort().join('|')===[...b].sort().join('|');}
+ function prepareName(value){const parts=tokens(value);return {normalized:normalize(value),tokens:parts,sorted:[...parts].sort().join('|')};}
  const givenVariants=[['alex','alejandro'],['toni','antonio'],['odisseas','odysseas']];
- function variant(a,b,keyA,keyB){
+ function variant(a,b,keyA,keyB,prepare=prepareName){
   // Reviewed IDs remain pinned; a generic name rule cannot bypass them.
   if(keyA.includes('|@')||keyB.includes('|@'))return keyA===keyB?{weight:6,method:'verified_identity'}:null;
-  if(normalize(a.name)===normalize(b.name))return {weight:5,method:'name_team'};
-  const at=tokens(a.name),bt=tokens(b.name);if(!at.length||!bt.length)return null;
-  if(sameTokens(at,bt))return {weight:4,method:'name_tokens_team'};
+  const first=prepare(a.name),second=prepare(b.name);
+  if(first.normalized===second.normalized)return {weight:5,method:'name_team'};
+  const at=first.tokens,bt=second.tokens;if(!at.length||!bt.length)return null;
+  if(at.length===bt.length&&first.sorted===second.sorted)return {weight:4,method:'name_tokens_team'};
   const shared=[...new Set(at.filter(t=>bt.includes(t)))],subset=(x,y)=>x.every(t=>y.includes(t));
   if(shared.filter(t=>t.length>1).length>=2&&(subset(at,bt)||subset(bt,at)))return {weight:3,method:'name_extended_team'};
   // An initial is a contraction, not a license to equate two full given names.
@@ -30,22 +31,28 @@
   return null;
  }
  function names(record){return [...new Set([record.name,...(Array.isArray(record.nameAliases)?record.nameAliases:[])].filter(n=>typeof n==='string'&&n.trim()&&n.length<=250))].slice(0,8);}
- function variants(a,b,keyA,keyB){
-  if(keyA.includes('|@')||keyB.includes('|@'))return variant(a,b,keyA,keyB);
+ function variants(a,b,keyA,keyB,prepare,published){
+  if(keyA.includes('|@')||keyB.includes('|@'))return variant(a,b,keyA,keyB,prepare);
   let selected=null;
-  for(const first of names(a))for(const second of names(b)){
-   const match=variant({name:first},{name:second},keyA,keyB);if(!match||selected&&selected.weight>=match.weight)continue;
+  for(const first of published(a))for(const second of published(b)){
+   const match=variant({name:first},{name:second},keyA,keyB,prepare);if(!match||selected&&selected.weight>=match.weight)continue;
    selected={...match,method:first===a.name&&second===b.name?match.method:'provider_alias_team',names:[first,second]};
   }
   return selected;
  }
  function link(primary,secondary,{primaryClub,secondaryClub,primaryKey=p=>normalize(p.name),secondaryKey=p=>normalize(p.name)}){
   const clubs=new Map(),edges=new Map(),reverse=new Map(),states=new Map(),matches=new Map();
+  // These caches live for one match pass, so changed records never reuse stale names.
+  const prepared=new Map(),aliases=new Map(),secondaryKeys=new Map();
+  const prepare=name=>{if(!prepared.has(name))prepared.set(name,prepareName(name));return prepared.get(name);};
+  const published=p=>{if(!aliases.has(p))aliases.set(p,names(p));return aliases.get(p);};
+  const otherKey=p=>{if(!secondaryKeys.has(p))secondaryKeys.set(p,secondaryKey(p));return secondaryKeys.get(p);};
   for(const p of secondary){const club=secondaryClub(p);if(!club||!normalize(p.name))continue;if(!clubs.has(club))clubs.set(club,[]);clubs.get(club).push(p);}
   for(const p of primary){
    const club=primaryClub(p),candidates=[],state={ambiguous:false,roleConflict:false,candidates:0};
-   if(club&&normalize(p.name))for(const other of clubs.get(club)||[]){
-    const match=variants(p,other,primaryKey(p),secondaryKey(other));if(!match)continue;
+   const key=club&&normalize(p.name)?primaryKey(p):null;
+   if(key!==null)for(const other of clubs.get(club)||[]){
+    const match=variants(p,other,key,otherKey(other),prepare,published);if(!match)continue;
     state.candidates++;if(!compatibleRole(p,other)){state.roleConflict=true;continue;}
     const edge={primary:p,record:other,...match};candidates.push(edge);
     if(!reverse.has(other))reverse.set(other,[]);reverse.get(other).push(edge);

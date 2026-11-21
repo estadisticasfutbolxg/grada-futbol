@@ -6,10 +6,11 @@ const espn=require('../dist/laliga.js');
 const owner=require('./owner.cjs');
 const running=new Map(),localCache=new Map();
 const rosters=new Map();
-const decodedAssets=new WeakMap();
+const decodedAssets=new WeakMap(),encodedAssets=new WeakMap();
+function assetBytes(asset){if(!encodedAssets.has(asset))encodedAssets.set(asset,Uint8Array.from(atob(asset.gzip),c=>c.charCodeAt(0)));return encodedAssets.get(asset);}
 function assetJSON(asset){
  if(!decodedAssets.has(asset)){
-  const bytes=Uint8Array.from(atob(asset.gzip),c=>c.charCodeAt(0));
+  const bytes=assetBytes(asset);
   const value=new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'))).json();
   decodedAssets.set(asset,value);value.catch(()=>decodedAssets.delete(asset));
  }
@@ -42,14 +43,23 @@ function sharedCache(){
 function json(body,status=200,headers={}){return new Response(JSON.stringify(body),{status,headers:{'Content-Type':'application/json; charset=utf-8','X-Content-Type-Options':'nosniff','Cache-Control':'no-store',...headers}});}
 function apiKey(origin,source,league){return origin+'/api/source/'+source+'?league='+league;}
 function validSource(source,league){return Number.isInteger(league.fotmobId)&&['espn','fotmob','understat'].includes(source)&&(source!=='understat'||league.primary==='Understat');}
-async function rosterPlayer(origin,league,playerId,assets,cache){
- const response=await cache.match(apiKey(origin,'fotmob',league.id)),asset=assets['/downloads/fotmob-'+league.id+'-2026-27.json'],tag=response?.ok?response.headers.get('X-Grada-Checked-At'):asset?.sha,key=league.id+'|'+tag;
+async function roster(origin,league,assets,cache){
+ const response=await cache.match(apiKey(origin,'fotmob',league.id)),asset=assets['/downloads/fotmob-'+league.id+'-2026-27.json'],tag=response?.ok?response.headers.get('X-Grada-Checked-At'):asset?.sha,prefix=origin+'|'+league.id+'|',key=prefix+tag;
  if(!rosters.has(key)){
-  let data;if(response?.ok)data=await response.json();else if(asset){const bytes=Uint8Array.from(atob(asset.gzip),c=>c.charCodeAt(0));data=await new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'))).json();}else return null;
-  for(const existing of rosters.keys())if(existing.startsWith(league.id+'|'))rosters.delete(existing);
-  rosters.set(key,new Map(data.players.map(p=>[String(p.id),{id:String(p.id),team_id:String(p.team_id),name:p.name}])));
+  for(const existing of rosters.keys())if(existing.startsWith(prefix))rosters.delete(existing);
+  const pending=(async()=>{const data=response?.ok?await response.json():asset?await assetJSON(asset):null;return data?new Map(data.players.map(p=>[String(p.id),{id:String(p.id),team_id:String(p.team_id),name:p.name}])):null;})();
+  rosters.set(key,pending);pending.catch(()=>{if(rosters.get(key)===pending)rosters.delete(key);});
  }
- return rosters.get(key).get(playerId)||null;
+ return rosters.get(key);
+}
+async function rosterPlayer(origin,league,playerId,assets,cache){return (await roster(origin,league,assets,cache))?.get(playerId)||null;}
+async function batchProfiles(url,league,ids,assets,cache,fetcher,now){
+ const players=await roster(url.origin,league,assets,cache);
+ if(!players||ids.some(id=>!players.has(id)))return json({error:'Jugador fuera de la plantilla verificada.'},400);
+ const results=new Array(ids.length);let cursor=0;
+ async function worker(){while(cursor<ids.length){const index=cursor++,id=ids[index];try{const response=await playerResponse(url,league,players.get(id),cache,fetcher,now);if(response.ok)results[index]=await response.json();}catch(_){/* A failed profile must not erase successful peers. */}}}
+ await Promise.all(Array.from({length:Math.min(3,ids.length)},worker));
+ return privateResponse(json({profiles:results.filter(Boolean),failed:ids.filter((_,i)=>!results[i])}));
 }
 async function playerResponse(url,league,player,cache,fetcher,now){
  const key=url.origin+'/api/player/fotmob?league='+league.id+'&player='+player.id,cached=await cache.match(key),checked=cached&&Date.parse(cached.headers.get('X-Grada-Checked-At'));
@@ -87,6 +97,13 @@ async function handle(request,assets,{cache=sharedCache(),fetcher=fetch,now=Date
   if(request.method!=='GET')return json({error:'Método no permitido.'},405,{Allow:'GET'});
   const origin=request.headers.get('Origin'),site=request.headers.get('Sec-Fetch-Site');
   if(origin&&origin!==url.origin||site==='cross-site')return json({error:'Origen no permitido.'},403);
+  if(url.pathname==='/api/players/fotmob'){
+   const params=[...url.searchParams],ids=(url.searchParams.get('players')||'').split(',');
+   if(params.length!==2||url.searchParams.getAll('league').length!==1||url.searchParams.getAll('players').length!==1||ids.length>profiles.batchSize||new Set(ids).size!==ids.length||ids.some(id=>!/^\d{1,12}$/.test(id)))return json({error:'Consulta no permitida.'},400);
+   let league;try{league=leagues.get(url.searchParams.get('league'));if(!validSource('fotmob',league))throw new Error();}catch(_){return json({error:'Liga no admitida.'},400);}
+   const denied=await owner.requireOwner(request,env,now);if(denied)return denied;
+   try{return await batchProfiles(url,league,ids,assets,cache,fetcher,now);}catch(_){return json({error:'No se pudieron verificar las fichas.'},503);}
+  }
   if(url.pathname==='/api/player/fotmob'){
    const params=[...url.searchParams];if(params.length!==2||url.searchParams.getAll('league').length!==1||url.searchParams.getAll('player').length!==1||!/^\d{1,12}$/.test(url.searchParams.get('player')||''))return json({error:'Consulta no permitida.'},400);
    let league;try{league=leagues.get(url.searchParams.get('league'));if(!validSource('fotmob',league))throw new Error();}catch(_){return json({error:'Liga no admitida.'},400);}
@@ -118,11 +135,14 @@ async function handle(request,assets,{cache=sharedCache(),fetcher=fetch,now=Date
    }catch(_){/* Invalid cached data must not hide the verified published capture. */}
   }
  }
- const headers={'Content-Type':asset.type,'X-Content-Type-Options':'nosniff','Referrer-Policy':'no-referrer','Cache-Control':asset.type.startsWith('text/html')?'no-store':'public, max-age=300',ETag:'"'+asset.sha+'"'};
+ const encodings=(request.headers.get('Accept-Encoding')||'').toLowerCase().split(',').map(item=>item.trim().split(/\s*;\s*/)),gzip=encodings.find(item=>item[0]==='gzip')||encodings.find(item=>item[0]==='*');
+ const compressed=!!gzip&&!gzip.slice(1).some(item=>/^q\s*=/.test(item)&&!(Number(item.split('=')[1])>0));
+ const immutable=!source&&url.searchParams.get('v')===asset.sha.slice(0,16);
+ const headers={'Content-Type':asset.type,'X-Content-Type-Options':'nosniff','Referrer-Policy':'no-referrer','Vary':'Accept-Encoding','Cache-Control':asset.type.startsWith('text/html')?'no-store':immutable?'public, max-age=31536000, immutable':'public, max-age=300',ETag:'"'+asset.sha+(compressed?'-gzip':'')+'"',...(compressed?{'Content-Encoding':'gzip'}:{})};
  if(request.headers.get('If-None-Match')===headers.ETag)return new Response(null,{status:304,headers});
  if(request.method==='HEAD')return new Response(null,{headers});
- const bytes=Uint8Array.from(atob(asset.gzip),c=>c.charCodeAt(0)),body=new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
- return new Response(body,{headers});
+ const bytes=assetBytes(asset),body=compressed?bytes:new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
+ return new Response(body,{headers,...(compressed?{encodeBody:'manual'}:{})});
 }
 function privateResponse(response){const result=new Response(response.body,response);result.headers.set('Cache-Control','private, no-store');result.headers.set('Vary','Cookie, oai-authenticated-user-id');return result;}
 module.exports={handle,apiKey};

@@ -34,17 +34,20 @@
  }
  // Capture dates and retrieval URLs can change without any football data changing.
  const captureKeys=new Set(['captured_at','imported_at','minutes_captured_at','url']);
- function canonical(value){
-  if(Array.isArray(value))return value.map(canonical);
-  if(value&&typeof value==='object')return Object.fromEntries(Object.keys(value).filter(k=>!captureKeys.has(k)).sort().map(k=>[k,canonical(value[k])]));
-  return value;
+ function sameValues(a,b){
+  if(a===b)return true;
+  if(!a||!b||typeof a!=='object'||typeof b!=='object')return JSON.stringify(a)===JSON.stringify(b);
+  const present=value=>value!==undefined&&typeof value!=='function'&&typeof value!=='symbol';
+  if(Array.isArray(a)||Array.isArray(b))return Array.isArray(a)&&Array.isArray(b)&&a.length===b.length&&Array.from(a).every((value,i)=>sameValues(present(value)?value:null,present(b[i])?b[i]:null));
+  const keys=value=>Object.keys(value).filter(key=>!captureKeys.has(key)&&present(value[key])),ak=keys(a),bk=keys(b);
+  return ak.length===bk.length&&ak.every(key=>Object.hasOwn(b,key)&&present(b[key])&&sameValues(a[key],b[key]));
  }
  function playerValues(player){
   return {...Object.fromEntries(Object.entries(player).filter(([key,value])=>value===null||typeof value!=='object'||['metricContexts','fieldSources'].includes(key))),tacticalPositions:[...roles.info(player).codes].sort()};
  }
  function changes(before,after,project=value=>value){
   const old=new Map(before.map(row=>[String(row.id),row])),added=[],modified=[];
-  for(const row of after){const prior=old.get(String(row.id));if(!prior)added.push(row);else if(JSON.stringify(canonical(project(prior)))!==JSON.stringify(canonical(project(row))))modified.push(row);old.delete(String(row.id));}
+  for(const row of after){const prior=old.get(String(row.id));if(!prior)added.push(row);else if(!sameValues(project(prior),project(row)))modified.push(row);old.delete(String(row.id));}
   return {added,modified,removed:[...old.values()]};
  }
  function matchCount(data){const n=data?.metadata?.imported_matches;return Number.isInteger(n)&&n>=0?n:null;}
@@ -59,6 +62,31 @@
     profiles:key==='fotmob'?data.metadata.profile_enrichment||null:null};
   });
   return {players,sources};
+ }
+ async function loadProfiles(data,league,{fetchImpl=fetch,onProgress=()=>{}}={}){
+  const found=[],size=profiles.batchSize;let done=0,batchSupported=true;
+  async function singles(rows){
+   let cursor=0;
+   async function worker(){while(cursor<rows.length){const row=rows[cursor++];try{
+    const r=await fetchImpl('/api/player/fotmob?league='+encodeURIComponent(league.id)+'&player='+encodeURIComponent(row.id),{signal:AbortSignal.timeout(30000),cache:'no-store'});
+    if(r.ok)found.push(await r.json());
+   }catch(_){/* A failed profile keeps the previous verified fields. */}}}
+   await Promise.all(Array.from({length:Math.min(3,rows.length)},worker));
+  }
+  for(let offset=0;offset<data.players.length;offset+=size){
+   const rows=data.players.slice(offset,offset+size),ids=rows.map(p=>String(p.id));
+   if(batchSupported){try{
+    const r=await fetchImpl('/api/players/fotmob?league='+encodeURIComponent(league.id)+'&players='+ids.map(encodeURIComponent).join(','),{signal:AbortSignal.timeout(60000),cache:'no-store'});
+    if(r.status===401||r.status===403){done+=rows.length;onProgress(done,data.players.length);continue;}
+    if(!r.ok){if(r.status===404||r.status===405)batchSupported=false;throw new Error('Ficha agrupada no disponible.');}
+    const payload=await r.json(),items=payload.profiles;
+    if(!Array.isArray(items)||items.length>rows.length||new Set(items.map(p=>String(p?.id))).size!==items.length||items.some(p=>!ids.includes(String(p?.id))))throw new Error('Respuesta de fichas inválida.');
+    found.push(...items);
+   }catch(_){await singles(rows);}}
+   else await singles(rows);
+   done+=rows.length;onProgress(done,data.players.length);
+  }
+  return found;
  }
  function captureStore(){
   let connection;
@@ -78,5 +106,5 @@
   }
   return {get:(league,key)=>operation('readonly',league+'|'+key),set:(league,key,value)=>operation('readwrite',league+'|'+key,value)};
  }
- const api={sources,names,validate,selectCapture,refresh,report,captureStore};if(node)module.exports=api;else root.GradaRefresh=api;
+ const api={sources,names,validate,selectCapture,refresh,report,captureStore,loadProfiles};if(node)module.exports=api;else root.GradaRefresh=api;
 })(typeof window==='object'?window:globalThis);

@@ -51,6 +51,13 @@
     const result = (below+equal/2)/reference.length*100;
     return lowerBetter ? 100-result : result;
   }
+  // Plans own these sorted samples; public percentile() still accepts mutable arrays.
+  function rankedPercentile(value,sorted,lowerBetter=false){
+    if(!Number.isFinite(value)||!sorted.length)return null;
+    function bound(inclusive){let lo=0,hi=sorted.length;while(lo<hi){const mid=(lo+hi)>>>1;if(sorted[mid]<value||inclusive&&sorted[mid]===value)lo=mid+1;else hi=mid;}return lo;}
+    const below=bound(false),equal=bound(true)-below,result=(below+equal/2)/sorted.length*100;
+    return lowerBetter?100-result:result;
+  }
   function relativeArea(percentiles) {
     if(percentiles.length<3||percentiles.some(p=>!Number.isFinite(p)||p<0||p>100))return null;
     // Shoelace area / area of the regular polygon at P100. Equal angular gaps.
@@ -72,7 +79,7 @@
       const values=samePosition.filter(p=>eligible(p,key)).map(p=>metrics.metric(p,key,axes[key][1])).filter(Number.isFinite);
       if(values.length>=5)samples.set(key,values);
     }
-    return {definition:def,minimum,samples,keys:[...samples.keys()].filter(k=>!(position==='POR'&&samples.has('psxgEfficiency')&&k==='prevented')).slice(0,6),peerCount:samePosition.filter(p=>candidates.some(key=>eligible(p,key)&&Number.isFinite(metrics.metric(p,key,axes[key][1])))).length};
+    return {definition:def,minimum,samples,ranked:new Map([...samples].map(([key,values])=>[key,[...values].sort((a,b)=>a-b)])),keys:[...samples.keys()].filter(k=>!(position==='POR'&&samples.has('psxgEfficiency')&&k==='prevented')).slice(0,6),peerCount:samePosition.filter(p=>candidates.some(key=>eligible(p,key)&&Number.isFinite(metrics.metric(p,key,axes[key][1])))).length};
   }
   function baseEligible(record,minimum){return Number.isFinite(record.minutes)&&record.minutes>=minimum;}
   function profile(player,all,plan) {
@@ -81,7 +88,7 @@
     for(const key of plan.keys){
       const [label,unit,lower]=axes[key],value=metrics.metric(player,key,unit),sample=plan.samples.get(key);
       if(!Number.isFinite(value))continue;
-      values.push({key,label,value,percentile:percentile(value,sample,lower),lowerBetter:!!lower,referenceCount:sample.length,source:metrics.context(player,key)?.source||null});
+      values.push({key,label,value,percentile:plan.ranked?.has(key)?rankedPercentile(value,plan.ranked.get(key),lower):percentile(value,sample,lower),lowerBetter:!!lower,referenceCount:sample.length,source:metrics.context(player,key)?.source||null});
     }
     const visible=values.length>=3?values:[],area=relativeArea(visible.map(a=>a.percentile));
     const insufficientSamples=values.flatMap(a=>{
@@ -111,7 +118,8 @@
     return new Map(['MED_ATT','MED_DEF'].map(key=>{
       const plan=reference(referencePlayers,key);
       const distribution=referencePlayers.filter(p=>p.pos==='MED').map(p=>profile(p,referencePlayers,plan).score).filter(Number.isFinite);
-      return [key,new Map(all.filter(p=>p.pos==='MED').map(p=>{const index=profile(p,referencePlayers,plan);return [p,{...index,kind:'index',rolePercentile:Number.isFinite(index.score)&&distribution.length>=5?percentile(index.score,distribution):null}];}))];
+      const ranked=[...distribution].sort((a,b)=>a-b);
+      return [key,new Map(all.filter(p=>p.pos==='MED').map(p=>{const index=profile(p,referencePlayers,plan);return [p,{...index,kind:'index',rolePercentile:Number.isFinite(index.score)&&distribution.length>=5?rankedPercentile(index.score,ranked):null}];}))];
     }));
   }
   function midfieldRole(player,indices){

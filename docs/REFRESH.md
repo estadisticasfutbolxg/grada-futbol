@@ -4,6 +4,8 @@ La web se sirve en el mismo proyecto Sites mediante un Worker. El generador `scr
 
 ## Botón Actualizar datos
 
+Desde el 21 de noviembre, las fichas se consultan en lotes de hasta seis conservando los mismos datos, recuperación y límites de concurrencia. La carga paralela, el archivo JavaScript agrupado y los cálculos optimizados se documentan en [PERFORMANCE.md](PERFORMANCE.md), con medición local y sus límites.
+
 El botón consulta ESPN, FotMob y, en LaLiga, Understat. Todas las ligas procesa las cinco competiciones con concurrencia limitada. ESPN conserva su adaptador de clasificación/plantillas. El servidor consulta los rankings HTML y las fichas de FotMob y los datos públicos de Understat, sin ejecutar JavaScript de las fuentes.
 
 Solo se aceptan rutas, competiciones y jugadores de plantillas verificadas. Las consultas son GET de lectura, no admiten URLs arbitrarias, rechazan orígenes cruzados y métodos de escritura, limitan tamaño/tiempo y permiten redirecciones únicamente dentro del mismo host HTTPS. Caché: 5 minutos para consultas de fuente, 1 hora para fichas y 2 minutos para fallos, con deduplicación. La última respuesta válida se conserva separada de los fallos.

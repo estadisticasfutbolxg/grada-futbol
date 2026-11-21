@@ -44,6 +44,19 @@ def build():
     client_files = ['index.html','style.css','leagues.json','leagues.js','metrics.js','sampling.js','fairplay.js','security.js','understat.js','laliga.js','roles.js','fotmob.js','identity.js','positions.js','combined.js','scopes.js','clubs.js','branding.js','filters.js','radar.js','squads.js','scores.js','explore.js','components.js','profiles.js','refresh.js','owner.js','app.js']
     files = [ROOT / 'dist' / filename for filename in client_files]
     client_bodies = {filename: (ROOT / 'dist' / filename).read_bytes() for filename in client_files}
+    # Preserve the source script order in one immutable browser request. Individual
+    # modules remain available for diagnostics and ordinary local development.
+    markup = client_bodies['index.html'].decode()
+    script_pattern = r'<script src="([a-z-]+\.js)"></script>'
+    scripts = re.findall(script_pattern, markup)
+    if not scripts or scripts[-1] != 'app.js' or len(set(scripts)) != len(scripts) or any(name not in client_bodies for name in scripts):
+        raise ValueError('Unexpected browser entrypoints')
+    bundle_name = 'grada-client.js'
+    client_bodies[bundle_name] = ("'use strict';\n" + '\n;\n'.join(client_bodies[name].decode() for name in scripts)).encode()
+    files.append(ROOT / 'dist' / bundle_name)
+    markup = re.sub(script_pattern, '', markup)
+    markup = markup.replace('</body>', '<script defer src="' + bundle_name + '"></script></body>')
+    client_bodies['index.html'] = markup.encode()
     def version_asset(match):
         filename = match[2]
         body = client_bodies.get(filename)
