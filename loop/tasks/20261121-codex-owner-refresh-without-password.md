@@ -1,12 +1,13 @@
 # 20261121-codex · Actualizar sin contraseña adicional
 
-- Estado: `review`
+- Estado: `done`
 - Responsable: Codex
 - Revisor: autocontrol; sin revisión independiente solicitada
 - Rama: `feat/owner-refresh-without-password`
 - Base Sites: `18fcba4e6adf355c91e59957170ede335bf576f1`
 - Base GitHub: `0bc98e62b85c67e4b240c8e1cdc4f29fe5626103`
-- Issue/PR: no creados
+- Issue: no creado
+- PR: [#51 integrado](https://github.com/estadisticasfutbolxg/grada-futbol/pull/51)
 - Entrega: merge y publicación privada, autorización vigente
 
 ## Objetivo y alcance
@@ -21,7 +22,7 @@ Archivos compartidos: `worker/owner.cjs`, `dist/owner.js`, HTML/CSS/glosario, pr
 - [x] Sin identidad o con otra cuenta se deniega antes de consultar proveedores; ID vinculado sigue siendo autoridad.
 - [x] Se retiran formulario y rutas de contraseña, conservando entrada/salida de ChatGPT y fallos seguros.
 - [x] Datos/scores y optimizaciones intactos; sin consultas de estadísticas para validar.
-- [ ] Pruebas, GitHub y publicación privada confirmados.
+- [x] Pruebas, GitHub y publicación privada confirmados.
 
 ## Plan y evidencia
 
@@ -46,4 +47,10 @@ Base publicada v27; solo un propietario y cero editores/grupos/visitantes. Valid
 | Sintaxis JS y docs/diff | Correctos | Sin cambios de importadores o fórmulas |
 | Navegador | No disponible en modo managed sin `cua_repl.js` | No se afirma QA visual/móvil |
 
-Autocontrol del diff y criterios: sin hallazgos pendientes. No equivale a revisión independiente. Commit/push, PR/merge y publicación pendientes de confirmar, con audiencia privada conservada.
+Autocontrol del diff y criterios: sin hallazgos pendientes. No equivale a revisión independiente. Código subido a GitHub en `593564684dc01028539b67f3c709405cc3f960fb`. PR #51 integrado con squash en `b7757d141858910ddfaa1570cd9ecdc548af55a1`, main verificado. Head/base exactos, PR limpio, sin checks/statuses configurados ni protecciones/rulesets. Configuración de GitHub intacta.
+
+Fuente Sites `f14ba4b8b6fdf61c78838d297d0ce794262e1697` subida y verificada; archivo con hosting/Worker exactos. [GRADA privada](https://grada-futbol-analitica.ivanmatema2.chatgpt.site), versión **28**, despliegue `appgdep_6b0217f2063481919bd25582fdb54da2` en `succeeded`, 21 de noviembre a las **23:15 Madrid**. Versión `appgprj_6ae0b8b2eb1881918601230d00603255~appgver_08ff21be67a881919f4c9a9920710e99`; procedencia confirmada. Runtime revisión 1 sin cambios.
+
+HTTP real posterior: HTML/bundle 200, cuerpos SHA256 exactos al Worker, un script gzip de 68.629 bytes y sin formulario de contraseña. `/api/owner/status` confirma `password_required:false`. El bearer de servicio no aporta identidad de visitante: estado owner false, actualización 401 y login antiguo 404; no se ha consultado a proveedores. El flujo positivo de propietario se comprobó con las pruebas de servidor/cliente, sin suplantar identidad en producción.
+
+Audiencia posterior owner-only revisión 3: un propietario, cero editores/grupos/visitantes. Objetivo completo; cierre documental posterior sin nuevo despliegue de un Worker idéntico. No se afirma QA visual.

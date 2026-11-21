@@ -1,5 +1,12 @@
 # Estado comprobado de GRADA
 
+## Actualización sin contraseña adicional · publicación privada verificada · 21 de noviembre de 2026 · 23:15 Madrid
+
+- El icono comprueba la sesión del propietario y comienza directamente. Se eliminan formulario, segunda confirmación, desbloqueo de 30 minutos y rutas de contraseña. Se conserva la identidad de Sites y el ID vinculado en R2; otra cuenta o falta de identidad se deniegan antes de consultar fuentes/fichas. Sin reescribir propietario, secretos o audiencia. [Contrato](REFRESH.md#acceso-del-propietario).
+- 24 archivos Node correctos, seis casos de acceso/interfaz sin cookie; cinco arranques del bundle en VM conservan scores de v27. Once capturas intactas, un script y lotes de seis conservados. **0 jugadores, estadísticas, scores o partidos actualizados**, sin consultas reales de proveedores. Sin QA visual disponible.
+- [PR #51](https://github.com/estadisticasfutbolxg/grada-futbol/pull/51) integrado en `b7757d141858910ddfaa1570cd9ecdc548af55a1`. [GRADA privada](https://grada-futbol-analitica.ivanmatema2.chatgpt.site), versión **28**, despliegue `appgdep_6b0217f2063481919bd25582fdb54da2` en `succeeded`. Fuente `f14ba4b8b6fdf61c78838d297d0ce794262e1697`; Worker SHA256 `aa905fb8b9c3a1d19ca9676f9eb92da4ab92557ec91c660608ecba0c3749e1b1`, 142 assets/11 módulos. HTTP posterior confirma HTML/bundle exactos y gzip 68.629 bytes, sin formulario; estado sin contraseña, servicio sin identidad rechazado para actualizar (401), login antiguo retirado (404).
+- Audiencia posterior solo propietario, revisión 3; cero editores/grupos/visitantes y variables runtime sin cambios. [Tarea y límites](../loop/tasks/20261121-codex-owner-refresh-without-password.md).
+
 ## Carga y actualización optimizadas · publicación privada verificada · 21 de noviembre de 2026 · 22:54 Madrid
 
 - 25 scripts agrupados en un bundle de 69.322 bytes gzip y caché por hash. Cinco ligas e IndexedDB cargan en paralelo. Fichas en lotes de seis: mismas 2.285 fichas con 383 peticiones normales al Site, manteniendo tres trabajos por lote y dos ligas. Autorización, validación, TTL, recuperación y ruta individual preservados. Gzip directo y plantillas deduplicadas. [Detalle y reproducción](PERFORMANCE.md).
