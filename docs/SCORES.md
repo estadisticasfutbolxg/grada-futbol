@@ -115,3 +115,5 @@ node --test tests/*.test.cjs
 El Worker empaqueta HTML con hashes en las URLs de scripts y CSS para que cada publicación cargue módulos de una misma versión. Las capturas iniciales se solicitan sin reutilizar la caché del navegador; los refrescos conservan su validación y respaldo. No se añaden secretos, permisos ni escrituras públicas. Las capturas, JSON/SQLite y Worker generado siguen fuera de GitHub.
 
 La auditoría de la revisión de nombres y posiciones, sus jugadores recuperados y los pendientes reales están en [SCORE_REVIEW.md](SCORE_REVIEW.md).
+
+Selecciones compara siete sistemas con contención, creación y puestos publicados compatibles. Cada sistema maximiza la suma de scores canónicos; entre sus onces completos se elige la mayor media ponderada por minutos. El puesto propuesto y el perfil del score se muestran separados; no hay una nueva puntuación individual. [Asignación y límites](NATIONS.md).
