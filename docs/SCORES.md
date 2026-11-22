@@ -94,6 +94,8 @@ Los rankings de equipo requieren inicialmente 5 PJ. Cambiar ese filtro no cambia
 
 ## Totales de liga
 
+Los [onces teóricos de selecciones](NATIONS.md) reutilizan estos mismos scores y el promedio por minutos de los once titulares elegidos. Solo hay score global cuando están cubiertos sus once puestos; no son partidos ni resultados internacionales.
+
 Los paneles suman únicamente valores publicados finitos. Una ausencia ya no oculta todos los valores conocidos: se muestra el subtotal parcial y `con dato / registros`. Si no hay ningún valor conocido, se conserva el guion; un cero real sí se muestra. Las paradas incluyen los registros POR y cualquier otro registro con paradas publicadas. No se añaden las cifras de dos fuentes para el mismo jugador.
 
 Con las capturas publicadas al preparar este cambio hay 1.029 asistencias conocidas (2.281/2.284 registros) y 3.048 paradas (131/136 registros elegibles) en Todas las ligas. Son sumas de la cobertura importada, no una declaración de temporada completa.

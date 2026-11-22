@@ -249,3 +249,60 @@ footer{flex-wrap:wrap}
   .filters .league-choice select{width:100%;min-width:0;flex-basis:100%}
   .club-badge-lg{width:2.5rem;height:2.5rem}
 }
+.national-intro{max-width:900px;margin-bottom:24px}
+.national-intro h2{font-size:clamp(24px,3vw,34px);margin:12px 0}
+.national-intro p{line-height:1.6;color:#52645a}
+.national-toolbar{display:flex;align-items:end;gap:24px;flex-wrap:wrap;margin-bottom:22px}
+.national-toolbar>label:first-child{display:grid;gap:8px;min-width:240px;font-size:14px}
+.national-toggle{display:flex;gap:10px;align-items:center;font-size:14px;padding-bottom:13px}
+.national-toggle input{width:17px;height:17px;accent-color:#236347}
+.national-layout{display:grid;grid-template-columns:minmax(300px,.8fr) minmax(460px,1.3fr);gap:22px;align-items:start}
+.national-ranking-panel h2{font-size:21px}
+.national-ranking{max-height:680px;overflow:auto}
+.national-ranking th{white-space:normal}
+.national-score{font-weight:800;color:#20573d;font-variant-numeric:tabular-nums}
+.nation-choice{border:0;background:transparent;padding:5px 0;text-align:left;cursor:pointer;color:inherit;font:inherit}
+.nation-choice:hover,.nation-choice:focus-visible{text-decoration:underline}
+.national-selected{background:#edf4ec}
+.national-flag{font-size:18px;line-height:1}
+.national-heading{display:flex;gap:20px;justify-content:space-between;align-items:center;margin-bottom:22px}
+.national-heading h2{font-size:27px;margin:12px 0 0}
+.national-total{display:grid;text-align:right;gap:4px;white-space:nowrap}
+.national-total>span,.national-total>small{font-size:12px;color:#607366}
+.national-total>b{font-size:34px;color:#20573d;font-variant-numeric:tabular-nums}
+.nation-warning{background:#faf3e4;color:#725a28;padding:14px;border-radius:8px;font-size:14px;line-height:1.6}
+.nation-pitch{position:relative;background:linear-gradient(180deg,#28523f,#376b50);border:1px solid #315b45;border-radius:12px;padding:24px 14px;display:grid;gap:26px;isolation:isolate;overflow:hidden}
+.nation-pitch:before{content:"";position:absolute;inset:14px;border:1px solid #ffffff38;border-radius:3px;z-index:-1;background:linear-gradient(transparent calc(50% - .5px),#ffffff38 50%,transparent calc(50% + .5px))}
+.nation-pitch:after{content:"";position:absolute;width:100px;height:100px;border:1px solid #ffffff38;border-radius:50%;left:calc(50% - 50px);top:calc(50% - 50px);z-index:-1}
+.nation-line{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;list-style:none;padding:0;margin:0}
+.nation-line-DEL{grid-template-columns:repeat(2,minmax(0,1fr));width:65%;margin:auto}
+.nation-line-POR{grid-template-columns:minmax(0,1fr);width:34%;margin:auto}
+.nation-player{display:grid;align-content:start;gap:6px;width:100%;height:100%;min-height:96px;padding:10px 7px;border:1px solid #ffffff65;border-radius:8px;background:#f8fbf5;color:#193c2b;font:inherit;cursor:pointer;text-align:center}
+.nation-player>b{font-size:19px;font-variant-numeric:tabular-nums}
+.nation-player-name{font-size:14px;font-weight:650;overflow-wrap:anywhere}
+.nation-player>small{font-size:12px;color:#526c5a}
+.nation-vacant{background:#ffffff12;border-style:dashed;color:#fff;cursor:default}
+.nation-vacant>small{color:#e2ece3}
+.nation-vacant>span{font-size:14px}
+.nation-player:hover:not(.nation-vacant),.nation-player:focus-visible{border-color:#d4dd82;outline:2px solid #d4dd82;outline-offset:2px}
+.national-units{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:22px 0}
+.nation-unit{display:grid;gap:8px;padding:13px 10px;border:1px solid #e1e9df;border-radius:8px}
+.nation-unit>span,.nation-unit>small{font-size:12px;color:#52645a}
+.nation-unit>b{font-size:22px;color:#20573d}
+.nation-unit meter{width:100%;height:9px;accent-color:#437453}
+.national-ledger{margin-top:20px}
+.national-ledger summary{cursor:pointer;font-weight:650;font-size:14px}
+.national-ledger td{font-size:14px}
+@media(max-width:1100px){.national-layout{grid-template-columns:1fr}
+.national-ranking{max-height:320px}}
+@media(max-width:600px){.nation-pitch{padding:20px 9px;gap:20px}
+.nation-line{gap:6px}
+.nation-player{padding:9px 4px;min-height:90px}
+.nation-player-name{font-size:14px}
+.nation-player>small{font-size:12px}
+.national-heading h2{font-size:23px}
+.national-total>b{font-size:29px}
+.national-units{grid-template-columns:repeat(2,minmax(0,1fr))}
+.national-toolbar>label:first-child{min-width:100%;width:100%}}
+
+.national-ranking table{min-width:100%;width:100%}.national-ranking td{white-space:normal}.national-ranking td:first-child{white-space:nowrap}

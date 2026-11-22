@@ -2,6 +2,7 @@
   'use strict';
   const leagues=typeof module==='object'&&module.exports?require('./leagues.js'):root.GradaLeagues;
   const roles=typeof module==='object'&&module.exports?require('./roles.js'):root.GradaRoles;
+  const nationality=typeof module==='object'&&module.exports?require('./nationality.js'):root.GradaNationality;
   const counts=['lineBreakingPasses','clearances','blocks','highClaims','sweeperActions','saves','conceded','chancesCreated','bigChancesCreated','bigChancesMissed','yellowCards','redCards','penaltiesSaved','penaltiesFaced','clean'];
   const publishedRates=['shotsOnTargetPer90','longBallsPer90','dribblesPer90','finalThirdRecoveriesPer90','midfieldRecoveriesPer90','foulsPer90'];
   const percentages=['shotsOnTargetPct','longBallAccuracy','dribbleSuccess','savepct'];
@@ -36,6 +37,7 @@
       if(t.possession!==undefined&&t.possession!==null&&(!numeric(t.possession)||t.possession>100))throw new Error('Posesión inválida.');
     }
     for(const p of data.players){
+      if(p.nationality!==undefined&&p.nationality!==null&&!nationality.valid(p,p.nationality,league.id))throw new Error('Nacionalidad sin identidad verificada.');
       if(p.tacticalPositions!==undefined&&(!roles.valid(p)||p.tacticalContext.league_key!==league.id||p.tacticalContext.season!==league.season||Date.parse(p.tacticalContext.captured_at)>Date.now()+300000))throw new Error('Posiciones detalladas sin respaldo verificado.');
       if(!['POR','DEF','MED','DEL','—'].includes(p.pos)||!/^\d+$/.test(p.id)||!teams.has(String(p.team_id))||typeof p.name!=='string'||!p.name.trim()||p.name.length>250||!numeric(p.minutes)||!Number.isInteger(p.matches)||p.matches<0)throw new Error('Registro FotMob inválido.');
       for(const k of ['tackles','interceptions','recoveries'])if(p[k]!==null&&(!Number.isInteger(p[k])||p[k]<0))throw new Error('Conteo FotMob inválido.');

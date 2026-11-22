@@ -43,7 +43,7 @@
   return ak.length===bk.length&&ak.every(key=>Object.hasOwn(b,key)&&present(b[key])&&sameValues(a[key],b[key]));
  }
  function playerValues(player){
-  return {...Object.fromEntries(Object.entries(player).filter(([key,value])=>value===null||typeof value!=='object'||['metricContexts','fieldSources'].includes(key))),tacticalPositions:[...roles.info(player).codes].sort()};
+  return {...Object.fromEntries(Object.entries(player).filter(([key,value])=>value===null||typeof value!=='object'||['metricContexts','fieldSources','nationality'].includes(key))),tacticalPositions:[...roles.info(player).codes].sort()};
  }
  function changes(before,after,project=value=>value){
   const old=new Map(before.map(row=>[String(row.id),row])),added=[],modified=[];

@@ -3,6 +3,7 @@
  const node=typeof module==='object'&&module.exports,leagues=node?require('./leagues.js'):root.GradaLeagues;
  const positions=node?require('./positions.js'):root.GradaPositions;
  const roles=node?require('./roles.js'):root.GradaRoles;
+ const nationality=node?require('./nationality.js'):root.GradaNationality;
  const fields={successful_passes:['completed','number'],successful_passes_accuracy:['accuracy','percent'],shots:['shots','number'],shots_on_target:['shotsOnTarget','number'],expected_goals:['xg','fraction'],expected_assists:['xa','fraction'],expected_goals_on_target:['xgot','fraction'],line_breaking_passes:['lineBreakingPasses','number'],chances_created:['chancesCreated','number'],big_chances_created:['bigChancesCreated','number'],'matchstats.headers.tackles':['tackles','number'],interceptions:['interceptions','number'],recoveries:['recoveries','number'],clearances:['clearances','number'],blocked_shots:['blocks','number'],saves:['saves','number'],save_percentage:['savepct','percent'],goals_conceded:['conceded','number'],goals_prevented:['prevented','fraction'],clean_sheet_team_title:['clean','number'],penalty_saves:['penaltiesSaved','number'],keeper_high_claim:['highClaims','number'],keeper_sweeper:['sweeperActions','number'],yellow_cards:['yellowCards','number'],red_cards:['redCards','number'],expected_goals_against_while_on_pitch:['xga','fraction']};
  const rates={dribbles_succeeded:'dribblesPer90',long_balls_accurate:'longBallsPer90',fouls_committed:'foulsPer90'};
  function numeric(value,format,signed=false){
@@ -16,7 +17,8 @@
   if(String(d?.id)!==String(player.id)||String(d.primaryTeam?.teamId)!==String(player.team_id)||!Number.isFinite(Date.parse(capturedAt)))throw new Error('Ficha de otro jugador o club.');
   const nameAliases=[...new Set([player.name,d.name,d.fullName].filter(n=>typeof n==='string'&&n.trim()&&n.length<=250))];
   const pos=positions.fromFotmob(position),positionContext={source:'FotMob',captured_at:capturedAt,url:'https://www.fotmob.com/players/'+player.id+'/player',key:position?.key||null,label:position?.label||null,identityVerified:true};
-  if(main?.leagueId!==league.fotmobId||main.season!=='2026/2027'||season?.seasonName!=='2026/2027'||season.tournaments?.[0]?.tournamentId!==league.fotmobId)return {id:String(player.id),team_id:String(player.team_id),pos,positionContext,nameAliases,values:{},contexts:{},captured_at:capturedAt,scope:'position_only'};
+  const country=nationality.fromProfile(d,player,leagueId,capturedAt);
+  if(main?.leagueId!==league.fotmobId||main.season!=='2026/2027'||season?.seasonName!=='2026/2027'||season.tournaments?.[0]?.tournamentId!==league.fotmobId)return {id:String(player.id),team_id:String(player.team_id),pos,positionContext,nameAliases,...(country?{nationality:country}:{}),values:{},contexts:{},captured_at:capturedAt,scope:'position_only'};
   const mainStats=new Map(main.stats.map(s=>[s.localizedTitleId,s.value])),minutes=numeric(mainStats.get('minutes_played'),'number'),matches=numeric(mainStats.get('matches_uppercase'),'number');
   if(matches>2*(league.teams-1)||minutes>matches*130)throw new Error('Muestra de ficha inválida.');
   const values={},contexts={},url='https://www.fotmob.com/players/'+player.id+'/player';
@@ -48,7 +50,7 @@
    }
    for(const key of ['xgaOnTarget','psxg'])if(contexts[key])Object.assign(contexts[key],{shots:faced.length,pairedConceded:values.conceded-ownGoals,pairedSaves:values.saves,ownGoalsExcluded:ownGoals,coverage:key==='psxg'&&contexts[key].derived==='goals_prevented_identity'?'Goles evitados y goles recibidos de la misma ficha; autogoles verificados en el mapa y excluidos.':'Tiros a puerta afrontados; recuento igual a paradas + goles recibidos sin autogoles.'});
   }
-  return {id:String(player.id),team_id:String(player.team_id),pos,positionContext,nameAliases,values,contexts,captured_at:capturedAt};
+  return {id:String(player.id),team_id:String(player.team_id),pos,positionContext,nameAliases,...(country?{nationality:country}:{}),values,contexts,captured_at:capturedAt};
  }
  const allowed=new Set(['minutes','matches','goals','assists','shotsPer90','shotsOnTargetPer90','psxg','xgaOnTarget',...Object.values(fields).map(v=>v[0]),...Object.values(rates)]);
  function deriveCounts(next,changed){
@@ -74,6 +76,7 @@
     if(next.pos==='—'||profileAt>=positionAt){next.pos=profile.pos;next.positionContext=profile.positionContext||null;}
    }
    if(Array.isArray(profile?.nameAliases))next.nameAliases=[...new Set([player.name,...(Array.isArray(player.nameAliases)?player.nameAliases:[]),...profile.nameAliases].filter(n=>typeof n==='string'&&n.trim()&&n.length<=250))].slice(0,8);
+   if(profile?.nationality){const result=nationality.apply(next,profile.nationality,leagues.resolve(data.metadata).id);if(result!==next)next.nationality=result.nationality;}
    deriveCounts(next,changed);
    if(profile)matched++;return next;
   });
@@ -85,7 +88,7 @@
   if(!previous)return data;
   let sameLeague=false;try{sameLeague=leagues.resolve(data.metadata).id===leagues.resolve(previous.metadata).id;}catch(_){}
   if(!sameLeague||data.metadata.source!=='FotMob'||previous.metadata.source!=='FotMob'||data.metadata.season_id!==previous.metadata.season_id||data.metadata.league_id!==previous.metadata.league_id)return data;
-  data=roles.restore(data,previous);
+  data=nationality.restore(roles.restore(data,previous),previous);
   const oldById=new Map(previous.players.map(p=>[String(p.id),p]));let fields=0,positionsRetained=0;
   const players=data.players.map(player=>{
    const prior=oldById.get(String(player.id));

@@ -15,11 +15,15 @@
  }
  function matches(record,key){if(!key)return true;const r=info(record);return key==='UNKNOWN'?r.groups.length===0:r.groups.includes(key);}
  function coverage(players){const known=players.filter(p=>info(p).codes.length);return {known:known.length,total:players.length,classified:players.filter(p=>info(p).groups.length).length};}
- function parseSquad(html,team,leagueId,capturedAt){
+ function squadPage(html,team,leagueId,capturedAt){
   const league=leagues.get(leagueId),match=html.match(/<script\b[^>]*\bid=["']__NEXT_DATA__["'][^>]*>([\s\S]*?)<\/script\s*>/i);if(!match)throw new Error('Plantilla sin datos.');
   const page=JSON.parse(match[1])?.props?.pageProps,d=page?.fallback?.['team-'+team.id]||page,details=d?.details;
   if(String(details?.id)!==String(team.id)||details.primaryLeagueId!==league.fotmobId||details.latestSeason!=='2026/2027'||!Number.isFinite(Date.parse(capturedAt))||Date.parse(capturedAt)>Date.now()+300000)throw new Error('Plantilla de otro club, liga o temporada.');
   const sections=d.squad?.squad;if(!Array.isArray(sections)||sections.length>12)throw new Error('Plantilla incompleta.');
+  return d;
+ }
+ function parseSquad(html,team,leagueId,capturedAt){
+  const league=leagues.get(leagueId),d=squadPage(html,team,leagueId,capturedAt),sections=d.squad.squad;
   const slug=/^[a-z0-9-]+$/.test(d.seostr||'')?d.seostr:'team',url='https://www.fotmob.com/teams/'+team.id+'/squad/'+slug,seen=new Set(),players=[];
   for(const group of sections){if(group.title==='coach')continue;if(!Array.isArray(group.members)||group.members.length>100)throw new Error('Grupo de plantilla inválido.');
    for(const p of group.members){const id=String(p.id);if(!/^\d{1,12}$/.test(id)||seen.has(id))throw new Error('Identidad de plantilla inválida.');seen.add(id);
@@ -41,5 +45,5 @@
   try{if(leagues.resolve(data.metadata).id!==leagues.resolve(previous.metadata).id)return data;}catch(_){return data;}
   const old=new Map(previous.players.map(p=>[String(p.id),p]));return {...data,players:data.players.map(p=>{const prior=old.get(String(p.id));if(!prior||String(prior.team_id)!==String(p.team_id)||!valid(prior)||valid(p)&&Date.parse(p.tacticalContext.captured_at)>=Date.parse(prior.tacticalContext.captured_at))return p;return {...p,tacticalPositions:[...prior.tacticalPositions],tacticalContext:{...prior.tacticalContext}};})};
  }
- const api={labels,groups,info,matches,coverage,parseSquad,enrich,restore,valid};if(node)module.exports=api;else root.GradaRoles=api;
+ const api={labels,groups,info,matches,coverage,parseSquad,squadPage,enrich,restore,valid};if(node)module.exports=api;else root.GradaRoles=api;
 })(typeof window==='object'?window:globalThis);

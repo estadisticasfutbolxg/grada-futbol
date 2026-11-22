@@ -8,6 +8,7 @@
   const metrics = node ? require('./metrics.js') : root.GradaMetrics;
   const identitiesAPI = node ? require('./identity.js') : root.GradaIdentity;
   const positions = node ? require('./positions.js') : root.GradaPositions;
+  const nationality = node ? require('./nationality.js') : root.GradaNationality;
   const SOURCE = 'Understat + ESPN';
   const fields = [...new Set(['matches','minutes','goals','assists','xg','xa','shots','shotsOnTarget','shotsPer90','passes','completed','accuracy','conversion','delta','saves','savepct','conceded','xga','xgaOnTarget','clean','tackles','interceptions','recoveries','keypasses','progressive','psxg','prevented','points','bigChances','shotsOnTargetPerMatch','possession',...fotmob.fields])];
   const numeric = n => typeof n === 'number' && Number.isFinite(n);
@@ -63,6 +64,7 @@
       if (other) row.sourceRecords.ESPN = {...other};
       if(additional) row.sourceRecords.FotMob = {...additional};
       if(kind==='player'){row.positionResolution=positions.resolve(row.sourceRecords,primarySource);row.pos=row.positionResolution.position;row.fieldSources.pos=row.positionResolution.source;}
+      if(kind==='player'){const country=nationality.info(row);delete row.nationality;if(country){row.nationality={...country,context:{...country.context}};row.fieldSources.nationality='FotMob';}}
       const differences = [];
       for (const key of fields) {
         const chosen = [[primarySource,primary],['ESPN',other],['FotMob',additional]].find(([,r])=>r&&(numeric(r[key])||numeric(r.metricContexts?.[key]?.reportedPer90)));
