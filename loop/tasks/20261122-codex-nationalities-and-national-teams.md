@@ -1,12 +1,12 @@
 # 20261122-codex · Nacionalidades y selecciones 4-4-2
 
-- Estado: `review`
+- Estado: `done`
 - Responsable: Codex
 - Revisor: autocontrol, sin revisión independiente solicitada
 - Rama: `feat/nationalities-and-national-teams`
 - Base Sites: `7d7d95cbbba1764b3076a61ca0204f6d6441c588`
 - Base GitHub: `6f7397bd51ea9690f7d6a066e753b87281e96a5f`
-- Issue/PR: no creados
+- Issue/PR: [#53](https://github.com/estadisticasfutbolxg/grada-futbol/pull/53), integrado
 - Entrega: merge y publicación privada, autorización vigente
 
 ## Objetivo y alcance
@@ -23,7 +23,7 @@ Archivos compartidos: módulos de país/selecciones, adaptadores y recuperación
 - [x] Selecciones por país publicado, once único válido, sin duplicados y score ponderado comprobable; incompletos pendientes.
 - [x] Score primero; nacionalidad en tablas/fichas y selección en navegación con dibujo 4-4-2 y ranking.
 - [x] Regeneración por etapas desde caché; estadísticas, scores y fechas originales sin cambios indebidos.
-- [ ] Pruebas, GitHub, merge y publicación privada confirmados.
+- [x] Pruebas, GitHub, merge y publicación privada confirmados.
 
 ## Plan y evidencia
 
@@ -53,4 +53,8 @@ Exploración: 2.544 miembros en 96 plantillas, 106 códigos de país y cero conf
 
 ## Integración y publicación
 
-Pendientes de confirmar: PR, merge, push nativo y despliegue privado. Se conservará política owner-only revisión 3, sin contraseña adicional ni cambios de variables.
+- [PR #53](https://github.com/estadisticasfutbolxg/grada-futbol/pull/53) integrado por squash; main GitHub verificado en `8607e174bb9a406b3df718778c49a38b8f8b6c89`. Base y blobs contrastados antes de aplicar los 22 archivos, sin sustituir cambios del colaborador. Sin checks/protecciones requeridos; autocontrol declarado, sin aprobar en nombre de otra persona.
+- Push nativo confirmado por SHA remoto: `7a27e3ff55d8052e2e721690a22e60088a3298a5`. Archivo exacto `.openai/hosting.json` + Worker; código/generadores/documentación en GitHub, datos y bases excluidos.
+- [Selecciones en GRADA privada](https://grada-futbol-analitica.ivanmatema2.chatgpt.site/?vista=selecciones), versión **29**, despliegue `appgdep_6b02b05ca4388191bdd02c6c83244d4e` en `succeeded` el 22 de noviembre de 2026, 10:05 Madrid. Versión `appgprj_6ae0b8b2eb1881918601230d00603255~appgver_c31067dc07188191847eea9228c4961a`; procedencia nativa exacta comprobada.
+- HTTP posterior con autorización de servicio: HTML/bundle gzip exactos y cinco JSON FotMob con las nacionalidades y SHA256 esperados (450/445/479/388/382); no se consultan proveedores. Fuente sin identidad de visitante denegada 401, login antiguo 404 y `password_required:false`. Prueba positiva de propietario en tests, sin suplantar identidad. Evidencia `live.json`, sin guardar credenciales.
+- Audiencia posterior owner-only `custom`, revisión **3**, un owner, cero editores/grupos/visitantes; variables runtime revisión **1** intactas. Sin contraseña adicional. El cierre documental posterior no cambia el Worker publicado.
