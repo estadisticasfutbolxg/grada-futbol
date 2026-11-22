@@ -94,7 +94,7 @@ Los rankings de equipo requieren inicialmente 5 PJ. Cambiar ese filtro no cambia
 
 ## Totales de liga
 
-Los [onces teóricos de selecciones](NATIONS.md) reutilizan estos mismos scores y el promedio por minutos de los once titulares elegidos. Solo hay score global cuando están cubiertos sus once puestos; no son partidos ni resultados internacionales.
+Los [onces teóricos de selecciones](NATIONS.md) reutilizan estos mismos scores y la media simple de los once titulares elegidos (cada uno pesa 1/11). Las líneas también usan media simple. El mínimo sigue siendo 200 minutos; los clubes conservan sus promedios ponderados. Solo hay score global cuando están cubiertos sus once puestos; no son partidos ni resultados internacionales.
 
 Los paneles suman únicamente valores publicados finitos. Una ausencia ya no oculta todos los valores conocidos: se muestra el subtotal parcial y `con dato / registros`. Si no hay ningún valor conocido, se conserva el guion; un cero real sí se muestra. Las paradas incluyen los registros POR y cualquier otro registro con paradas publicadas. No se añaden las cifras de dos fuentes para el mismo jugador.
 
@@ -116,4 +116,4 @@ El Worker empaqueta HTML con hashes en las URLs de scripts y CSS para que cada p
 
 La auditoría de la revisión de nombres y posiciones, sus jugadores recuperados y los pendientes reales están en [SCORE_REVIEW.md](SCORE_REVIEW.md).
 
-Selecciones compara siete sistemas con contención, creación y puestos publicados compatibles. Cada sistema maximiza la suma de scores canónicos; entre sus onces completos se elige la mayor media ponderada por minutos. El puesto propuesto y el perfil del score se muestran separados; no hay una nueva puntuación individual. [Asignación y límites](NATIONS.md).
+Selecciones compara siete sistemas con contención, creación y puestos publicados compatibles. Cada sistema maximiza la suma de scores canónicos; entre sus onces completos se elige la mayor media simple. El puesto propuesto y el perfil del score se muestran separados; no hay una nueva puntuación individual. [Asignación y límites](NATIONS.md).

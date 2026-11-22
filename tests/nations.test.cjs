@@ -9,9 +9,11 @@ function fixture(){
  const rows=[player(1,'POR',['GK'],0.4,900),player(2,'DEF',['LB']),player(3,'DEF',['CB']),player(4,'DEF',['CB']),player(5,'DEF',['RB']),player(6,'MED',['CDM'],0.5,300,'laliga','MED_DEF'),player(7,'MED',['CM','CAM'],0.5,300,'laliga','MED_ATT'),player(8,'MED',['CM'],0.5,300,'laliga','MED_BALANCED'),player(9,'DEL',['LW']),player(10,'DEL',['RW']),player(11,'DEL',['ST'],0.9,200)];
  return {rows,model:{data:{players:rows.map(r=>r.player),teams:[{id:'1',name:'Isolated club',sourceRecords:{FotMob:{id:'101'}}}]},players:new Map(rows.map(r=>[r.player,{score:r.score,profileLabel:r.midfieldProfile||r.player.pos}])),roles:new Map(rows.map(r=>[r.player,r.midfieldProfile]))}};
 }
-test('complete coherent XI preserves player scores, data and the exact minutes-weighted mean, including zero',()=>{
+test('complete coherent XI preserves player scores, data and the exact arithmetic mean, including zero',()=>{
  const {rows,model}=fixture(),before=JSON.stringify(model.data),country=nations.build(model).countries[0];assert(country.complete);assert.equal(country.selected,11);assert.equal(new Set(country.slots.map(s=>s.candidate.person)).size,11);assert.equal(country.formation,'4-3-3');
- const expected=rows.reduce((s,r)=>s+r.score*r.player.minutes,0)/rows.reduce((s,r)=>s+r.player.minutes,0);assert(Math.abs(country.score-expected)<1e-12);assert.equal(JSON.stringify(model.data),before);
+ const expected=rows.reduce((s,r)=>s+r.score,0)/11;assert(Math.abs(country.score-expected)<1e-12);assert.equal(JSON.stringify(model.data),before);
+ const weighted=rows.reduce((s,r)=>s+r.score*r.player.minutes,0)/rows.reduce((s,r)=>s+r.player.minutes,0);assert(Math.abs(country.score-weighted)>0.01);assert(Math.abs(country.units.DEL.score-1.9/3)<1e-12);
+ const identities=country.slots.map(s=>s.candidate.person);for(let i=0;i<rows.length;i++)rows[i].player.minutes=200+i*1700;const updated=nations.build(model).countries[0];assert.equal(updated.score,country.score);assert.deepEqual(updated.units,country.units);assert.equal(updated.formation,country.formation);assert.deepEqual(updated.slots.map(s=>s.candidate.person),identities);
  for(const row of rows)model.players.get(row.player).score=0;const zero=nations.build(model).countries[0];assert(zero.complete);assert.equal(zero.score,0);assert(nations.ranking(nations.build(model)).includes('0,000'));
 });
 test('missing roles, missing scores, insufficient minutes and unknown country cannot manufacture a complete XI',()=>{
@@ -27,7 +29,7 @@ test('one provider ID appears once across leagues; most minutes wins rather than
 });
 test('dynamic field and score-first tables show real club IDs, evidence, score profiles and seven alternatives safely',()=>{
  const {model}=fixture(),result=nations.build(model),country=result.countries[0],ranking=nations.ranking(result),html=nations.lineup(country,result);
- assert(ranking.match(/<th\b[^>]*>(.*?)<\/th>/)[1].includes('Score'));assert(html.includes('4-3-3'));assert(html.includes('minutos de club'));assert(!html.includes('style='));assert(!html.includes('onclick='));assert(html.includes('data-national-player='));assert(nations.options(result,'ESP').includes('selected'));
+ assert(ranking.match(/<th\b[^>]*>(.*?)<\/th>/)[1].includes('Score'));assert(html.includes('4-3-3'));assert(html.includes('suma de los once scores / 11'));assert(!html.includes('Σ(score × minutos'));assert(!html.includes('style='));assert(!html.includes('onclick='));assert(html.includes('data-national-player='));assert(nations.options(result,'ESP').includes('selected'));
  assert.equal((html.match(/class="nation-club"/g)||[]).length,11);assert.equal((html.match(/class="nation-club">[\s\S]*?src="\/assets\/clubs\/101.png"/g)||[]).length,11);assert(html.includes('Perfil del score'));assert(html.includes('Encaje'));assert(html.includes('Los siete sistemas'));assert.equal(country.alternatives.length,7);
  model.data.players[0].name='<img src=x onerror=alert(1)>';assert(nations.lineup(nations.build(model).countries[0],nations.build(model)).includes('&lt;img'));assert.equal(nationality.label({code:'ESP',name:'Spain'}),'España');
  model.data.teams[0].sourceRecords.FotMob.id='../../fake';const fallback=nations.lineup(country,result);assert(!fallback.includes('/assets/clubs/'));assert(fallback.includes('club-monogram'));

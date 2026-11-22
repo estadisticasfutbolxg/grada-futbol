@@ -37,14 +37,22 @@ test('matching agrees with independent exhaustive search across changing role/sc
   search(0,new Set(),0);const picked=forms.assign(pool,slots),total=picked.reduce((s,x)=>s+x.candidate.score,0);assert(Math.abs(total-maximum)<1e-12);
  }
 });
-test('the strongest keeper is retained even when a weaker low-minute one would inflate the weighted mean',()=>{
+test('stronger players are retained and all eleven have equal weight despite different minutes',()=>{
  const strong=row('POR',['GK'],.4,null,900),weak=row('POR',['GK'],.1,null,200),pool=[strong,weak,...back4(),dm(),cm(),creative(),...wings(),st()];for(const p of pool)if(p.player.pos!=='POR')p.score=.9;
  const p=forms.propose(pool);assert(p.complete);assert.equal(p.slots.find(s=>s.role==='GK').candidate.person,strong.person);
- const chosen=p.slots.map(s=>s.candidate),expected=chosen.reduce((s,r)=>s+r.score*r.player.minutes,0)/chosen.reduce((s,r)=>s+r.player.minutes,0);assert.equal(p.score,expected);
+ const chosen=p.slots.map(s=>s.candidate),expected=chosen.reduce((s,r)=>s+r.score,0)/11;assert.equal(p.score,expected);
 });
 test('within the same selected XI, defensive profile anchors and attacking profile creates; score and identities stay fixed',()=>{
  const anchor=row('MED',['CDM','CM'],.8,'MED_DEF'),support=row('MED',['CDM','CM'],.7,null),maker=creative(),pool=[gk(),...back4(),anchor,support,maker,...wings(),st()],before=JSON.stringify(pool),p=forms.propose(pool);
  assert(p.complete);assert.equal(p.slots.find(s=>s.role==='HOLD').candidate.person,anchor.person);assert.equal(p.slots.find(s=>s.role==='CREATE').candidate.person,maker.person);assert.equal(JSON.stringify(pool),before);
  const reversed=forms.propose([...pool].reverse());assert.equal(reversed.formation,p.formation);assert.deepEqual(reversed.slots.map(s=>s.candidate.person),p.slots.map(s=>s.candidate.person));
  const complete=p.alternatives.filter(a=>a.complete);assert(p.score>=Math.max(...complete.map(a=>a.score))-1e-12);
+});
+
+test('minutes cannot change equal-score identities or the preferred system while the same records stay eligible',()=>{
+ const pool=[gk(),...back4(),dm(),cm(),creative(),...wings(),st(),st(),am(),row('DEF',['CB'])],before=forms.propose(pool);
+ for(let i=0;i<pool.length;i++)pool[i].player.minutes=200+(pool.length-i)*799;
+ const after=forms.propose(pool);assert.equal(after.score,before.score);assert.equal(after.formation,before.formation);assert.deepEqual(after.slots.map(s=>s.candidate.person),before.slots.map(s=>s.candidate.person));
+ for(const a of after.alternatives)if(a.complete)assert(Math.abs(a.score-a.quality/11)<1e-12);
+ assert(after.score>=Math.max(...after.alternatives.filter(a=>a.complete).map(a=>a.score))-1e-12);
 });

@@ -4,7 +4,7 @@
  const minimumScoreMinutes=node?require('./sampling.js').minimumScoreMinutes:root.GradaSampling.minimumScoreMinutes;
  const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const fmt=value=>Number.isFinite(value)?new Intl.NumberFormat('es-ES',{minimumFractionDigits:3,maximumFractionDigits:3}).format(value):'—';
- const method=formations.method,weighted=formations.weighted;
+ const method=formations.method,mean=formations.mean;
  const positions={POR:{label:'Portería'},DEF:{label:'Defensa y carriles'},MED:{label:'Centro del campo'},DEL:{label:'Delantera'}};
  function build(model){
   const data=model.data,people=new Map(),countries=new Map();let known=0,conflicts=0,duplicateRecords=0;
@@ -25,7 +25,7 @@
    country.missing=country.slots.filter(s=>!s.candidate).map(s=>s.label);
    country.units=Object.fromEntries(Object.keys(positions).map(pos=>{
     const slots=country.slots.filter(s=>s.pos===pos),items=slots.filter(s=>s.candidate).map(s=>s.candidate);
-    return [pos,{score:items.length===slots.length?weighted(items):null,known:items.length,total:slots.length}];
+    return [pos,{score:items.length===slots.length?mean(items):null,known:items.length,total:slots.length}];
    }));
   }
   const rows=[...countries.values()].sort((a,b)=>(b.score??-1)-(a.score??-1)||a.name.localeCompare(b.name,'es'));
@@ -63,8 +63,8 @@
   return '<div class="national-heading"><div><span class="badge">Once teórico · '+esc(country.formation)+'</span><h2>'+label(country.country)+'</h2></div><div class="national-total"><span>Score teórico</span><b>'+fmt(country.score)+'</b><small>'+country.selected+'/11 puestos</small></div></div>'+
    (country.complete?'':'<p class="nation-warning">Once incompleto. Faltan: '+esc(country.missing.join(', '))+'. El score de selección queda pendiente.</p>')+
    '<div class="nation-pitch" aria-label="Once '+esc(country.formation)+' de '+esc(country.name)+'">'+pitch+'</div><p class="sub">Contención, creación y puestos compatibles. Las bandas respetan el lado publicado; los interiores no tienen un lado verificado. El escudo indica el club. Selecciona un jugador para ver su ficha.</p><div class="national-units">'+units+'</div>'+
-   '<details class="national-ledger"><summary>Por qué este once · jugadores y encaje</summary><p class="sub">Cada sistema elige la mayor suma de scores individuales con puestos compatibles. Entre esos siete onces se elige el mayor score ponderado: Σ(score × minutos de club) / Σ(minutos de club). Cada jugador conserva el score y perfil de su ficha. El puesto propuesto se apoya en posiciones publicadas; los apoyos por perfil estadístico se indican como encaje teórico. Las líneas agrupan los puestos del dibujo; incluyen carrileros en defensa. No son estadísticas de partidos internacionales.</p><div class="tablewrap"><table><thead><tr><th scope="col">Score</th><th scope="col">Jugador</th><th scope="col">Puesto propuesto</th><th scope="col">Encaje</th><th scope="col">Perfil del score</th><th scope="col">Club</th><th scope="col">Minutos</th></tr></thead><tbody>'+roster+'</tbody></table></div></details>'+
+   '<details class="national-ledger"><summary>Por qué este once · jugadores y encaje</summary><p class="sub">Cada sistema elige la mayor suma de scores individuales con puestos compatibles. Entre esos siete onces se elige la mayor media simple: suma de los once scores / 11. Cada titular pesa lo mismo; las líneas también usan media simple. Los minutos sirven para comprobar el mínimo de 200, sin ponderar el score. Cada jugador conserva el score y perfil de su ficha. El puesto propuesto se apoya en posiciones publicadas; los apoyos por perfil estadístico se indican como encaje teórico. Las líneas agrupan los puestos del dibujo; incluyen carrileros en defensa. No son estadísticas de partidos internacionales.</p><div class="tablewrap"><table><thead><tr><th scope="col">Score</th><th scope="col">Jugador</th><th scope="col">Puesto propuesto</th><th scope="col">Encaje</th><th scope="col">Perfil del score</th><th scope="col">Club</th><th scope="col">Minutos</th></tr></thead><tbody>'+roster+'</tbody></table></div></details>'+
    '<details class="national-ledger"><summary>Los siete sistemas evaluados</summary><div class="tablewrap"><table><thead><tr><th scope="col">Score teórico</th><th scope="col">Sistema</th><th scope="col">Cobertura</th></tr></thead><tbody>'+alternatives+'</tbody></table></div></details>';
  }
- const api={method,build,weighted,positions,label,options,ranking,lineup};if(node)module.exports=api;else root.GradaNations=api;
+ const api={method,build,mean,positions,label,options,ranking,lineup};if(node)module.exports=api;else root.GradaNations=api;
 })(typeof window==='object'?window:globalThis);
