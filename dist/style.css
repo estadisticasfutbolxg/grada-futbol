@@ -275,8 +275,14 @@ footer{flex-wrap:wrap}
 .nation-pitch:before{content:"";position:absolute;inset:14px;border:1px solid #ffffff38;border-radius:3px;z-index:-1;background:linear-gradient(transparent calc(50% - .5px),#ffffff38 50%,transparent calc(50% + .5px))}
 .nation-pitch:after{content:"";position:absolute;width:100px;height:100px;border:1px solid #ffffff38;border-radius:50%;left:calc(50% - 50px);top:calc(50% - 50px);z-index:-1}
 .nation-line{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;list-style:none;padding:0;margin:0}
-.nation-line-DEL{grid-template-columns:repeat(2,minmax(0,1fr));width:65%;margin:auto}
-.nation-line-POR{grid-template-columns:minmax(0,1fr);width:34%;margin:auto}
+.nation-line-count-1{grid-template-columns:minmax(0,1fr);width:38%;margin:auto}
+.nation-line-count-2{grid-template-columns:repeat(2,minmax(0,1fr));width:76%;margin:auto}
+.nation-line-count-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.nation-club{display:flex;justify-content:center;align-items:center;min-height:30px}
+.nation-club .club-label{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.nation-club .club-identity{justify-content:center}
+.national-ledger td{white-space:normal;min-width:100px}
+.national-ledger td:first-child{white-space:nowrap;min-width:65px}
 .nation-player{display:grid;align-content:start;gap:6px;width:100%;height:100%;min-height:96px;padding:10px 7px;border:1px solid #ffffff65;border-radius:8px;background:#f8fbf5;color:#193c2b;font:inherit;cursor:pointer;text-align:center}
 .nation-player>b{font-size:19px;font-variant-numeric:tabular-nums}
 .nation-player-name{font-size:14px;font-weight:650;overflow-wrap:anywhere}

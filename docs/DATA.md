@@ -1,6 +1,6 @@
 # Contrato de datos y métricas
 
-> Desde el 22 de noviembre: [país deportivo publicado y selecciones teóricas 4-4-2](NATIONS.md). `nationality` conserva código, nombre, ID de selección y contexto de identidad/club/liga/temporada/fecha/URL. No cambia estadísticas ni el score canónico del jugador; los onces incompletos conservan score desconocido.
+> Desde el 22 de noviembre: [país deportivo publicado y selecciones teóricas con sistemas coherentes](NATIONS.md). `nationality` conserva código, nombre, ID de selección y contexto de identidad/club/liga/temporada/fecha/URL. No cambia estadísticas ni el score canónico del jugador; los onces incompletos conservan score desconocido.
 
 > Vigente desde el 20 de noviembre: [score único por jugador, laterales mixtos y juego limpio verificado](SCORES.md), modelo `role_fairplay_radar_v6`, con mínimo de 200 minutos inclusive para todas las posiciones. La posición y sus discrepancias siguen resolviéndose con fuentes; no se elige la posición ni el score para maximizar su puntuación.
 
