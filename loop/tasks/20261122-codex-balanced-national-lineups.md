@@ -1,12 +1,12 @@
 # 20261122-codex · Selecciones con sistemas coherentes y escudos
 
-- Estado: `review`
+- Estado: `done`
 - Responsable: Codex
 - Revisor: autocontrol, sin revisión independiente solicitada
 - Rama: `feat/balanced-national-lineups`
 - Base Sites: `dba8fd8fed2458fbf717727c5d2dfa7dc04d2d87`
 - Base GitHub: `050bc1eb841900cc385ec79dd6b530dfac9deef4`
-- PR: no creado
+- PR: [#55](https://github.com/estadisticasfutbolxg/grada-futbol/pull/55), integrado
 - Entrega: merge y publicación privada, autorización vigente
 
 ## Objetivo y alcance
@@ -21,7 +21,7 @@ Archivos compartidos: nuevo modelo puro de formaciones, `dist/nations.js`, app/H
 - [x] Siete sistemas, asignación única con puestos compatibles, contención y creación obligatorias, delantero centro y bandas/carriles coherentes.
 - [x] Jugadores por mayor suma de scores y elección entre los siete onces por el mismo score ponderado publicado, sin cambiar scores individuales; incompletos sin score global.
 - [x] Campo refleja sistema elegido y muestra puestos, evidencia y alternativas sin mezclar perfil estadístico con posición publicada.
-- [ ] Casos límite, equivalencia de datos/scores, empaquetado, PR/merge y publicación privada comprobados.
+- [x] Casos límite, equivalencia de datos/scores, empaquetado, PR/merge y publicación privada comprobados.
 
 ## Plan y evidencia
 
@@ -49,4 +49,8 @@ La base está limpia y sincronizada con el repositorio nativo. GitHub main verif
 
 ## Integración y publicación
 
-Pendientes: subida, PR, merge y despliegue privado. Conservar audiencia owner-only revisión 3 y actualización sin contraseña adicional.
+- [PR #55](https://github.com/estadisticasfutbolxg/grada-futbol/pull/55) integrado por squash y main verificado en `87a56d08ae27da8ebe6e7f4a32045403212a912f`. Los blobs de la base se contrastaron con GitHub antes de escribir; sin cambios del colaborador sustituidos. PR limpio, sin checks/protecciones requeridos; autocontrol, sin aprobación independiente inventada.
+- Push nativo confirmado por SHA remoto `73b74ad9678424329ddd555030968a598077cc16`. Artefacto exacto con manifiesto y Worker, sin datos/SQLite/secretos en GitHub.
+- [Selecciones en GRADA privada](https://grada-futbol-analitica.ivanmatema2.chatgpt.site/?vista=selecciones), versión **30**, despliegue `appgdep_6b02c6a8ce688191a368e5aaabf721da` en `succeeded`, 22 de noviembre de 2026, 11:40 Madrid. Versión `appgprj_6ae0b8b2eb1881918601230d00603255~appgver_307559ac285c8191b6a0d2e55503a22a`; procedencia nativa exacta comprobada.
+- HTTP posterior con autorización de servicio confirma HTML y bundle exactos por SHA256, método v2/escudos/sistemas y cinco capturas FotMob intactas. Fuente sin identidad de visitante denegada 401, login antiguo 404 y `password_required:false`; sin consultas de proveedores. Prueba positiva del propietario en tests, sin suplantar su identidad. Evidencia `live.json` sin credenciales.
+- Política posterior `custom` owner-only, revisión **3**, un owner, cero editores/grupos/visitantes. Variables runtime revisión **1** intactas. Sin contraseña adicional. El cierre documental posterior no cambia el Worker publicado.
