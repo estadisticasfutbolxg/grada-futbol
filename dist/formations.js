@@ -1,7 +1,7 @@
 (function(root){
  'use strict';
  const node=typeof module==='object'&&module.exports,tactical=node?require('./roles.js'):root.GradaRoles;
- const method='national_xi_balanced_minutes_v2',epsilon=1e-12;
+ const method='national_xi_balanced_mean_v3',epsilon=1e-12;
  const definitions={
   GK:{label:'Portero',pos:'POR'},CB:{label:'Central',pos:'DEF'},
   LB:{label:'Lateral izquierdo',pos:'DEF'},RB:{label:'Lateral derecho',pos:'DEF'},
@@ -21,8 +21,8 @@
   {key:'3-4-2-1',lines:[[['ST','ST']],[['AM1','AM'],['AM2','AM']],[['LWB','LWB'],['HOLD','HOLD'],['LINK','LINK'],['RWB','RWB']],back3,keeper]},
   {key:'4-2-2-2',lines:[[['ST1','ST'],['ST2','ST']],[['AM1','AM'],['AM2','AM']],[['HOLD','HOLD'],['LINK','LINK']],back4,keeper]}
  ].map(t=>({...t,slots:t.lines.flatMap((line,row)=>line.map(([key,role])=>({key,role,row,...definitions[role]})))}));
- const weighted=rows=>rows.length?rows.reduce((sum,p)=>sum+p.score*p.player.minutes,0)/rows.reduce((sum,p)=>sum+p.player.minutes,0):null;
- const order=(a,b)=>b.score-a.score||b.player.minutes-a.player.minutes||a.player.name.localeCompare(b.player.name,'es')||String(a.player.id).localeCompare(String(b.player.id));
+ const mean=rows=>rows.length?rows.reduce((sum,p)=>sum+p.score,0)/rows.length:null;
+ const order=(a,b)=>b.score-a.score||a.player.name.localeCompare(b.player.name,'es')||String(a.player.id).localeCompare(String(b.player.id));
  function prepare(candidate){return {...candidate,codes:tactical.info(candidate.player).codes};}
  function evidence(candidate,role){
   const codes=candidate.codes||tactical.info(candidate.player).codes,pos=candidate.player.pos,has=code=>codes.includes(code);
@@ -84,15 +84,14 @@
   // Reassign only those same players to their most suitable roles. This tie
   // breaker changes neither the selected identities nor either score total.
   const slots=assign(chosen,template.slots,affinity);
-  // Choose the strongest compatible players in each system first. Optimizing
-  // their minute-weighted mean directly can favor a weaker, low-minute keeper
-  // merely because he dilutes the other ten scores less.
-  return {formation:template.key,slots,complete,selected:chosen.length,score:complete?weighted(chosen):null,quality:chosen.reduce((s,p)=>s+p.score,0),minutes:chosen.reduce((s,p)=>s+p.player.minutes,0)};
+  // Every selected player has equal weight. Maximizing the sum of eleven
+  // scores also maximizes their arithmetic mean, independently of minutes.
+  return {formation:template.key,slots,complete,selected:chosen.length,score:complete?mean(chosen):null,quality:chosen.reduce((s,p)=>s+p.score,0),minutes:chosen.reduce((s,p)=>s+p.player.minutes,0)};
  }
  function propose(pool){
   const candidates=pool.map(prepare),alternatives=templates.map(t=>evaluate(candidates,t));
-  const compare=(a,b)=>Number(b.complete)-Number(a.complete)||(a.complete&&Math.abs(b.score-a.score)>epsilon?b.score-a.score:0)||b.selected-a.selected||b.quality-a.quality||b.minutes-a.minutes||templates.findIndex(t=>t.key===a.formation)-templates.findIndex(t=>t.key===b.formation);
+  const compare=(a,b)=>Number(b.complete)-Number(a.complete)||(a.complete&&Math.abs(b.score-a.score)>epsilon?b.score-a.score:0)||b.selected-a.selected||b.quality-a.quality||templates.findIndex(t=>t.key===a.formation)-templates.findIndex(t=>t.key===b.formation);
   return {...[...alternatives].sort(compare)[0],alternatives};
  }
- const api={method,templates,definitions,evidence,assign,weighted,propose};if(node)module.exports=api;else root.GradaFormations=api;
+ const api={method,templates,definitions,evidence,assign,mean,propose};if(node)module.exports=api;else root.GradaFormations=api;
 })(typeof window==='object'?window:globalThis);
