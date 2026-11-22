@@ -1,12 +1,12 @@
 # 20261122-codex · Media simple en selecciones
 
-- Estado: `review`
+- Estado: `done`
 - Responsable: Codex
 - Revisor: autocontrol, sin revisión independiente solicitada
 - Rama: `fix/national-scores-simple-mean`
 - Base Sites: `0665c1062fe317721780a65f4807e0975f565a2a`
 - Base GitHub: `8cfd08eeef6bc7dbf36ccb106db7b5e75877ee74`
-- PR: no creado
+- PR: [#57](https://github.com/estadisticasfutbolxg/grada-futbol/pull/57), integrado
 - Entrega: merge y publicación privada autorizados
 
 ## Objetivo y alcance
@@ -20,7 +20,7 @@ Por petición expresa, eliminar la ponderación por minutos de los scores de sel
 - [x] Score global = suma de los once scores / 11 y líneas con su media simple; huecos conservan desconocido.
 - [x] Elección de sistema y ranking por esa misma media; minutos no alteran valor ni desempate si siguen siendo elegibles y la identidad/ficha es la misma.
 - [x] Textos, glosario y documentación coherentes; mínimo 200 y clubes preservados.
-- [ ] Pruebas e invariantes, GitHub/merge y publicación privada comprobados.
+- [x] Pruebas e invariantes, GitHub/merge y publicación privada comprobados.
 
 ## Plan y evidencia
 
@@ -45,4 +45,8 @@ Por petición expresa, eliminar la ponderación por minutos de los scores de sel
 
 ## Integración y publicación
 
-Pendientes: PR, merge, push nativo y despliegue privado con audiencia owner-only revisión 3. Sin contraseña adicional ni cambios de variables runtime.
+- [PR #57](https://github.com/estadisticasfutbolxg/grada-futbol/pull/57) integrado por squash; main GitHub comprobado `dc8186357573cb1dc61cc2924ee2ff58de0b8034`. Blobs de base contrastados antes de escribir, sin reemplazar trabajo ajeno. PR limpio y sin checks/protecciones requeridos; autocontrol, sin aprobación independiente inventada.
+- Push nativo confirmado por SHA remoto `c9b086d527d5b95a1780ef6a8f32e28c998baf36`. Manifiesto y Worker exactos empaquetados, datos/bases/secretos fuera de GitHub.
+- [Selecciones en GRADA privada](https://grada-futbol-analitica.ivanmatema2.chatgpt.site/?vista=selecciones), versión **31**, despliegue `appgdep_6b033d3380388191ad6260ee2ec174b6` en `succeeded`, 22 de noviembre de 2026, 20:06 Madrid. Versión `appgprj_6ae0b8b2eb1881918601230d00603255~appgver_48d33831e5a88191a04d09279b0f9a09`; fuente nativa exacta comprobada.
+- HTTP posterior con autorización de servicio comprueba HTML/bundle por SHA256, método v3 y fórmula suma /11, más cinco capturas FotMob idénticas. Actualización sin identidad de visitante denegada 401, login antiguo 404 y `password_required:false`. Sin consultas de proveedores; flujo positivo del propietario comprobado en tests, sin suplantarlo. Evidencia `live.json` sin credenciales.
+- Acceso posterior owner-only `custom`, revisión **3**, un owner y cero editores/grupos/visitantes; variables runtime revisión **1** intactas. Sin contraseña adicional. Cierre documental posterior sin cambiar el Worker publicado.
