@@ -1,12 +1,12 @@
 # 20261123-codex-data-dates · Fechas de los datos en cada vista
 
-- Estado: `review`
+- Estado: `done`
 - Responsable: Codex
 - Revisor: autocontrol; sin revisión independiente
 - Rama: `feat/source-data-dates`
 - Base Sites: `a5b6ab9c4985b1673b1d1ab1b6b58ada10c371fd`
 - Base GitHub main: `a17082a582d1a30198ca04a1767a4f8c3dc7e8e5`, comprobada al comenzar
-- PR: pendiente
+- PR: [#61](https://github.com/estadisticasfutbolxg/grada-futbol/pull/61), integrado en `72db1ee14e3b88896f16cbdffdcc62338b01ddcb`; main comprobado
 - Objetivo de entrega: merge y despliegue privado
 
 ## Objetivo
@@ -24,7 +24,7 @@ Mostrar las fechas reales de las capturas cargadas en todas las vistas, por liga
 - [x] Resumen compacto y detalle por liga/fuente en todas las vistas, incluidas Selecciones y Todas las ligas.
 - [x] Fechas estadísticas, de fichas y del último intento diferenciadas; fallos conservan la fecha real. Zona Europe/Madrid y desconocidos explícitos.
 - [x] Actualización, navegación, caché, fichas y comparador coherentes; capturas y scores intactos.
-- [ ] Código subido, PR integrado y publicación privada comprobada.
+- [x] Código subido, PR integrado y publicación privada comprobada.
 
 ## Iteración actual
 
@@ -48,4 +48,10 @@ Autocontrol del diff y estados de refresco realizado: fechas proceden del snapsh
 
 ### Resultado y relevo
 
-Validado localmente; GitHub y publicación pendientes. Sin nuevos datos descargados.
+Código subido y PR #61 integrado tras verificar head/base, mergeable clean y ausencia de checks/protecciones configurados. No se registra aprobación de otra persona.
+
+Publicación **33** privada confirmada el 23 de noviembre de 2026, 15:42 Madrid. Fuente Sites `6cefee078c8dc02426a5a19a8ed06241e4754888`, versión `appgprj_6ae0b8b2eb1881918601230d00603255~appgver_70b9b2c994f08191beed03619604983d`, despliegue `appgdep_6b04509694788191b744015f907d2078` en `succeeded`. Worker SHA256 arriba.
+
+HTTP sobre la publicación confirma HTML y bundle gzip exactos, panel y módulo nuevos, cinco capturas FotMob intactas y acceso a consulta de fuente sin identidad denegado 401. Estado sin contraseña adicional y ruta antigua de login 404. El token de servicio no representa identidad del propietario; no se realizó un refresco real de proveedores.
+
+Audiencia owner-only custom revisión 3: un propietario, cero editores, grupos o visitantes; runtime revisión 1 sin cambios. Sin nuevos datos descargados: **0 jugadores y 0 partidos actualizados**. Documentación de cierre se sincroniza por separado sin republicar un Worker idéntico. No quedan criterios funcionales pendientes.
