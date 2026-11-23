@@ -16,9 +16,19 @@ Se exige LaLiga 2026/27 validada en todas las fuentes. Se comparan nombres compl
 
 Cada unión exige un nombre y club únicos en ambas fuentes de esa pareja, y coherencia del rol portero/campo. Los agregados de traspasos sin equipo único conservan solo Understat. No se usa un candidato ambiguo; una tercera fuente puede complementar al jugador si su coincidencia propia sí es inequívoca. Los jugadores exclusivos de ESPN siguen en su vista y descarga; no amplían el catálogo combinado ni crean duplicados dudosos.
 
-**Prioridad: Understat → ESPN → FotMob**, incluidos los ceros conocidos. Cada proveedor posterior solo completa campos desconocidos. Las discrepancias quedan en `combination.conflicting_fields`; los registros originales están en `sourceRecords`. `metadata.sources` conserva la captura de cada proveedor. El combinado usa como fecha general la más antigua, no la hora de calcular la unión.
+**Prioridad: Understat → ESPN → FotMob**, incluidos los ceros conocidos. Cada proveedor posterior completa campos desconocidos. Desde el 23 de noviembre, los goles tienen además una excepción de frescura, descrita a continuación. Las discrepancias quedan en `combination.conflicting_fields`; los registros originales están en `sourceRecords`. `metadata.sources` conserva la captura de cada proveedor. El combinado usa como fecha general la más antigua, no la hora de calcular la unión.
 
 Con las mismas capturas, la revisión del 10 de noviembre complementa 481 de 487 registros Understat: 459 coinciden con ESPN y 475 con FotMob (hay solapamiento). Seis conservan solo Understat. Understat mantiene su captura del 1 de noviembre; ESPN se actualizó el 7 de noviembre. FotMob conserva jugadores del 6 de noviembre y añade equipos del 7. Los 13 registros FotMob no unidos siguen en sus descargas; no se añaden al catálogo combinado mediante identidades dudosas. Si falta FotMob, se conserva el combinado de dos fuentes.
+
+### Goles y capturas de distinta fecha
+
+Los goles no quedan bloqueados por una fuente prioritaria antigua: un recuento **distinto**, con más PJ conocidos o, con iguales PJ, fecha posterior puede sustituirlo, siempre tras una unión inequívoca y en la misma liga/temporada/club. Se usa la fecha y muestra del campo (una ficha puede ser posterior al agregado). Ante igual cobertura/fecha, valores iguales o muestra desconocida o menor, se conserva la prioridad. Una consulta reciente puede devolver una muestra más corta y antigua: por eso la cobertura precede a la hora de descarga. Fechas futuras y contextos de otra liga no autorizan la sustitución. Una corrección posterior puede disminuir goles o llevarlos a cero; no se elige el máximo histórico.
+
+`metricContexts.goals.selection` registra el método y la fuente prioritaria sustituida. Las capturas originales permanecen intactas. El caso de Budimir demuestra el fallo anterior: Understat 7 goles/10 PJ (1 de noviembre), ESPN 8/11 (7) y ficha FotMob 8/12, 930 minutos (8). El combinado corregido muestra 8 y su tasa /90 usa esos 930 minutos, sin tomar los 769 de Understat. Son cifras de las capturas conservadas, no una comprobación de su recuento actual del día.
+
+Conversión, diferencia goles−xG, goles/xG y goles+asistencias pueden recuperar **los dos componentes originales del proveedor de los goles** si las columnas visibles conservan otras fuentes. Ambos deben tener muestra compatible; no basta con que el jugador esté unido. `fromSourceRecord` y `componentValues` identifican esa procedencia y la interfaz muestra fuente, fecha, PJ, minutos y valores utilizados. No se cambian los xG, tiros o asistencias visibles por esa recuperación. Si la muestra no se puede verificar, el derivado sigue desconocido.
+
+En equipos, si el proveedor del recuento no publica minutos, goles/90 usa **90 minutos nominales por partido de esa misma fuente**. Se etiqueta `minutes_derived: team_nominal_90`; no son minutos observados ni se aplica a jugadores. Así goles/90 de equipo equivale a sus goles por partido, sin dividir por los minutos de otra captura. Un derivado sin par compatible continúa desconocido.
 
 ## Identidades verificadas
 

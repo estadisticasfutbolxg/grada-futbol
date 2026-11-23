@@ -59,6 +59,27 @@
     const matchedIDs = new Set(), matchedFotmobIDs = new Set();
     const sourceMetadata={[primarySource]:u.metadata,ESPN:e.metadata,...(f?{FotMob:f.metadata}:{})};
     const stats = {matched_players:0,understat_only_players:0,ambiguous_players:0,conflicting_players:0,espn_matched_players:0,fotmob_matched_players:0};
+    function goalCapture([source,record]){
+      if(!record||!Number.isInteger(record.goals)||record.goals<0)return null;
+      const context=record.metricContexts?.goals;
+      if(context?.source&&context.source!==source)return null;
+      const matches=context&&Object.hasOwn(context,'matches')?context.matches:record.matches;
+      const captured=Date.parse(context?.captured_at||sourceMetadata[source].imported_at);
+      return Number.isInteger(matches)&&matches>=0&&Number.isFinite(captured)&&captured<=Date.now()+300000&&(!context?.league_key||context.league_key===league.id)?{matches,captured}:null;
+    }
+    function currentGoals(candidates,preferred){
+      if(!preferred)return preferred;
+      let chosen=preferred,proof=goalCapture(chosen);
+      if(!proof)return chosen;
+      for(const candidate of candidates){
+        const next=goalCapture(candidate);
+        // Retrieval time is not the date of the last match. A newly downloaded
+        // but shorter season must not replace a more complete known sample.
+        if(next&&(next.matches>proof.matches||next.matches===proof.matches&&next.captured>proof.captured)){chosen=candidate;proof=next;}
+      }
+      // Equal counters keep the preferred provider and its original sample.
+      return chosen[1].goals===preferred[1].goals?preferred:chosen;
+    }
     function merge(primary,other,kind,additional=null) {
       const row = {...primary,id:(kind === 'player'?'combined:':'')+primary.id,fieldSources:{name:primarySource,team:primarySource,pos:primarySource},metricContexts:{},sourceRecords:{[primarySource]:{...primary}}};
       if (other) row.sourceRecords.ESPN = {...other};
@@ -67,13 +88,20 @@
       if(kind==='player'){const country=nationality.info(row);delete row.nationality;if(country){row.nationality={...country,context:{...country.context}};row.fieldSources.nationality='FotMob';}}
       const differences = [];
       for (const key of fields) {
-        const chosen = [[primarySource,primary],['ESPN',other],['FotMob',additional]].find(([,r])=>r&&(numeric(r[key])||numeric(r.metricContexts?.[key]?.reportedPer90)));
+        const candidates=[[primarySource,primary],['ESPN',other],['FotMob',additional]];
+        const preferred=candidates.find(([,r])=>r&&(numeric(r[key])||numeric(r.metricContexts?.[key]?.reportedPer90)));
+        const chosen=key==='goals'?currentGoals(candidates,preferred):preferred;
         const source = chosen?.[0], sourceRow = chosen?.[1];
         row[key] = sourceRow && numeric(sourceRow[key]) ? sourceRow[key] : null;
         if (source) {
           row.fieldSources[key] = source;
           const original=sourceRow.metricContexts?.[key];
           row.metricContexts[key] = {...original,source,captured_at:original?.captured_at||sourceMetadata[source].imported_at,matches:original&&Object.hasOwn(original,'matches')?original.matches:sourceRow.matches??null,minutes:original&&Object.hasOwn(original,'minutes')?original.minutes:sourceRow.minutes??null};
+          if(chosen!==preferred)row.metricContexts[key].selection={method:'goal_sample_freshness_v1',preferred_source:preferred[0],basis:goalCapture(chosen).matches>goalCapture(preferred).matches?'more_matches':'newer_capture'};
+          if(key==='goals'&&kind==='team'&&row.metricContexts[key].minutes===null&&Number.isInteger(row.metricContexts[key].matches)){
+            row.metricContexts[key].minutes=row.metricContexts[key].matches*90;
+            row.metricContexts[key].minutes_derived='team_nominal_90';
+          }
         }
         if (new Set([primary,other,additional].filter(Boolean).map(r=>r[key]).filter(numeric)).size>1) differences.push(key);
       }
@@ -87,14 +115,15 @@
       }
       // Derived values must describe the same numerator/denominator cohort.
       function derived(key,a,b,calculate) {
-        if (row.metricContexts[key]?.reportedValue && numeric(row[key])) return;
-        if (numeric(row[a]) && numeric(row[b]) && metrics.sameSample(row.metricContexts[a],row.metricContexts[b])) {
-          row[key] = calculate(row[a],row[b]);
-          if (numeric(row[key])) { row.fieldSources[key] = row.fieldSources[a]; row.metricContexts[key] = {...row.metricContexts[a],reportedValue:false,derived:key==='delta'?'same_source_difference':'same_source_ratio',components:[a,b],componentCaptures:{[a]:row.metricContexts[a].captured_at,[b]:row.metricContexts[b].captured_at}};delete row.metricContexts[key].reportedPer90; return; }
+        if (row.metricContexts[key]?.reportedValue && numeric(row[key]) && !(a==='goals'&&row.metricContexts.goals?.selection)) return;
+        const pair=metrics.pair(row,a,b,key==='delta'?'same_source_difference':'same_source_ratio');
+        if (pair&&numeric(pair.first)&&numeric(pair.second)) {
+          row[key] = calculate(pair.first,pair.second);
+          if (numeric(row[key])) { row.fieldSources[key] = pair.context.source; row.metricContexts[key] = pair.context;return; }
         }
         row[key] = null; delete row.fieldSources[key]; delete row.metricContexts[key];
       }
-      derived('conversion','goals','shots',(a,b)=>b>0?a/b*100:null);
+      derived('conversion','goals','shots',(a,b)=>b>0&&a<=b?a/b*100:null);
       derived('delta','goals','xg',(a,b)=>a-b);
       derived('accuracy','completed','passes',(a,b)=>b>0?a/b*100:null);
       derived('savepct','saves','conceded',(a,b)=>a+b>0?a/(a+b)*100:null);
@@ -151,7 +180,7 @@
     if(f) sources.FotMob={...f.metadata};
     return {metadata:{...u.metadata,league_key:league.id,primary_source:primarySource,kind:'combined',source:primarySource+' + ESPN'+(f?' + FotMob':''),url:u.metadata.url,complete:false,sources,combination:{...stats,understat_only_players:primarySource==='Understat'?stats.understat_only_players:0,primary_only_players:stats.understat_only_players,espn_players_not_joined:e.players.length-matchedIDs.size,fotmob_players_not_joined:f?f.players.length-matchedFotmobIDs.size:0},
       imported_at:new Date(Math.min(...Object.values(sources).map(m=>Date.parse(m.imported_at)))).toISOString(),
-      notes:'Catálogo y valores prioritarios de '+primarySource+'. ESPN'+(f?' y FotMob':'')+' complementan coincidencias inequívocas de nombres, iniciales o apellidos y equipo, o identidad revisada. Las posiciones usan consenso entre fuentes y, sin consenso, la posición de ficha FotMob cuando existe; las demás métricas conservan su prioridad. '+stats.matched_players+'/'+players.length+' jugadores complementados. Las capturas pueden cubrir distintos partidos; cada campo conserva su fuente y PJ. Los casos dudosos mantienen la fuente principal. Las tasas usan minutos y PJ de la fuente de su numerador o su tasa publicada; no se infieren minutos de ESPN ni xG recibidos de porteros.'},
+      notes:'Catálogo y valores prioritarios de '+primarySource+'. ESPN'+(f?' y FotMob':'')+' complementan coincidencias inequívocas de nombres, iniciales o apellidos y equipo, o identidad revisada. Las posiciones usan consenso entre fuentes y, sin consenso, la posición de ficha FotMob cuando existe; las demás métricas conservan su prioridad, salvo un recuento de goles distinto con más PJ verificados o, con iguales PJ, una captura posterior. Los derivados de goles usan componentes originales de una sola fuente y muestra, indicados en su procedencia. '+stats.matched_players+'/'+players.length+' jugadores complementados. Las capturas pueden cubrir distintos partidos; cada campo conserva su fuente y PJ. Los casos dudosos mantienen la fuente principal. Las tasas usan minutos y PJ de la fuente de su numerador o su tasa publicada; no se infieren minutos de ESPN ni xG recibidos de porteros.'},
       players,teams,matches:u.matches.map(m=>({...m}))};
   }
   function isCombined(data){return data?.metadata?.kind==='combined'||data?.metadata?.source===SOURCE;}

@@ -12,9 +12,26 @@
     if(!a||!b||!a.source||a.source!==b.source||a.minutes!==b.minutes||a.matches!==b.matches||a.league_key&&b.league_key&&a.league_key!==b.league_key)return false;
     return !(a.sample_id||b.sample_id)||a.sample_id===b.sample_id;
   }
+  function pair(record,a,b,derived){
+    let first=record.metricContexts?.[a],second=record.metricContexts?.[b],left=record[a],right=record[b],fromRecord=false;
+    if(!sameSample(first,second)){
+      // A refreshed goal total may differ from the preferred xG/shot sample.
+      // Use both components of that goal provider's original record; never
+      // divide its new goals by a denominator from another provider or sample.
+      const goal=record.metricContexts?.goals,source=goal?.source,raw=record.sourceRecords?.[source];
+      if(![a,b].includes('goals')||goal?.selection?.method!=='goal_sample_freshness_v1'||!raw||raw.goals!==record.goals)return null;
+      const nominal=goal.minutes_derived==='team_nominal_90'&&!Object.hasOwn(raw,'team_id')&&Number.isInteger(raw.matches),minutes=raw.minutes??(nominal?raw.matches*90:null);
+      const original=key=>raw.metricContexts?.[key]||(!goal.profileVerified&&raw.matches===goal.matches&&minutes===goal.minutes?{source,captured_at:goal.captured_at,matches:raw.matches,minutes,...(nominal?{minutes_derived:'team_nominal_90'}:{}),...(goal.league_key?{league_key:goal.league_key}:{})}:null);
+      first=original(a);second=original(b);left=raw[a];right=raw[b];
+      if(!number(left)||!number(right)||!sameSample(first,second)||!sameSample(first,goal))return null;
+      fromRecord=true;
+    }
+    const c={...first,reportedValue:false,derived,components:[a,b],componentCaptures:{[a]:first.captured_at||null,[b]:second.captured_at||null}};delete c.reportedPer90;
+    if(fromRecord){c.fromSourceRecord=true;c.componentValues={[a]:left,[b]:right};}
+    return {first:left,second:right,context:c};
+  }
   function componentContext(record,a,b,derived){
-    const first=record.metricContexts?.[a],second=record.metricContexts?.[b];if(!sameSample(first,second))return null;
-    const c={...first,reportedValue:false,derived,components:[a,b],componentCaptures:{[a]:first.captured_at||null,[b]:second.captured_at||null}};delete c.reportedPer90;return c;
+    return pair(record,a,b,derived)?.context||null;
   }
   function ratio(numerator, denominator) {
     if (!number(numerator) || numerator < 0 || !number(denominator) || denominator <= 0) return null;
@@ -56,17 +73,18 @@
     if(key==='shotsPer90')return number(record.shotsPer90)?record.shotsPer90:normalized(record,'shots');
     if(Object.hasOwn(differences,key)){
       const [a,b]=differences[key],ctx=context(record,key),matches=ctx?ctx.matches:record.metricContexts?null:record.matches;
-      if(!number(record[a])||!number(record[b])||!number(matches)||matches<=0)return null;
-      const result=(record[a]-record[b])/matches;return number(result)?result:null;
+      const first=ctx?.componentValues?.[a]??record[a],second=ctx?.componentValues?.[b]??record[b];
+      if(!number(first)||!number(second)||!number(matches)||matches<=0)return null;
+      const result=(first-second)/matches;return number(result)?result:null;
     }
     if (Object.hasOwn(ratios,key)) {
       const [numerator,denominator] = ratios[key];
-      if(record.metricContexts&&!context(record,key))return null;
-      return ratio(record[numerator],record[denominator]);
+      const ctx=context(record,key);if(record.metricContexts&&!ctx)return null;
+      return ratio(ctx?.componentValues?.[numerator]??record[numerator],ctx?.componentValues?.[denominator]??record[denominator]);
     }
     if(Object.hasOwn(sums,key)){
-      if(record.metricContexts&&!context(record,key))return null;
-      const [a,b]=sums[key],value=number(record[a])&&record[a]>=0&&number(record[b])&&record[b]>=0?record[a]+record[b]:null,sum=number(value)?value:null;return unit==='90'?per90(sum,denominator(record,key,'minutes')):sum;
+      const ctx=context(record,key);if(record.metricContexts&&!ctx)return null;
+      const [a,b]=sums[key],first=ctx?.componentValues?.[a]??record[a],second=ctx?.componentValues?.[b]??record[b],value=number(first)&&first>=0&&number(second)&&second>=0?first+second:null,sum=number(value)?value:null;return unit==='90'?per90(sum,denominator(record,key,'minutes')):sum;
     }
     if (Object.hasOwn(perMatch,key)) {const value=record[perMatch[key]],matches=denominator(record,key,'matches');if(key==='pointsPerMatch'&&number(value)&&number(matches)&&matches>0){const result=value/matches;return number(result)?result:null;}return ratio(value,matches);}
     if (Object.hasOwn(fixedRates,key)) return normalized(record,fixedRates[key]);
@@ -79,7 +97,7 @@
     const known=records.filter(record=>number(record[key]));
     return {value:known.length?known.reduce((sum,record)=>sum+record[key],0):null,known:known.length,total:records.length,complete:records.length>0&&known.length===records.length};
   }
-  const api = {metric,per90,ratio,rates,fixedRates,ratios,sums,differences,perMatch,number,context,total,sameSample};
+  const api = {metric,per90,ratio,rates,fixedRates,ratios,sums,differences,perMatch,number,context,total,sameSample,pair};
   if (typeof module === 'object' && module.exports) module.exports = api;
   else root.GradaMetrics = api;
 })(typeof window === 'object' ? window : globalThis);
