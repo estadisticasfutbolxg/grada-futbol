@@ -11,3 +11,8 @@ test('the player radar renders a valid zero score and preserves unknown metrics 
  player.dribblesPer90=null;const pending=radar.profile(player,peers);assert.equal(pending.score,null);
  const missing=root.GradaComponents.radar(player,peers,metadata,pending);assert.match(missing,/<strong>—<\/strong>/);assert.match(missing,/Faltan métricas publicadas: Regates logrados/);
 });
+
+test('provenance explains newer goal selection and original same-source components without hiding their values',()=>{
+ const c={source:'FotMob',captured_at:'2026-11-08T12:00:00Z',matches:12,minutes:930,profileVerified:true},raw={goals:8,xg:7.02,metricContexts:{goals:c,xg:c}},p={goals:8,xg:6.5,matches:10,metricContexts:{goals:{...c,selection:{method:'goal_sample_freshness_v1',preferred_source:'Understat'}},xg:{source:'Understat',matches:10,minutes:769,captured_at:'2026-11-01T12:00:00Z'}},sourceRecords:{FotMob:raw}},metadata={sources:{FotMob:{imported_at:c.captured_at}}};
+ const goals=root.GradaComponents.provenance(p,'goals',metadata),ratio=root.GradaComponents.provenance(p,'goalsPerXg',metadata);assert(goals.text.includes('recuento posterior'));assert(goals.text.includes('Understat'));assert(ratio.text.includes('componentes originales de FotMob'));assert(ratio.text.includes('goles 8'));assert(ratio.text.includes('xG 7,02'));assert.equal(ratio.matches,12);
+});

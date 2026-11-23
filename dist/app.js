@@ -22,7 +22,7 @@ const descriptions = {
   nationality:'País deportivo publicado por FotMob para el jugador y club verificados. Puede diferir del nacimiento o de todas sus ciudadanías. No acredita convocatoria ni elegibilidad internacional.',
   tacticalRole:'Puestos declarados por FotMob en la ficha o plantilla actual. CB central; LB/RB lateral; LWB/RWB carrilero; CDM pivote; CM mediocentro/interior; CAM mediapunta. Puede haber varios puestos; no se conoce el reparto de minutos. Filtrar por puesto no recalcula el score POR/DEF/MED/DEL.',
   xgPerShot:'Calidad media de las ocasiones: xG acumulado dividido entre tiros de la misma fuente y muestra. 0,15 equivale a 0,15 goles esperados por tiro. No mide el acierto del rematador. Sin tiros positivos se muestra —.',
-  goalInvolvements:'Goles más asistencias publicados en la misma fuente y muestra. No suma componentes de proveedores o periodos distintos.',
+  goalInvolvements:'Goles más asistencias de una misma fuente y muestra. Si las columnas usan capturas distintas, la procedencia indica los componentes originales utilizados.',
   expectedInvolvements:'xG más xA del mismo proveedor y muestra. Conserva el modelo de ese proveedor; no equivale a sumar modelos de fuentes diferentes.',
   goalInvolvementsPer90:'Goles más asistencias por 90 minutos: (goles + asistencias) × 90 ÷ minutos de esa misma fuente y muestra. No se añade una tasa publicada de goles a otra de asistencias con distinta cobertura.',
   xgXaPer90:'Producción esperada por 90 minutos: (xG + xA) × 90 ÷ minutos de la misma fuente y muestra. Sirve para comparar la aportación al remate y a la creación de ocasiones.',
@@ -35,11 +35,11 @@ const descriptions = {
   assists:'Pases identificados como asistencia de gol por el proveedor.',
   xg:'Goles esperados: suma de la probabilidad de gol de los tiros antes de conocer su resultado. Modelo de StatsBomb; incluye penaltis de partido y excluye tandas.',
   xa:'xA derivada: suma del xG de los tiros enlazados con un pase del jugador. No es un modelo independiente de todos los pases.',
-  goalsPerXg:'Goles marcados ÷ xG acumulado. Se muestra como multiplicador: 1× coincide con el xG, 1,20× significa un 20 % más de goles y 0,80× un 20 % menos. No es una probabilidad ni un porcentaje de conversión; con xG cero o ausente se muestra —. Se calcula con el mismo proveedor y conserva su valor en modo por 90.',
+  goalsPerXg:'Goles marcados ÷ xG acumulado. Se muestra como multiplicador: 1× coincide con el xG, 1,20× significa un 20 % más de goles y 0,80× un 20 % menos. No es una probabilidad ni un porcentaje de conversión; con xG cero o ausente se muestra —. Se calcula con el mismo proveedor y conserva su valor en modo por 90. La procedencia indica los componentes originales si las columnas usan otras capturas.',
   assistsPerXa:'Asistencias de gol ÷ xA acumulada de la fuente activa. Multiplicador: 1× coincide con la xA y 1,20× significa un 20 % más de asistencias. Depende también de la finalización de los compañeros; con xA cero o ausente se muestra —. Conserva su valor en modo por 90.',
   xgaPerMatch:'xG recibidos por partido jugado = xG atribuidos al portero ÷ partidos en los que participó ese portero. Una aparición parcial cuenta como un partido; no equivale a xG recibidos por 90 minutos. Sin xG atribuibles o sin partidos válidos se muestra —. Nunca se sustituye por el xG recibido de su equipo.',
-  conversion:'Porcentaje de conversión = goles marcados ÷ tiros realizados × 100. Sin tiros se muestra —.',
-  delta:'Goles marcados menos xG acumulado. Un valor positivo indica más goles que los esperados por el modelo.',
+  conversion:'Goles ÷ tiros × 100, de una misma fuente y muestra. La procedencia muestra los componentes originales si difieren de otras columnas. Sin tiros: —.',
+  delta:'Goles menos xG de una misma fuente y muestra. La procedencia muestra los componentes originales si difieren de otras columnas.',
   passes:'Intentos de pase; incluye completados y no completados.',completed:'Pases que llegaron a su destino según el proveedor.',accuracy:'Precisión de pase = pases completados ÷ intentos × 100.',
   completedPer90:'Pases completados por 90 minutos. Se usa la tasa publicada por FotMob cuando está disponible; no se reconstruyen totales a partir de su valor redondeado. En otras fuentes se requieren pases completados y minutos propios.',
   recoveries:'Balones recuperados según el proveedor: acciones que devuelven la posesión al equipo. No equivale necesariamente a una entrada ganada o a cortar un pase. Se mantienen separados de entradas e intercepciones.',
@@ -276,13 +276,14 @@ function combinationNote(record) {
   const clubNote=club&&club.kind!=='single'?'<p class="sub club-note">'+esc(club.description)+'</p>':'';
   const tactical=record.team!==undefined?GradaRoles.info(record):null;
   const tacticalNote=tactical?'<p class="sub tactical-note">'+(tactical.codes.length?'Puestos publicados: '+esc(tactical.label)+' · FotMob · '+esc(new Intl.DateTimeFormat('es-ES',{dateStyle:'medium',timeZone:'Europe/Madrid'}).format(new Date(tactical.context.captured_at)))+'. Puede declarar varios puestos; no conocemos los minutos en cada uno.':'Sin posición detallada verificada; no se deduce de las estadísticas.')+'</p>':'';
-  const statistical=statisticalProfileNote(record);
+  const statistical=statisticalProfileNote(record),goalContext=record.metricContexts?.goals;
+  const goalNote=goalContext?.selection?.method==='goal_sample_freshness_v1'?'<p class="sub goal-freshness-note">Goles: '+(goalContext.selection.basis==='more_matches'?'muestra más completa':'captura posterior con la misma cobertura')+' de '+esc(goalContext.source)+', en lugar de '+esc(goalContext.selection.preferred_source)+'. La procedencia de cada cifra indica su fecha y muestra.</p>':'';
   const league=record.league_key||currentLeague,id=record.id.startsWith(league+':')?record.id.slice(league.length+1):record.id;
   const link='?'+new URLSearchParams({datos:'publicados',liga:league,jugador:id});
   const positionNote=record.positionResolution?'<p class="sub position-note">'+esc(GradaPositions.describe(record))+' <a href="'+esc(link)+'">Ver captura publicada</a></p>':'';
-  if(isAll())return '<p class="sub combination-note">'+esc(record.league)+' · datos y prioridad de la liga original; referencia del radar: todas las ligas seleccionadas.</p>'+clubNote+positionNote+tacticalNote+statistical;
-  const text = !record.combination?.matched?'Sin coincidencia única en las fuentes complementarias: se conservan los datos de la fuente principal.':record.combination.conflicting_fields.length?'Hay discrepancias entre las fuentes; se respeta la prioridad indicada arriba. Cada cifra muestra su origen.':'Registro completado con '+Object.keys(record.sourceRecords).filter(k=>k!==primarySource()).join(' y ')+'. '+primarySource()+' mantiene la prioridad.';
-  return '<p class="sub combination-note">'+text+'</p>'+clubNote+positionNote+tacticalNote+statistical;
+  if(isAll())return '<p class="sub combination-note">'+esc(record.league)+' · datos y prioridad de la liga original; referencia del radar: todas las ligas seleccionadas.</p>'+clubNote+positionNote+tacticalNote+statistical+goalNote;
+  const text = !record.combination?.matched?'Sin coincidencia única en las fuentes complementarias: se conservan los datos de la fuente principal.':record.combination.conflicting_fields.length?'Hay discrepancias entre las fuentes. Se conserva la prioridad indicada, con la excepción de goles de muestras más completas o posteriores comprobadas. Cada cifra muestra su origen.':'Registro completado con '+Object.keys(record.sourceRecords).filter(k=>k!==primarySource()).join(' y ')+'. '+primarySource()+' mantiene la prioridad.';
+  return '<p class="sub combination-note">'+text+'</p>'+clubNote+positionNote+tacticalNote+statistical+goalNote;
 }
 function statisticalProfileNote(record){
   if(record.pos!=='MED')return '';

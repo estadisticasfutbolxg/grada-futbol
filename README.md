@@ -9,7 +9,7 @@ Web en español de estadísticas, perfiles y rankings por score del radar de jug
 
 La columna Nacionalidad y el apartado **Selecciones** reúnen países publicados por FotMob y onces teóricos elegidos entre siete sistemas coherentes, con contención, creación y score como media simple de sus once titulares. [Cobertura, procedencia, fórmula y generadores](docs/NATIONS.md). Son simulaciones con las ligas disponibles; no convocatorias oficiales.
 
-LaLiga prioriza Understat → ESPN → FotMob. Las otras ligas priorizan FotMob → ESPN, incluidos xG/xA FotMob, tras comprobar las mismas familias de métricas de pase, ataque, defensa y portería. Los modelos, capturas, PJ y minutos de cada campo se conservan. No hay datos de demostración; las ausencias siguen `null`.
+LaLiga prioriza Understat → ESPN → FotMob; los goles admiten un recuento distinto de mayor cobertura o, con iguales PJ, captura posterior, con fuente y fecha explícitas. Las otras ligas priorizan FotMob → ESPN, incluidos xG/xA FotMob, tras comprobar las mismas familias de métricas de pase, ataque, defensa y portería. Los modelos, capturas, PJ y minutos de cada campo se conservan. No hay datos de demostración; las ausencias siguen `null`.
 
 Las capturas verificadas reúnen 2.284 fichas jugador/liga y 96 equipos. Los percentiles usan una referencia común de las ligas cargadas. Hay rankings de delanteros, porteros, defensas, centrales, laterales y perfiles MED ofensivo/defensivo/equilibrado; los equipos usan promedios ponderados de esos mismos scores. Los scores individuales requieren todos los ejes de su posición/perfil. Consulta [ligas y rankings](docs/LEAGUES.md), [combinación](docs/COMBINED.md) y [estado publicado](docs/STATUS.md).
 

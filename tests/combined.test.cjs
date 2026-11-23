@@ -10,12 +10,12 @@ function fixture(){
  const e={metadata:meta('ESPN'),matches:[],teams:teams.map((t,i)=>({...t,id:String(101+i),minutes:null,xg:null,xga:null})),players:players.map((p,i)=>({...p,id:'espn:'+i,team_id:String(101+i),minutes:null,xg:null,xa:null,xga:null,psxg:null,goals:9,assists:9,saves:12,conceded:3}))};
  return {u,e};
 }
-test('keeps Understat values and fills known ESPN values with their own denominators',()=>{
+test('keeps preferred metrics, refreshes more complete goals and uses own source denominators',()=>{
  const {u,e}=fixture(),before=JSON.stringify({u,e});e.players[0].matches=3;const original=JSON.stringify({u,e});
  const d=combine(u,e),p=d.players[0];
- assert.equal(d.players.length,u.players.length);assert.equal(p.goals,1);assert.equal(p.assists,1);assert.equal(p.saves,12);assert.equal(p.fieldSources.saves,'ESPN');
+ assert.equal(d.players.length,u.players.length);assert.equal(p.goals,9);assert.equal(p.assists,1);assert.equal(p.saves,12);assert.equal(p.fieldSources.saves,'ESPN');
  assert.equal(p.matches,2);assert.equal(metric(p,'savesPerMatch'),4);assert.equal(metric(p,'saves','90'),null);
- assert.equal(metric(p,'goalsPerXg'),0.5);assert.equal(p.savepct,80);
+ assert.equal(metric(p,'goalsPerXg'),null);assert.equal(p.savepct,80);
  assert.equal(JSON.stringify({u,e}),original);assert(before.length>0);
  assert.equal(d.metadata.sources.Understat.imported_at,u.metadata.imported_at);
  assert(d.matches.every(m=>d.teams.some(t=>t.id===m.home_id)));
@@ -94,4 +94,51 @@ test('a unique exact ESPN identity can bridge a published full name to FotMob, w
  const f=fotmobFixture(u);f.players[0].name='Andrés López';
  const row=combine(u,e,f).players[0];assert.equal(row.sourceRecords.FotMob.id,f.players[0].id);assert.equal(row.combination.match_methods.FotMob,'provider_alias_team');assert.equal(row.combination.match_evidence.FotMob.alias_bridge_source,'ESPN');assert.deepEqual(row.combination.match_evidence.FotMob.names,['Andrés Castrín López','Andrés López']);
  e.players.push({...e.players[0],id:'duplicate'});assert(!combine(u,e,f).players[0].sourceRecords.FotMob);
+});
+
+function freshGoalFixture(){
+ const {u,e}=fixture();Object.assign(u.players[0],{pos:'DEL',goals:7,shots:25,xg:6.5,matches:10,minutes:769});Object.assign(e.players[0],{pos:'DEL',goals:8,matches:11});e.metadata.imported_at='2026-11-07T12:00:00Z';
+ const f=fotmobFixture(u);Object.assign(f.players[0],{goals:8,shots:32,xg:7.02,assists:2,matches:12,minutes:930});
+ for(const k of ['goals','shots','xg','assists','minutes','matches'])f.players[0].metricContexts[k]={source:'FotMob',captured_at:'2026-11-08T12:00:00Z',matches:12,minutes:930,profileVerified:true,reportedValue:true,league_key:'laliga'};
+ return {u,e,f};
+}
+test('newer goal counts with non-regressing coverage replace the stale preferred count, using the field date and its own denominator',()=>{
+ const {u,e,f}=freshGoalFixture(),before=JSON.stringify({u,e,f}),p=combine(u,e,f).players[0];assert.equal(p.goals,8);assert.equal(p.fieldSources.goals,'FotMob');assert.equal(p.matches,10);assert.equal(p.minutes,769);assert.equal(p.metricContexts.goals.matches,12);assert.equal(p.metricContexts.goals.minutes,930);assert.equal(p.metricContexts.goals.captured_at,'2026-11-08T12:00:00Z');assert.equal(p.metricContexts.goals.selection.preferred_source,'Understat');assert.equal(metric(p,'goalsPer90'),8*90/930);
+ assert.equal(p.conversion,25);assert.equal(p.xg,6.5);assert.equal(p.shots,25);assert(Math.abs(p.delta-.98)<1e-12);assert.equal(metric(p,'goalsPerXg'),8/7.02);assert.equal(metric(p,'goalInvolvements'),10);assert(Math.abs(metric(p,'goalInvolvementsPer90')-10*90/930)<1e-12);
+ const ctx=require('../dist/metrics.js').context(p,'goalsPerXg');assert.equal(ctx.source,'FotMob');assert.deepEqual(ctx.componentValues,{goals:8,xg:7.02});assert.equal(p.metricContexts.conversion.fromSourceRecord,true);assert.equal(JSON.stringify({u,e,f}),before);
+});
+test('equal counters preserve priority; valid later corrections including zero are not replaced by a maximum goal count',()=>{
+ const {u,e}=fixture();u.players[0].goals=8;e.players[0].goals=8;e.metadata.imported_at='2026-11-08T12:00:00Z';e.players[0].matches=3;let p=combine(u,e).players[0];assert.equal(p.fieldSources.goals,'Understat');assert(!p.metricContexts.goals.selection);
+ e.players[0].goals=7;p=combine(u,e).players[0];assert.equal(p.goals,7);assert.equal(p.fieldSources.goals,'ESPN');
+ e.players[0].goals=0;p=combine(u,e).players[0];assert.equal(p.goals,0);assert.equal(metric(p,'goals','90'),null);assert.equal(p.metricContexts.goals.minutes,null);
+});
+test('equal or older same-size samples, shrinking or unknown samples, future dates and foreign scopes retain priority',()=>{
+ for(const update of [e=>e.metadata.imported_at='2026-10-31T12:00:00Z',e=>e.metadata.imported_at='2026-11-01T12:00:00Z',e=>e.players[0].matches=1,e=>e.players[0].matches=null,e=>e.players[0].metricContexts={goals:{source:'ESPN',captured_at:'2099-11-01T12:00:00Z',matches:3,minutes:null}},e=>e.players[0].metricContexts={goals:{source:'ESPN',captured_at:'2026-11-08T12:00:00Z',matches:3,minutes:null,league_key:'serie-a'}}]){
+  const {u,e}=fixture();e.metadata.imported_at='2026-11-08T12:00:00Z';e.players[0].matches=2;update(e);assert.equal(combine(u,e).players[0].goals,1);
+ }
+});
+test('field timestamps outrank aggregate timestamps and ambiguous identities do not supply refreshed goals',()=>{
+ const {u,e,f}=freshGoalFixture();f.metadata.imported_at='2026-11-20T12:00:00Z';f.players[0].metricContexts.goals.captured_at='2026-10-31T12:00:00Z';f.players[0].metricContexts.goals.matches=11;f.players[0].goals=15;let p=combine(u,e,f).players[0];assert.equal(p.goals,8);assert.equal(p.fieldSources.goals,'ESPN');assert.equal(metric(p,'goalsPer90'),null);
+ e.players.push({...e.players[0],id:'duplicate-goals'});f.players.push({...f.players[0],id:'999999'});p=combine(u,e,f).players[0];assert.equal(p.goals,7);assert.equal(p.fieldSources.goals,'Understat');
+});
+test('refreshed goals never borrow an incompatible original xG, shot or assist sample',()=>{
+ const {u,e,f}=freshGoalFixture();for(const k of ['xg','shots','assists'])f.players[0].metricContexts[k].minutes=900;const p=combine(u,e,f).players[0];assert.equal(p.goals,8);assert.equal(p.conversion,null);assert.equal(p.delta,null);assert.equal(metric(p,'goalsPerXg'),null);assert.equal(metric(p,'goalInvolvements'),null);assert.equal(metric(p,'goalsPer90'),8*90/930);
+});
+test('refresh and cache reload retain accepted newer goals when the preferred provider fails',async()=>{
+ const {u,e,f}=freshGoalFixture(),refresh=require('../dist/refresh.js'),league=require('../dist/leagues.js').get('laliga'),oldE=structuredClone(e),oldF=structuredClone(f);oldE.metadata.imported_at=u.metadata.imported_at;oldE.players[0].goals=7;oldF.players[0].goals=7;oldF.players[0].metricContexts.goals.captured_at='2026-11-02T12:00:00Z';
+ const before={understat:u,espn:oldE,fotmob:oldF,combined:combine(u,oldE,oldF)},result=await refresh.refresh(before,league,{fetchers:{understat:async()=>{throw Error('isolated unavailable source');},espn:async()=>e,fotmob:async()=>f},combine:s=>combine(s.understat,s.espn,s.fotmob)});
+ assert(result.failed.includes('understat'));assert.equal(result.state.combined.players[0].goals,8);const restored=refresh.selectCapture(result.state.fotmob,oldF,'fotmob',league);assert.equal(combine(u,e,restored).players[0].goals,8);assert.equal(refresh.report(before,result).players.modified.filter(p=>p.id===before.combined.players[0].id).length,1);
+});
+
+test('retrieving a shorter stale season today cannot regress a more complete known goal sample',()=>{
+ const {u,e,f}=freshGoalFixture();u.metadata.imported_at='2026-11-22T12:00:00Z';const p=combine(u,e,f).players[0];assert.equal(p.goals,8);assert.equal(p.metricContexts.goals.source,'FotMob');assert.equal(p.metricContexts.goals.matches,12);assert.equal(p.metricContexts.goals.selection.basis,'more_matches');assert.equal(p.metricContexts.goals.captured_at,'2026-11-08T12:00:00Z');
+});
+
+test('an inconsistent own shot count cannot create a conversion percentage above one hundred',()=>{
+ const {u,e,f}=freshGoalFixture();f.players[0].shots=3;const p=combine(u,e,f).players[0];assert.equal(p.goals,8);assert.equal(p.conversion,null);
+});
+
+test('fresh team goals use nominal ninety-minute matches while player minutes remain unknown',()=>{
+ const {u,e}=fixture();e.metadata.imported_at='2026-11-08T12:00:00Z';Object.assign(e.teams[0],{goals:4,matches:3,conceded:2,minutes:null});Object.assign(e.teams[1],{goals:2,matches:3,conceded:4,minutes:null});e.metadata.imported_matches=21;Object.assign(e.players[0],{goals:4,matches:3,minutes:null});const d=combine(u,e),t=d.teams[0],p=d.players[0];
+ assert.equal(t.goals,4);assert.equal(t.minutes,180);assert.equal(t.metricContexts.goals.minutes,270);assert.equal(t.metricContexts.goals.minutes_derived,'team_nominal_90');assert(Math.abs(metric(t,'goalsPer90')-4/3)<1e-12);assert.equal(metric(t,'goalsPerMatch'),4/3);assert.equal(metric(t,'goalDifferencePerMatch'),2/3);assert.equal(t.sourceRecords.ESPN.minutes,null);assert.equal(p.metricContexts.goals.minutes,null);assert.equal(metric(p,'goalsPer90'),null);
 });
