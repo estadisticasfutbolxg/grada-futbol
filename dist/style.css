@@ -312,3 +312,16 @@ footer{flex-wrap:wrap}
 .national-toolbar>label:first-child{min-width:100%;width:100%}}
 
 .national-ranking table{min-width:100%;width:100%}.national-ranking td{white-space:normal}.national-ranking td:first-child{white-space:nowrap}
+
+.data-dates{margin-top:20px;border:1px solid #dce5dc;border-radius:8px;background:#f5f8f3;color:#31533d;font-size:14px;min-width:0}
+.data-dates>summary{cursor:pointer;padding:12px 16px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;list-style:none}
+.data-dates>summary::-webkit-details-marker{display:none}
+.data-dates>summary:focus-visible,.date-scroll:focus-visible{outline:2px solid #437453;outline-offset:3px}
+.date-heading{font-weight:700}.date-chips{display:flex;flex-wrap:wrap;gap:6px 16px;flex:1}.date-chip{white-space:nowrap}.date-chip b{font-weight:600}
+.date-action{font-size:14px;color:#47744d}.date-action:after{content:' +';font-weight:700}.data-dates[open] .date-action:after{content:' −'}
+.date-body{padding:0 16px 14px;border-top:1px solid #dce5dc}.date-body p{font-size:14px;line-height:1.6;margin-top:12px;color:#52645a}
+.date-scroll{max-width:100%;overflow-x:auto;margin-top:12px}.data-dates table{width:100%;min-width:760px;border-collapse:collapse;background:transparent}
+.data-dates th,.data-dates td{padding:10px;text-align:left;border-bottom:1px solid #dce5dc;font-size:14px;color:#31533d;white-space:normal;background:transparent;position:static}
+.data-dates thead th{font-weight:650}.data-dates tbody th{font-weight:500}.date-outcome{display:block;margin-top:4px;font-size:14px;color:#52645a}
+.record-dates{font-size:14px;line-height:1.6;color:#52645a;margin:10px 0}.record-dates span{white-space:nowrap}
+@media(max-width:600px){.data-dates>summary{gap:8px 12px;padding:12px}.date-heading{flex:1}.date-chips{order:3;flex-basis:100%;gap:5px 12px}.date-body{padding:0 12px 12px}.date-chip{white-space:normal}}

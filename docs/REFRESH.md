@@ -72,6 +72,16 @@ El eje Eficacia vs xGOT es `100 × (1 − goles_sin_autogoles / xGOT_recibido)`,
 
 Los guiones de tablas y fichas explican su causa: dato ausente, definición diferente, minutos insuficientes, muestra xGOT no verificable o falta de ejes. Nunca se sustituyen automáticamente por cero.
 
+## Fechas visibles de los datos
+
+El panel **Datos cargados** aparece bajo el título en todas las vistas. Resume las fechas de las estadísticas por fuente; al abrirlo muestra cada liga/fuente, incluida Todas las ligas y Selecciones. Las fichas de jugadores/equipos y el comparador de jugadores incluyen también un resumen de sus capturas estadísticas. Las horas corresponden a `Europe/Madrid`, incluido su cambio estacional.
+
+La **captura base** usa `metadata.sources[fuente].imported_at`. **Estadísticas** muestra el intervalo entre esa captura y los contextos de campos numéricos disponibles, incluidas cifras cero, tasas publicadas, minutos propios y componentes originales. Recorre también las fichas originales enlazadas, aunque el combinado haya elegido otro proveedor. No equivale a la fecha del último partido ni garantiza que todos los campos lleguen hasta el extremo más reciente. En Todas se usan los metadatos de cada liga, sin sustituirlos por la fecha global más antigua.
+
+**Fichas** recoge por separado posición y nacionalidad: actualizar solo identidad no hace parecer más recientes las estadísticas. Una fecha desconocida se muestra como «Sin fecha»; nunca se sustituye por la hora actual. Los modelos de fechas se reutilizan por snapshot para no recorrer todas las fichas al cambiar de vista.
+
+**Último intento aquí** registra la hora local de fin de consulta y su resultado en este navegador: «Consulta válida» o «Se conservan datos». Se conserva un único registro por liga/fuente en `localStorage` (como máximo 15 para el catálogo actual); si falla el almacenamiento, solo dura la sesión. Una respuesta válida puede ser la misma captura o provenir de caché: no se cambia su fecha por la del intento. Las fuentes rechazadas o fallidas mantienen sus datos y fechas anteriores. Este historial no se comparte entre dispositivos ni modifica las capturas o sus metadatos.
+
 ## Acceso del propietario
 
 Desde el 21 de noviembre de 2026, por petición del propietario, el icono de actualización inicia el refresco tras comprobar su sesión de ChatGPT, **sin contraseña adicional ni cookie de desbloqueo**. La web conserva su audiencia privada. Si la sesión ha caducado o se usa otra cuenta, se ofrece entrar o cambiar de cuenta con las rutas de Sites.
