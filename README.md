@@ -38,6 +38,8 @@ Los escudos y banderas se sirven localmente. [Procedencia, generación y fallbac
 
 ## Navegación y scores
 
+El panel **Datos cargados** de cada vista muestra las fechas de captura por fuente y liga, con detalle de estadísticas, fichas y último intento en este navegador. Las fechas se actualizan al cargar capturas válidas y se conservan si una fuente falla. [Definición y límites](docs/REFRESH.md#fechas-visibles-de-los-datos).
+
 - Rankings de delanteros, porteros, defensas y perfiles defensivo/ofensivo de centrocampistas.
 - Rankings de equipos por ataque, defensa, rendimiento global y centros del campo ofensivos/defensivos.
 - Filtros por minutos, goles y otras métricas, búsqueda, ordenación, perfiles y comparador.

@@ -41,7 +41,7 @@ def build():
 
     entry = include(ROOT / 'worker/app.cjs')
     assets = {}
-    client_files = ['index.html','style.css','leagues.json','leagues.js','metrics.js','sampling.js','fairplay.js','security.js','understat.js','laliga.js','roles.js','nationality.js','fotmob.js','identity.js','positions.js','combined.js','scopes.js','clubs.js','branding.js','filters.js','radar.js','squads.js','scores.js','formations.js','nations.js','explore.js','components.js','profiles.js','refresh.js','owner.js','app.js']
+    client_files = ['index.html','style.css','leagues.json','leagues.js','metrics.js','sampling.js','fairplay.js','security.js','understat.js','laliga.js','roles.js','nationality.js','fotmob.js','identity.js','positions.js','combined.js','scopes.js','clubs.js','branding.js','filters.js','radar.js','squads.js','scores.js','formations.js','nations.js','explore.js','components.js','profiles.js','refresh.js','owner.js','dates.js','app.js']
     files = [ROOT / 'dist' / filename for filename in client_files]
     client_bodies = {filename: (ROOT / 'dist' / filename).read_bytes() for filename in client_files}
     # Preserve the source script order in one immutable browser request. Individual
