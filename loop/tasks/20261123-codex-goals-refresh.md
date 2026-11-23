@@ -1,12 +1,12 @@
 # 20261123-codex · Actualización de goles y frescura por campo
 
-- Estado: `review`
+- Estado: `done`
 - Responsable: Codex
 - Revisor: autocontrol, sin revisión independiente solicitada
 - Rama: `fix/refresh-goals-freshness`
 - Base Sites: `ac6dc0d77294dce0224417b161dd7e005b8f091d`
 - Base GitHub: `420e7da5b9d1236cc8da78b052f5e1bebbdff0f7`
-- PR: no creado
+- PR: [#59](https://github.com/estadisticasfutbolxg/grada-futbol/pull/59), integrado
 - Entrega: corregir, integrar y publicar en privado, autorización vigente
 
 ## Objetivo y alcance
@@ -22,7 +22,7 @@ Corregir elección de goles por cobertura de PJ y después fecha propia, manteni
 - [x] Budimir y casos equivalentes usan una muestra con más PJ verificados o, con iguales PJ, fecha posterior; empates/incertidumbre conservan prioridad.
 - [x] Tasas/derivados no mezclan muestras; ceros y correcciones válidas no se sustituyen por máximos históricos.
 - [x] Carga/actualización no reintroducen el valor anterior; fuente, fecha y cobertura visibles.
-- [ ] Regeneración por etapas, pruebas, recuento de jugadores/partidos, PR/merge y publicación privada comprobados.
+- [x] Regeneración por etapas, pruebas, recuento de jugadores/partidos, PR/merge y publicación privada comprobados.
 
 ## Plan
 
@@ -51,4 +51,8 @@ Corregir elección de goles por cobertura de PJ y después fecha propia, manteni
 
 ## Integración y publicación
 
-Pendientes: PR, merge, push nativo y publicación privada. Mantener owner-only revisión 3, runtime revisión 1 y actualización sin contraseña adicional.
+- [PR #59](https://github.com/estadisticasfutbolxg/grada-futbol/pull/59) integrado por squash; main GitHub verificado en `2256048c1c97d7c55ae9a0efc3c5e358bd9e528c`. Blobs de base contrastados antes de escribir, sin sustituir cambios del colaborador. PR limpio, sin checks/protecciones requeridos; autocontrol declarado, sin aprobación independiente inventada.
+- Push nativo confirmado por SHA remoto `32dd67eaf9dcd7b057ecdf6a496a5a31f2100394`. Artefacto exacto manifiesto + Worker; código/generador/auditor/pruebas/docs en GitHub, capturas/listados/SQLite/secretos excluidos.
+- [GRADA privada](https://grada-futbol-analitica.ivanmatema2.chatgpt.site), versión **32**, despliegue `appgdep_6b044337daa48191a06ec1388934aab3` en `succeeded`, 23 de noviembre de 2026, 14:44 Madrid. Versión `appgprj_6ae0b8b2eb1881918601230d00603255~appgver_6cfb2407ede08191acecb8a15f138b3e`; fuente nativa exacta comprobada.
+- HTTP posterior con autorización de servicio: HTML/bundle exactos por SHA256, método de frescura, pares originales, minutos nominales y cinco capturas FotMob intactas. API de fuente sin identidad de visitante denegada 401, login antiguo 404 y `password_required:false`. No se consulta a proveedores ni se suplanta identidad del propietario; prueba positiva de propietario en tests. Evidencia `live.json` sin credenciales.
+- Acceso posterior owner-only `custom`, revisión **3**, un propietario y cero editores/grupos/visitantes; runtime revisión **1** intacto. Sin contraseña adicional. El cierre documental posterior conserva el mismo Worker publicado.
