@@ -1,5 +1,7 @@
 # Actualización general y scores
 
+Desde el 24 de noviembre de 2026, LaLiga prioriza FotMob → Understat conservado → ESPN por métrica. El catálogo/IDs y partidos guardados siguen en Understat; las otras cuatro ligas conservan FotMob → ESPN. `understatRefresh: false` pausa su consulta general, pero mantiene la captura de respaldo, lectura de caché, validadores, importador manual y adaptador del Worker. Para reactivarla, cambiarlo a `true` cuando la página y permisos lo permitan; `metricPriority` controla la prioridad por separado. No se sustituyen ausencias por cero ni se cambia la muestra de una tasa. [Contrato vigente](COMBINED.md).
+
 La web se sirve en el mismo proyecto Sites mediante un Worker. El generador `scripts/build_worker.py` empaqueta los archivos HTML/CSS/JS y las capturas reales comprimidas en `dist/server/index.js`. Ese archivo incluye datos y está ignorado por Git. El manifiesto conserva project_id y no declara static. No se añaden bases alojadas, credenciales, permisos ni cuentas externas.
 
 ## Botón Actualizar datos

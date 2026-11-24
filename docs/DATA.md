@@ -1,5 +1,7 @@
 # Contrato de datos y métricas
 
+> Desde el 24 de noviembre de 2026: FotMob sustituye las métricas disponibles de Understat en LaLiga; se conservan los huecos, catálogo y código Understat. `primary_source` indica prioridad estadística y `catalog_source` la identidad del catálogo. [Contrato vigente](COMBINED.md).
+
 > Desde el 23 de noviembre: [goles con frescura por campo](COMBINED.md#goles-y-capturas-de-distinta-fecha). Un recuento distinto con más PJ conocidos o, si son iguales, fecha posterior puede sustituir al prioritario. Los derivados conservan pares de la misma fuente/muestra; `fromSourceRecord` y `componentValues` declaran los componentes originales cuando difieren de otras columnas.
 
 > Desde el 22 de noviembre: [país deportivo publicado y selecciones teóricas con sistemas coherentes](NATIONS.md). `nationality` conserva código, nombre, ID de selección y contexto de identidad/club/liga/temporada/fecha/URL. No cambia estadísticas ni el score canónico del jugador; los onces incompletos conservan score desconocido.
