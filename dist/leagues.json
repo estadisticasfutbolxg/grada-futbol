@@ -11,6 +11,8 @@
     "fotmobSeason": 38843,
     "fotmobSlug": "laliga",
     "primary": "Understat",
+    "metricPriority": ["FotMob", "Understat", "ESPN"],
+    "understatRefresh": false,
     "espnFile": "laliga-2026-27.json"
   },
   {

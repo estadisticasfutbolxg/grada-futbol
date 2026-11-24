@@ -36,9 +36,11 @@ def main():
                 stage=Path(temporary)
                 if league['primary']=='Understat':
                     old=ROOT/'dist/downloads/understat-laliga-2026-27.json'
-                    if old.exists() and old.with_suffix('.sqlite.gz').exists():
+                    if old.exists():
                         for source in [old,old.with_suffix('.sqlite.gz')]:
                             if source.exists():shutil.copy2(source,stage/source.name)
+                    elif league.get('understatRefresh') is False:
+                        raise ValueError('Falta la captura conservada de Understat para el catálogo de LaLiga. Su consulta general está pausada; el importador manual se conserva.')
                     else:run([sys.executable,'scripts/import_understat.py','--output-dir',str(stage)])
                 fm=[sys.executable,'scripts/import_fotmob.py','--league',league['id'],'--output-dir',str(stage)]
                 espn=[sys.executable,'scripts/import_laliga.py','--league',league['id'],'--output',str(stage/league['espnFile'])]
