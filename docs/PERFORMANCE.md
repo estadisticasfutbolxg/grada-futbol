@@ -1,5 +1,10 @@
 # Rendimiento de carga y actualización
 
+> Ampliación del 24 de noviembre: la caché de JSON descomprimidos del Worker conserva como máximo dos capturas, compartidas entre peticiones simultáneas y con expulsión de la menos reciente y máximo dos descompresiones en curso. Las solicitudes de otras ligas esperan antes de analizar sus cuerpos actualizados. Evita retener todos los objetos completos de las nuevas temporadas a medida que se consultan más ligas. Las plantillas mantienen mapas ligeros de ID/club/nombre y los bytes gzip locales conservan su caché. No cambia concurrencia, datos, TTL ni autenticación. Prueba funcional: lectura concurrente compartida, tres ligas, expulsión, cinco lecturas simultáneas y nueva lectura con el mismo resultado. Las cifras de cinco ligas que siguen son históricas.
+
+Las tablas muestran como máximo 100 filas por página, con Anterior/Siguiente y rango visible. Ordenación, búsqueda, filtros y recuentos se calculan sobre todo el conjunto antes de paginar; los puestos continúan entre páginas y los scores usan siempre la población completa. Al cambiar el conjunto o el criterio de orden se vuelve a la primera página. La paginación evita crear miles de filas de HTML al abrir Todas y no limita jugadores accesibles. Prueba de 245 resultados: tres páginas, orden global, vuelta, filtro, score estable y score primero. Las cifras de rendimiento iniciales que siguen corresponden a cinco ligas.
+
+
 Revisión del 21 de noviembre de 2026. Se conservan el modelo de score v6, los datos, sus fechas, las muestras, las prioridades de fuentes y el acceso privado del propietario. La revisión posterior de acceso del mismo día retira la contraseña adicional; los lotes siguen exigiendo al propietario identificado.
 
 ## Cambios

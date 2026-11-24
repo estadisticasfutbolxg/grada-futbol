@@ -1,12 +1,12 @@
 # 20261124-codex-retire-understat · Limpiar Understat de la aplicación activa
 
-- Estado: `review`
+- Estado: `done`
 - Responsable: Codex
 - Revisor: autocontrol; sin revisión independiente
 - Rama: `feat/retire-understat-from-app`
 - Base Sites: `e8b449d8a3950ca3ee46c2abc26445144d7a869b`
 - Base GitHub main: `5848490459baa949e5f4536e37a8b00a8c99570a`, comprobada
-- PR: pendiente
+- PR: [#65](https://github.com/estadisticasfutbolxg/grada-futbol/pull/65), integrado en `8e7627f6108ce725cb979562d8fc15adc6fc1eb2`
 - Entrega: merge y publicación privada
 
 ## Objetivo
@@ -18,7 +18,7 @@ Retirar Understat de las fuentes y datos activos de GRADA. LaLiga usa catálogo 
 - [x] Sin enlaces, atribuciones, fechas, métricas o referencias activas Understat en las vistas, fichas, glosario y comparadores.
 - [x] LaLiga sigue disponible con FotMob/ESPN; los huecos permanecen desconocidos y su cobertura parcial explícita. Cambios de catálogo, IDs y scores medidos.
 - [x] Código y capturas originales conservados; no se consulta ni sirve la captura Understat en la publicación.
-- [ ] Fórmula, mínimos de score, medias, acceso privado y datos de otras ligas coherentes; validación, merge y despliegue comprobados.
+- [x] Fórmula, mínimos de score, medias, acceso privado y datos de otras ligas coherentes; validación, merge y despliegue comprobados.
 
 ## Plan
 
@@ -39,4 +39,4 @@ La ampliación a nuevas ligas solicitada durante el trabajo se ejecutará como i
 
 ## Resultado y relevo
 
-En curso.
+Publicado en Sites privado **v35**, fuente `4997ce6412869811497dd5f45198b69ce228b377`, despliegue `appgdep_6b0591ea41a8819186345633b8d69324` en `succeeded`. HTTP confirma HTML/bundle exactos y cinco capturas intactas; 477 alias, captura archivada 404 y API ESPN sin identidad 401. Audiencia posterior owner-only revisión 3, un propietario y cero editores/grupos/visitantes; runtime revisión 1. La ampliación continúa en [su tarea](20261124-codex-equivalent-leagues.md).

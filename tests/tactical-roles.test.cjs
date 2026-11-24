@@ -22,6 +22,12 @@ test('cache recovery retains verified roles only for the same identity and a fre
  data.players[0].team_id='2';assert.equal(roles.restore(data,previous).players[0].tacticalPositions,undefined);
  previous.metadata={...meta,season:'2025/26'};assert.equal(roles.restore(data,previous),data);
 });
+test('ranking-only players gain a position only from an unambiguous verified squad family',()=>{
+ const f=squadFixture(),data={metadata:meta,teams:[{id:'1'}],players:[{id:'10',team_id:'1',pos:'—',minutes:600,goals:0}]};
+ let squad=roles.parseSquad(f.html(),{id:'1'},'laliga',date),p=roles.enrich(data,[squad]).players[0];
+ assert.equal(p.pos,'DEF');assert.equal(p.positionContext.kind,'squad_position');assert.equal(p.goals,0);assert.equal(p.minutes,600);assert.equal(data.players[0].pos,'—');
+ f.d.squad.squad[1].members[0].positionIdsDesc='CB,CM';squad=roles.parseSquad(f.html(),{id:'1'},'laliga',date);p=roles.enrich(data,[squad]).players[0];assert.equal(p.pos,'—');assert.equal(p.positionContext,undefined);assert.deepEqual(p.tacticalPositions,['CB','CM']);
+});
 test('central and fullback rankings filter published positions while keeping one DEF score',()=>{
  const s=roles.parseSquad(squadFixture().html(),{id:'1'},'laliga',date),p={...s.players[0],pos:'DEF',minutes:600},profile={score:0.4,comparableArea:0.4,axes:[]},model={players:new Map([[p,profile]])};
  for(const key of ['DEF','DEF_CB','DEF_FB']){assert(scores.eligible(model,p,radar.definition(key)));assert.equal(scores.value(model,p,radar.definition(key)),0.4);}

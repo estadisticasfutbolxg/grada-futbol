@@ -2,12 +2,30 @@
   'use strict';
   const node=typeof module==='object'&&module.exports;
   const clubs=node?require('./clubs.js'):root.GradaClubs;
+  const leagues=node?require('./leagues.js'):root.GradaLeagues;
   const countries={
     laliga:{code:'es',name:'España'},
     'premier-league':{code:'gb-eng',name:'Inglaterra'},
     'serie-a':{code:'it',name:'Italia'},
     bundesliga:{code:'de',name:'Alemania'},
-    'ligue-1':{code:'fr',name:'Francia'}
+    'ligue-1':{code:'fr',name:'Francia'},
+    portugal:{code:'pt',name:'Portugal'},
+    eredivisie:{code:'nl',name:'Países Bajos'},
+    championship:{code:'gb-eng',name:'Inglaterra'},
+    'bundesliga-2':{code:'de',name:'Alemania'},
+    'ligue-2':{code:'fr',name:'Francia'},
+    'serie-b':{code:'it',name:'Italia'},
+    'laliga-2':{code:'es',name:'España'},
+    belgium:{code:'be',name:'Bélgica'},
+    scotland:{code:'gb-sct',name:'Escocia'},
+    turkey:{code:'tr',name:'Turquía'},
+    'saudi-arabia':{code:'sa',name:'Arabia Saudí'},
+    denmark:{code:'dk',name:'Dinamarca'},
+    austria:{code:'at',name:'Austria'},
+    greece:{code:'gr',name:'Grecia'},
+    'league-one':{code:'gb-eng',name:'Inglaterra'},
+    'league-two':{code:'gb-eng',name:'Inglaterra'},
+    'a-league':{code:'au',name:'Australia'}
   };
   const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const initials=name=>String(name||'?').trim().split(/\s+/).map(word=>[...word][0]||'').slice(0,2).join('').toLocaleUpperCase('es');
@@ -19,7 +37,10 @@
   function countryLabel(league){
     const item=country(league);
     if(item)return '<span class="country-identity" title="País de la competición: '+item.name+'">'+flag(league)+'<span>'+item.name+'</span></span>';
-    if(league==='all')return '<span class="country-identity" title="España, Inglaterra, Italia, Alemania y Francia"><span class="league-flags" aria-hidden="true">'+Object.keys(countries).map(flag).join('')+'</span><span>5 países</span></span>';
+    if(league==='all'){
+      const unique=leagues.list().map(l=>l.id).filter(key=>Object.hasOwn(countries,key)).filter((key,i,keys)=>keys.findIndex(k=>countries[k].code===countries[key].code)===i);
+      return '<span class="country-identity" title="'+unique.map(key=>countries[key].name).join(', ')+'"><span class="league-flags" aria-hidden="true">'+unique.slice(0,5).map(flag).join('')+'</span><span>'+unique.length+' países</span></span>';
+    }
     return '';
   }
   function leagueLabel(league,label){

@@ -6,15 +6,25 @@ const espn=require('../dist/laliga.js');
 const owner=require('./owner.cjs');
 const running=new Map(),localCache=new Map();
 const rosters=new Map();
-const decodedAssets=new WeakMap(),encodedAssets=new WeakMap();
+// Two decoded captures cover the two simultaneous refresh leagues. Retaining
+// every parsed season would make memory grow with the expanded league catalog.
+const decodedAssets=new Map(),decodingAssets=new WeakMap(),decodeQueue=[],encodedAssets=new WeakMap();
+let activeDecodes=0;
 function assetBytes(asset){if(!encodedAssets.has(asset))encodedAssets.set(asset,Uint8Array.from(atob(asset.gzip),c=>c.charCodeAt(0)));return encodedAssets.get(asset);}
+function decodeNext(){
+ while(activeDecodes<2&&decodeQueue.length){const job=decodeQueue.shift();activeDecodes++;job().finally(()=>{activeDecodes--;decodeNext();});}
+}
 function assetJSON(asset){
- if(!decodedAssets.has(asset)){
-  const bytes=assetBytes(asset);
-  const value=new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'))).json();
-  decodedAssets.set(asset,value);value.catch(()=>decodedAssets.delete(asset));
- }
- return decodedAssets.get(asset);
+ const found=decodedAssets.get(asset);if(found){decodedAssets.delete(asset);decodedAssets.set(asset,found);return found;}
+ if(decodingAssets.has(asset))return decodingAssets.get(asset);
+ let resolve,reject;const value=new Promise((yes,no)=>{resolve=yes;reject=no;});decodingAssets.set(asset,value);
+ decodeQueue.push(async()=>{
+  try{const bytes=assetBytes(asset),data=await new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'))).json();
+   while(decodedAssets.size>=2)decodedAssets.delete(decodedAssets.keys().next().value);
+   decodedAssets.set(asset,value);resolve(data);
+  }catch(error){reject(error);}finally{decodingAssets.delete(asset);}
+ });decodeNext();
+ return value;
 }
 let localBytes=0;
 // Sites can deny the default Cache API. Caching must never gate source assets.
@@ -87,7 +97,7 @@ async function refresh(key,source,league,{cache,fetcher,now}){
 }
 function snapshot(path){
  const espn=leagues.list().find(league=>path==='/downloads/'+league.espnFile);if(espn)return {source:'espn',league:espn};
- const m=path.match(/^\/downloads\/(fotmob|understat)-([a-z-]+)-2026-27\.json$/);if(!m)return null;
+ const m=path.match(/^\/downloads\/(fotmob|understat)-([a-z0-9-]+)-2026-27\.json$/);if(!m)return null;
  try{const league=leagues.get(m[2]);return validSource(m[1],league)?{source:m[1],league}:null;}catch(_){return null;}
 }
 async function handle(request,assets,{cache=sharedCache(),fetcher=fetch,now=Date.now,env={}}={}){
@@ -127,7 +137,9 @@ async function handle(request,assets,{cache=sharedCache(),fetcher=fetch,now=Date
    if(!['fotmob','espn'].includes(source.source))return request.method==='HEAD'?new Response(null,{headers:cached.headers}):cached;
    try{
     const validator=source.source==='fotmob'?fotmob:espn;
-    const current=validator.validate(await cached.json()),published=validator.validate(await assetJSON(asset));
+    // Wait for a bounded published decode before parsing the refreshed body;
+    // queued league requests retain streams rather than full season objects.
+    const published=validator.validate(await assetJSON(asset)),current=validator.validate(await cached.json());
     const newer=Date.parse(current.metadata.imported_at)>Date.parse(published.metadata.imported_at);
     const restore=source.source==='fotmob'?profiles.restore:espn.restoreIdentities;
     const restored=validator.validate(restore(newer?current:published,newer?published:current));

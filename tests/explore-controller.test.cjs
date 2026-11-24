@@ -1,6 +1,16 @@
 'use strict';
 const test=require('node:test'),assert=require('node:assert/strict'),{harness}=require('./helpers/app-harness.cjs'),{fixture}=require('./helpers/explore.cjs');
 function loaded(){const h=harness(),input=fixture();h.run("data=input;loaded=true;view='players';datasets.set('laliga',{combined:input});updateRadarProfiles();renderClubOptions();renderTable();",{input});return h;}
+test('large tables page the globally sorted and filtered results without changing scores or losing players',()=>{
+ const h=loaded(),input=fixture(),sample=input.players.find(p=>p.pos==='DEL');input.players=Array.from({length:245},(_,i)=>({...sample,id:'page-'+i,name:'Player '+String(i).padStart(3,'0'),goals:i}));
+ h.run("data=input;datasets.set('laliga',{combined:input});sort='goals';direction=-1;updateRadarProfiles();renderTable();",{input});
+ const visible=()=>[...h.node('#tbody').innerHTML.matchAll(/data-detail="([^"]+)"/g)].map(m=>m[1]);
+ assert.equal(h.run('rows().length'),245);assert.equal(visible().length,100);assert.equal(visible()[0],'page-244');assert.equal(h.node('#table-page-status').textContent,'1–100 de 245');assert.equal(h.node('#table-previous').disabled,true);
+ const before=h.run('scoreModel.players.get(data.players[0]).score');h.node('#table-next').onclick();assert.equal(visible()[0],'page-144');assert.equal(h.node('#table-page-status').textContent,'101–200 de 245');assert.match(h.node('#tbody').innerHTML,/rank-column">101<\/td>/);assert.equal(h.run('scoreModel.players.get(data.players[0]).score'),before);
+ h.node('#table-next').onclick();assert.equal(visible().length,45);assert.equal(visible().at(-1),'page-0');assert.equal(h.node('#table-next').disabled,true);h.node('#table-previous').onclick();assert.equal(visible()[0],'page-144');
+ h.node('#search').value='Player 244';h.run('renderTable()');assert.deepEqual(visible(),['page-244']);assert.equal(h.node('#table-pagination').hidden,true);assert.equal(h.run('tablePage'),0);
+ h.node('#search').value='';h.run("sort='name';direction=1;renderTable()");assert.equal(visible()[0],'page-0');assert.equal(h.run('rows().length'),245);assert.match(h.node('#thead').innerHTML.match(/<th\b[\s\S]*?<\/th>/)[0],/radarArea/);
+});
 test('real table HTML puts score before rank and name; KPI sorting still works and dismisses help',()=>{
  const h=loaded(),headers=h.node('#thead').innerHTML.match(/<th\b[\s\S]*?<\/th>/g);assert.match(headers[0],/data-sort="radarArea"/);assert.match(headers[1],/data-help="rank"/);assert.match(headers[2],/data-sort="name"/);
  const scoreCell=h.node('#tbody').innerHTML.match(/<td\b[\s\S]*?<\/td>/)[0];assert.match(scoreCell,/score-main/);assert.match(scoreCell,/<strong>/);

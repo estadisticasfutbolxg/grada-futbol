@@ -14,7 +14,7 @@ test('player crests respect canonical club IDs and league scope; multiple-club a
 });
 test('countries are competition metadata, with England rather than a UK flag, and no invented nationality',()=>{
  assert.deepEqual(branding.country('premier-league'),{code:'gb-eng',name:'Inglaterra'});assert.equal(branding.country('unknown'),null);
- assert.match(branding.flag('premier-league'),/flags\/gb-eng.svg/);assert(!branding.flag('unknown'));assert.match(branding.countryLabel('all'),/5 países/);
+ assert.match(branding.flag('premier-league'),/flags\/gb-eng.svg/);assert(!branding.flag('unknown'));assert.match(branding.countryLabel('all'),/15 países/);
  assert.equal((branding.countryLabel('all').match(/data-country-flag/g)||[]).length,5);
  const league=branding.leagueLabel('ligue-1','Ligue 1');assert.match(league,/País de la competición: Francia/);assert(!league.includes('Mónaco'));
  const copy=branding.country('laliga');copy.code='x';assert.equal(branding.country('laliga').code,'es');

@@ -20,7 +20,7 @@
   const country=nationality.fromProfile(d,player,leagueId,capturedAt);
   if(main?.leagueId!==league.fotmobId||main.season!=='2026/2027'||season?.seasonName!=='2026/2027'||season.tournaments?.[0]?.tournamentId!==league.fotmobId)return {id:String(player.id),team_id:String(player.team_id),pos,positionContext,nameAliases,...(country?{nationality:country}:{}),values:{},contexts:{},captured_at:capturedAt,scope:'position_only'};
   const mainStats=new Map(main.stats.map(s=>[s.localizedTitleId,s.value])),minutes=numeric(mainStats.get('minutes_played'),'number'),matches=numeric(mainStats.get('matches_uppercase'),'number');
-  if(matches>2*(league.teams-1)||minutes>matches*130)throw new Error('Muestra de ficha inválida.');
+  if(matches>leagues.teamMatchLimit(league)||minutes>matches*130)throw new Error('Muestra de ficha inválida.');
   const values={},contexts={},url='https://www.fotmob.com/players/'+player.id+'/player';
   function assign(key,value,item,derived=null){values[key]=value;contexts[key]={source:'FotMob',captured_at:capturedAt,minutes,matches,url,reportedValue:!derived,profileVerified:true,...(Number.isFinite(item?.per90)?{reportedPer90:item.per90}:{}),...(derived?{derived}:{})};}
   for(const key of ['minutes','matches'])assign(key,key==='minutes'?minutes:matches);

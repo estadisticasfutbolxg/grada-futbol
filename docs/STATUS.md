@@ -1,5 +1,12 @@
 # Estado comprobado de GRADA
 
+## Understat retirado de la aplicación · publicación privada verificada · 24 de noviembre de 2026 · 14:32 Madrid
+
+- Las cinco ligas usan exclusivamente FotMob → ESPN. Understat no se carga, sirve ni participa en valores, posiciones, referencias o scores. Código y capturas archivados; 477 alias de IDs conservan enlaces antiguos sin estadísticas archivadas. LaLiga sigue disponible con los huecos xG/xGA de equipo explícitos.
+- 2.285 fichas, 1.517 scores válidos. La migración de catálogo incorpora 11 fichas FotMob existentes y retira 10 sin esa ficha. Cero consultas nuevas o partidos descargados para esta limpieza. Diez fuentes activas; once originales intactos y 57.247 campos de otras ligas sin cambios. [Tarea y listas privadas](../loop/tasks/20261124-codex-retire-understat.md).
+- 29 archivos Node correctos; cuatro arranques VM/DOM del Worker exacto, todas las vistas sin atribución archivada. 11.551 ejes solo FotMob/ESPN, medias de clubes/XI y mínimo 200 conservados. Sin QA visual; histórico StatsBomb sin JSON local. Autocontrol, sin revisión independiente.
+- [PR #65](https://github.com/estadisticasfutbolxg/grada-futbol/pull/65) integrado en `8e7627f6108ce725cb979562d8fc15adc6fc1eb2`. [GRADA privada](https://grada-futbol-analitica.ivanmatema2.chatgpt.site), **v35**, fuente `4997ce6412869811497dd5f45198b69ce228b377`, despliegue `appgdep_6b0591ea41a8819186345633b8d69324` succeeded. Worker SHA256 `77a62a6c4a9229d8336769d26a5e5083b0ac3e73a1a4a30af27b66f8e39fb0ab`; HTTP confirma HTML/bundle gzip 83.551 bytes y cinco capturas exactas. Owner-only revisión 3 y runtime revisión 1 conservados; sin contraseña adicional.
+
 ## FotMob prioritario y respaldo Understat · publicación privada verificada · 24 de noviembre de 2026 · 08:07 Madrid
 
 - LaLiga sustituye métricas disponibles de Understat por FotMob: prioridad FotMob → Understat conservado → ESPN, incluidos ceros válidos. Catálogo/IDs, identidades y posiciones se mantienen. Cada campo conserva fecha y muestra; un total conocido no se borra por una tasa sin total. Derivados de respaldo usan ambos componentes de una sola captura, explícitos en procedencia, y no disimulan conflictos de muestras FotMob. [Contrato](COMBINED.md).

@@ -6,7 +6,7 @@
     const players=[],teams=[],sources={},leagues=[];
     for(const d of items){
       const m=d.metadata,id=m.league_key;
-      leagues.push({id,name:m.competition,sources:m.sources,imported_matches:m.imported_matches,available_matches:m.available_matches});
+      leagues.push({id,name:m.competition,calendar_phase:m.calendar_phase||null,sources:m.sources,imported_matches:m.imported_matches,available_matches:m.available_matches});
       for(const [name,meta] of Object.entries(m.sources))if(!sources[name]||Date.parse(meta.imported_at)<Date.parse(sources[name].imported_at))sources[name]={...meta};
       function copy(row){
         const metricContexts=Object.fromEntries(Object.entries(row.metricContexts||{}).map(([key,c])=>[key,{...c,captured_at:c.captured_at||m.sources[c.source]?.imported_at||m.imported_at,league_key:id}]));
@@ -21,7 +21,7 @@
     return {metadata:{kind:'combined',scope:'all',league_key:'all',primary_source:'Mixta',source:'Combinado · '+items.length+' ligas',competition:'Todas las ligas',season:'2026/27',complete:false,sources,leagues,
       imported_at:new Date(Math.min(...items.map(d=>Date.parse(d.metadata.imported_at)))).toISOString(),imported_matches:leagues.reduce((s,l)=>s+l.imported_matches,0),available_matches:leagues.reduce((s,l)=>s+l.available_matches,0),
       combination:{matched_players:items.reduce((s,d)=>s+d.metadata.combination.matched_players,0)},
-      notes:'Conjunto de '+items.length+' ligas verificadas. Se conservan las fuentes y fechas de cada liga: catálogo FotMob y complemento ESPN. LaLiga puede carecer de xG de equipo; los valores ausentes permanecen desconocidos. Los recuentos de goles distintos pueden usar más PJ verificados o, con iguales PJ, una captura posterior; los derivados conservan componentes originales de una sola fuente. Los scores usan una referencia común de posición de las ligas cargadas, compartida con las vistas por liga. Los modelos xG/xA difieren por proveedor; el score es relativo a la posición. Las ausencias no se convierten en cero. No se agrupan fichas de un mismo jugador en ligas diferentes.'},players,teams,matches:[]};
+      notes:'Conjunto de '+items.length+' ligas verificadas. Se conservan las fuentes y fechas de cada liga: catálogo FotMob y complemento ESPN. LaLiga puede carecer de xG de equipo; los valores ausentes permanecen desconocidos. Los recuentos de goles distintos pueden usar más PJ verificados o, con iguales PJ, una captura posterior; los derivados conservan componentes originales de una sola fuente. En las ligas por fases, la cobertura corresponde a la fase regular publicada; las posteriores no se incluyen. Los scores no ajustan la dificultad entre divisiones. Los scores usan una referencia común de posición de las ligas cargadas, compartida con las vistas por liga. Los modelos xG/xA difieren por proveedor; el score es relativo a la posición. Las ausencias no se convierten en cero. No se agrupan fichas de un mismo jugador en ligas diferentes.'},players,teams,matches:[]};
   }
   const api={aggregate};if(typeof module==='object'&&module.exports)module.exports=api;else root.GradaScopes=api;
 })(typeof window==='object'?window:globalThis);
