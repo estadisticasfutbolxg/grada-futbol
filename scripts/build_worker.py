@@ -10,6 +10,7 @@ import hashlib
 import json
 from pathlib import Path
 import re
+import subprocess
 import xml.etree.ElementTree as ET
 from download_club_badges import validate_png
 
@@ -98,6 +99,13 @@ def build():
         mime = {'.html': 'text/html', '.css': 'text/css', '.js': 'text/javascript', '.json': 'application/json', '.png': 'image/png', '.svg': 'image/svg+xml', '.txt': 'text/plain'}[path.suffix]
         content_type = mime if path.suffix == '.png' else mime + '; charset=utf-8'
         assets['/' + path.relative_to(ROOT / 'dist').as_posix()] = {'type': content_type, 'sha': hashlib.sha256(body).hexdigest(), 'gzip': base64.b64encode(gzip.compress(body, mtime=0)).decode()}
+    # ID aliases preserve bookmarks without serving the archived provider data.
+    legacy = subprocess.run(['node', str(ROOT / 'scripts/build_legacy_links.cjs')], cwd=ROOT, capture_output=True, check=True, text=True)
+    aliases = json.loads(legacy.stdout)
+    if not isinstance(aliases, dict) or len(aliases) > 2000 or any(not re.fullmatch(r'[a-z-]+\|combined:\d{1,12}', key) or not isinstance(value, str) or not re.fullmatch(r'combined:\d{1,12}', value) for key, value in aliases.items()):
+        raise ValueError('Invalid legacy player links')
+    body = json.dumps(aliases, separators=(',', ':')).encode()
+    assets['/legacy-player-links.json'] = {'type': 'application/json; charset=utf-8', 'sha': hashlib.sha256(body).hexdigest(), 'gzip': base64.b64encode(gzip.compress(body, mtime=0)).decode()}
     factories = ',\n'.join(json.dumps(k) + ':function(module,exports,require){\n' + v[0] + '\n}' for k, v in modules.items())
     dependency_map = {k: v[1] for k, v in modules.items()}
     bundle = 'const factories={' + factories + '};\nconst dependencies=' + json.dumps(dependency_map) + ';\n'

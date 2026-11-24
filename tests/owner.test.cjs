@@ -13,11 +13,11 @@ test('pinned owner updates without a password, session secret or cookie; legacy 
 });
 test('all source and player routes reject anonymous or other identities before any provider request',async()=>{
  const {env,headers}=await access();let upstream=0;
- const paths=['/api/source/espn?league=laliga','/api/source/fotmob?league=laliga','/api/source/understat?league=laliga','/api/player/fotmob?league=laliga&player=100','/api/players/fotmob?league=laliga&players=100'];
+ const paths=['/api/source/espn?league=laliga','/api/source/fotmob?league=laliga','/api/player/fotmob?league=laliga&player=100','/api/players/fotmob?league=laliga&players=100'];
  const options={env,fetcher:async()=>{upstream++;throw Error('No real network');}};
  for(const path of paths)for(const identity of [{},{...user,'oai-authenticated-user-id':'viewer',Cookie:'__Host-grada-owner=fake'},{'oai-authenticated-user-email':user['oai-authenticated-user-email']}]){const r=await app.handle(new Request('https://owner-auth.test'+path,{headers:identity}),{},options);assert([401,403].includes(r.status));}
  assert.equal(upstream,0);assert.equal(await owner.requireOwner(new Request('https://owner-auth.test',{headers}),env),null);
- const allowed=await app.handle(new Request('https://owner-auth.test/api/source/understat?league=laliga',{headers}),{},options);assert.equal(allowed.status,503);assert(upstream>0,'owner without cookie reaches the mocked provider');assert(!(await allowed.text()).includes('contraseña'));
+ const allowed=await app.handle(new Request('https://owner-auth.test/api/source/fotmob?league=laliga',{headers}),{},options);assert.equal(allowed.status,503);assert(upstream>0,'owner without cookie reaches the mocked provider');assert(!(await allowed.text()).includes('contraseña'));
 });
 test('verified bootstrap email works without setup, and missing or broken authorization fails closed',async()=>{
  const env=fixture();assert.equal(await owner.requireOwner(request('status'),env),null);assert.equal(env.BUCKET.objects.size,0);

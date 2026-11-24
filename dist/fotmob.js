@@ -12,7 +12,7 @@
     lineBreakingPasses:'Pases que rompen una línea rival según FotMob. Se mantiene esta definición separada de los pases progresivos de StatsBomb.',
     clearances:'Despejes defensivos publicados por FotMob.',blocks:'Bloqueos defensivos publicados por FotMob.',
     highClaims:'Balones aéreos atrapados por el portero según FotMob.',sweeperActions:'Acciones del portero como líbero según FotMob.',
-    chancesCreated:'Ocasiones creadas según FotMob. Se conservan separadas de los pases clave de Understat.',
+    chancesCreated:'Ocasiones creadas según FotMob. Se conservan separadas de otras definiciones de pases clave.',
     bigChancesCreated:'Grandes ocasiones creadas, según la clasificación del proveedor FotMob.',bigChancesMissed:'Grandes ocasiones falladas según FotMob. Un mayor volumen no implica mayor rendimiento.',
     yellowCards:'Tarjetas amarillas publicadas por FotMob.',redCards:'Tarjetas rojas publicadas por FotMob.',
     penaltiesSaved:'Penaltis detenidos por el portero según FotMob.',penaltiesFaced:'Penaltis afrontados por el portero, de la misma tabla FotMob que sus penaltis detenidos.',
@@ -49,12 +49,13 @@
         if(typeof value!=='number'||!Number.isFinite(value)||(k!=='prevented'&&value<0)||(counts.includes(k)&&!Number.isInteger(value))||(percentages.includes(k)&&value>100))throw new Error('Métrica FotMob inválida: '+k);
       }
       for(const [contextKey,c] of Object.entries(p.metricContexts||{}))if(c.source!=='FotMob'||!Number.isFinite(Date.parse(c.captured_at))||!numeric(c.minutes)||!Number.isInteger(c.matches)||c.matches<0||('reportedPer90'in c&&(!Number.isFinite(c.reportedPer90)||(contextKey!=='prevented'&&c.reportedPer90<0))))throw new Error('Contexto FotMob inválido.');
-      if(m.profile==='full'){
-        for(const k of ['goals','assists','shots','xg','xa','shotsPer90','conversion'])if(p[k]!==null&&(!numeric(p[k])||(['goals','assists','shots'].includes(k)&&!Number.isInteger(p[k]))))throw new Error('Métrica principal FotMob inválida.');
+      if(m.profile==='full'||league.primary==='FotMob'){
+        for(const k of ['goals','assists','shots','xg','xa','shotsPer90','conversion'])if(p[k]!==undefined&&p[k]!==null&&(!numeric(p[k])||(['goals','assists','shots'].includes(k)&&!Number.isInteger(p[k]))))throw new Error('Métrica principal FotMob inválida.');
         if(p.conversion>100)throw new Error('Modelo FotMob inválido.');
       }
     }
-    if(league.primary==='FotMob'&&(m.profile!=='full'||!data.teams.every(t=>numeric(t.xg)&&numeric(t.xga)&&Number.isInteger(t.matches)&&t.matches<=2*(league.teams-1)&&t.minutes===t.matches*90)))throw new Error('Faltan métricas principales de esta liga.');
+    const partial=league.optionalMetrics?.includes('equipos: xg')&&league.optionalMetrics.includes('equipos: xga');
+    if(league.primary==='FotMob'&&!partial&&(m.profile!=='full'||!data.teams.every(t=>numeric(t.xg)&&numeric(t.xga)&&Number.isInteger(t.matches)&&t.matches<=2*(league.teams-1)&&t.minutes===t.matches*90)))throw new Error('Faltan métricas principales de esta liga.');
     if(m.profile==='full'){
       const played=data.teams.reduce((s,t)=>s+t.matches,0)/2;
       if(!Number.isInteger(played)||played<0||played>league.matches||m.imported_matches!==played||m.available_matches!==league.matches||data.teams.reduce((s,t)=>s+t.goals,0)!==data.teams.reduce((s,t)=>s+t.conceded,0))throw new Error('Cobertura FotMob incoherente.');
