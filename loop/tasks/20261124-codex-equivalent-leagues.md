@@ -1,12 +1,13 @@
 # 20261124-codex-equivalent-leagues · Ligas con cobertura equivalente
 
-- Estado: `review`
+- Estado: `done`
 - Responsable: Codex
 - Revisor: autocontrol; sin revisión independiente
 - Rama: `feat/equivalent-fotmob-espn-leagues`
 - Base Sites: `4997ce6412869811497dd5f45198b69ce228b377`, v35 publicada y HTTP verificado
 - Base GitHub main: `8e7627f6108ce725cb979562d8fc15adc6fc1eb2`, PR #65 integrado
-- PR y publicación: pendientes
+- PR: [#66](https://github.com/estadisticasfutbolxg/grada-futbol/pull/66), integrado en `b18b207748e42616b40dc6784d4ae9969a94a909`
+- Sites: versión 36, publicación privada y HTTP confirmados
 
 ## Objetivo y alcance
 
@@ -21,7 +22,7 @@ Archivos compartidos: catálogo/validadores, combinación de clubes, generadores
 - [x] Posiciones/nacionalidades verificadas y xGOT recibido sin mezclar equipo, portero o muestras. Ausencias siguen desconocidas.
 - [x] Un score por jugador desde 200 min y referencia común; medias de clubes y XI nacionales coherentes. Fuentes anteriores intactas.
 - [x] Filtros, selector, Todas, rankings, fichas, actualización general, caché, acceso privado y rendimiento validados.
-- [ ] Código y generadores en GitHub, PR integrado y Sites actualizado; sin datos/SQLite/secretos en GitHub. Entrega de jugadores y cobertura de partidos por fuente.
+- [x] Código y generadores en GitHub, PR integrado y Sites actualizado; sin datos/SQLite/secretos en GitHub. Entrega de jugadores y cobertura de partidos por fuente.
 
 ## Plan y evidencia
 
@@ -46,4 +47,8 @@ Capturas y resultados originales en `/workspace/scratch/grada-more-leagues/`; qu
 
 ## Resultado y relevo
 
-En curso.
+Publicado en [GRADA privada](https://grada-futbol-analitica.ivanmatema2.chatgpt.site), **v36**, fuente `46fc487e9fbb6554d7c23c24232e04ca83a1572c`, despliegue `appgdep_6b059e8950ac819188660432065597ad` en `succeeded`. Versión `appgprj_6ae0b8b2eb1881918601230d00603255~appgver_7ba39b5b20948191a3a99d36d3443c27`.
+
+HTTP confirma HTML/bundle exactos, paginación y las 44 capturas publicadas (9.766 fichas FotMob), sin consultas nuevas a proveedores. Actualizar sin identidad sigue en 401; sin contraseña adicional. Audiencia posterior owner-only revisión 3, un propietario y cero editores/grupos/visitantes; runtime revisión 1. [PR #66](https://github.com/estadisticasfutbolxg/grada-futbol/pull/66) integrado; main `b18b207748e42616b40dc6784d4ae9969a94a909` confirmado.
+
+SQLite de las 22 ligas: 134.205.440 bytes sin comprimir / 13.288.072 comprimidos. Las 44 capturas JSON de carga: 84.326.567 bytes / 4.942.579 gzip. No incluyen el archivo Understat ni HTML de captura. SQLite permanece local; el Site sirve JSON. El cierre documental no cambia el Worker publicado ni necesita otro despliegue idéntico.

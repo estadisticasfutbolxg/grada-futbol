@@ -88,3 +88,7 @@ python scripts/import_leagues.py --league portugal \
 `rankings/<liga>/raw/` (o directamente `<liga>/`) contiene HTML de `SPECS`, `CORE` y `TEAM_SPECS`; `<liga>/espn/`, `standings.json` y `roster-<id>.json`. `plantillas/<liga>/<club-id>.html` y `fichas/<liga>/<jugador-id>.html` conservan los tiempos originales. `enrich_squads.py` reutiliza cada plantilla para posiciones/nacionalidad, con validación por ID, club, liga y temporada. `enrich_fotmob.py --minimum-minutes 200 --missing-only` consulta solo quienes alcanzan el mínimo y porteros, reutilizando fichas ya capturadas con su fecha original; `--keepers-only` limita a porteros. Son opciones explícitas de importación, no cambios al refresco de la web.
 
 Los generadores separados admiten `--league`; `build_combined.cjs`, `--data-dir` y `--reference-dir`. Tras importar ligas nuevas, se regeneran todos los combinados con el mismo conjunto final como referencia. No se editan cifras a mano. [Datos](DATA.md), [FotMob](FOTMOB.md), [tarea y verificación](../loop/tasks/20261124-codex-equivalent-leagues.md).
+
+## Tamaño de las capturas del 24 de noviembre
+
+Las 22 bases SQLite FotMob ocupan **134.205.440 bytes sin comprimir (134,2 MB)** y **13.288.072 bytes gzip (13,3 MB)** en total. Se conservan como archivos locales; el Site usa JSON. Las 44 capturas activas FotMob/ESPN ocupan 84.326.567 bytes en JSON y **4.942.579 bytes en la transferencia gzip (4,94 MB)**. Son tamaños medidos de este conjunto, sin incluir HTML de origen, capturas archivadas, imágenes o código.
