@@ -109,7 +109,7 @@
     if ([...data.players,...data.teams].some(p=>p.minutes!==null || p.xg!==null || p.xga!==null) || data.players.some(p=>p.xa!==null || p.psxg!==null)) throw new Error('Métrica sin respaldo en la fuente.');
     const played = data.teams.reduce((sum,t)=>sum+t.matches,0)/2;
     if (!Number.isInteger(played) || played < 0 || played > league.matches || played !== data.metadata.imported_matches || data.metadata.available_matches!==league.matches ||
-        data.teams.some(t=>![t.matches,t.goals,t.conceded].every(numeric)) ||
+        data.teams.some(t=>![t.matches,t.goals,t.conceded].every(numeric)||!Number.isInteger(t.matches)||t.matches>leagues.teamMatchLimit(league)) ||
         data.teams.reduce((sum,t)=>sum+t.goals,0)!==data.teams.reduce((sum,t)=>sum+t.conceded,0)) throw new Error('Clasificación incoherente.');
     return data;
   }

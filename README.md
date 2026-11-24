@@ -3,7 +3,7 @@
 > Definición vigente desde el 19 de noviembre: [score único por jugador con ejes de su perfil, referencia común, promedios de equipo y totales con cobertura](docs/SCORES.md). El perfil MED y el puesto de lateral seleccionan los ejes; juego limpio aplica una penalización lineal con tarjetas verificadas y mayor peso de las rojas. Cambiar de ranking no recalcula el score.
 
 
-Web en español de estadísticas, perfiles y rankings por score del radar de jugadores y equipos. El selector ofrece **LaLiga, Premier League, Serie A, Bundesliga, Ligue 1** combinadas y **Todas las ligas**, temporada 2026/27. HTML/CSS/JavaScript en `dist/`, Python estándar para descargar datos reales y generar SQLite gratuitos.
+Web en español de estadísticas, perfiles y rankings por score del radar de jugadores y equipos. El selector ofrece **22 ligas combinadas de 15 países**, más **Todas las ligas** (incluidas primeras y segundas divisiones verificadas), temporada 2026/27. HTML/CSS/JavaScript en `dist/`, Python estándar para descargar datos reales y generar SQLite gratuitos.
 
 ## Datos reales y fuentes
 
@@ -11,16 +11,16 @@ Desde el 24 de noviembre, la aplicación activa usa **solo FotMob y ESPN**, incl
 
 La columna Nacionalidad y el apartado **Selecciones** reúnen países publicados por FotMob y onces teóricos elegidos entre siete sistemas coherentes, con contención, creación y score como media simple de sus once titulares. [Cobertura, procedencia, fórmula y generadores](docs/NATIONS.md). Son simulaciones con las ligas disponibles; no convocatorias oficiales.
 
-LaLiga prioriza FotMob → Understat conservado → ESPN para las métricas; mantiene el catálogo e IDs de Understat y pausa su consulta general mientras no está disponible. Su código e importador permanecen para reactivación futura; los goles admiten un recuento distinto de mayor cobertura o, con iguales PJ, captura posterior, con fuente y fecha explícitas. Las otras ligas priorizan FotMob → ESPN, incluidos xG/xA FotMob, tras comprobar las mismas familias de métricas de pase, ataque, defensa y portería. Los modelos, capturas, PJ y minutos de cada campo se conservan. No hay datos de demostración; las ausencias siguen `null`.
+Todas las ligas usan catálogo y prioridad FotMob → ESPN, incluidos xG/xA FotMob, tras comprobar las mismas familias de métricas de pase, ataque, defensa y portería. Los goles admiten un recuento distinto de mayor cobertura o, con iguales PJ, captura posterior, con fuente y fecha explícitas. Understat conserva su código e importador archivados para una reactivación futura. Los modelos, capturas, PJ y minutos de cada campo se conservan. No hay datos de demostración; las ausencias siguen `null`.
 
-Las capturas verificadas reúnen 2.284 fichas jugador/liga y 96 equipos. Los percentiles usan una referencia común de las ligas cargadas. Hay rankings de delanteros, porteros, defensas, centrales, laterales y perfiles MED ofensivo/defensivo/equilibrado; los equipos usan promedios ponderados de esos mismos scores. Los scores individuales requieren todos los ejes de su posición/perfil. Consulta [ligas y rankings](docs/LEAGUES.md), [combinación](docs/COMBINED.md) y [estado publicado](docs/STATUS.md).
+Las capturas verificadas reúnen 9.766 fichas jugador/liga y 398 equipos. Los percentiles usan una referencia común de las ligas cargadas. Hay rankings de delanteros, porteros, defensas, centrales, laterales y perfiles MED ofensivo/defensivo/equilibrado; los equipos usan promedios ponderados de esos mismos scores. Los scores individuales requieren todos los ejes de su posición/perfil. Consulta [ligas y rankings](docs/LEAGUES.md), [combinación](docs/COMBINED.md) y [estado publicado](docs/STATUS.md).
 
 ## Generar la web y las bases
 
 Requiere Python 3.11+, Node 22+ e Internet, sin instalar paquetes ni contratar una base:
 
 ```sh
-python scripts/import_leagues.py --all --profiles
+python scripts/import_leagues.py --all --squads --profiles
 python scripts/download_club_badges.py
 python scripts/build_worker.py
 node scripts/serve.mjs 8000
@@ -32,9 +32,9 @@ Abre http://localhost:8000. También puedes generar una liga:
 python scripts/import_leagues.py --league premier-league
 ```
 
-El proceso genera JSON de cada proveedor, JSON combinado y SQLite FotMob comprimido. LaLiga mantiene además su JSON/SQLite Understat. Los JSON sirven para cargar la web; la interfaz no muestra enlaces de descarga de CSV, JSON o SQLite. **Las bases y los datos generados no se incluyen en GitHub**. Los importadores separados aceptan `--league`: `scripts/import_fotmob.py`, `scripts/import_laliga.py` y `scripts/build_combined.cjs`.
+El proceso genera JSON de cada proveedor, JSON combinado y SQLite FotMob comprimido. Las capturas Understat anteriores pueden conservarse localmente como archivo y no se necesitan para las ligas activas. Los JSON sirven para cargar la web; la interfaz no muestra enlaces de descarga de CSV, JSON o SQLite. **Las bases y los datos generados no se incluyen en GitHub**. Los importadores separados aceptan `--league`: `scripts/import_fotmob.py`, `scripts/import_laliga.py` y `scripts/build_combined.cjs`.
 
-Una fuente no disponible no se sustituye por datos ficticios. El proceso `--all` continúa con las ligas que pasan los controles e informa de las omitidas; falla si no puede generar ninguna. Understat puede reutilizar su captura existente con su fecha original. Si está en mantenimiento y no hay captura local, LaLiga no se habilita hasta disponer de ella. El selector solo ofrece combinados validados. [LEAGUES.md](docs/LEAGUES.md) describe reproducción desde cachés reales y todos los campos.
+Una fuente no disponible no se sustituye por datos ficticios. El proceso `--all` continúa con las ligas que pasan los controles e informa de las omitidas; falla si no puede generar ninguna. La aplicación activa no depende de la disponibilidad de Understat. El selector solo ofrece combinados validados. [LEAGUES.md](docs/LEAGUES.md) describe reproducción desde cachés reales y todos los campos.
 
 Los escudos y banderas se sirven localmente. [Procedencia, generación y fallback de imágenes](docs/ASSETS.md).
 

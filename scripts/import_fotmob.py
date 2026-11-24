@@ -102,7 +102,9 @@ def parse(body,stat,league=DEFAULT):
  if str(doc.get('currentSeasonId'))!=str(league['fotmobSeason']) or doc.get('currentStatName')!=stat or doc.get('type')!=specs(league)[stat][0] or doc.get('leagueDetails',{}).get('id')!=league['fotmobId']:raise ValueError('Wrong FotMob competition, season or statistic')
  if not any(str(s.get('id'))==str(league['fotmobSeason']) and s.get('name')=='2026/2027' for s in doc.get('seasons',[])):raise ValueError('Season 2026/27 not confirmed')
  rows=doc.get('statsData')
- if not isinstance(rows,list) or not 1<=len(rows)<=1500:raise ValueError('Missing statistic rows')
+ # A verified empty penalty-save ranking supplies no player values. Keeper
+ # profiles must still publish actual counts before combined coverage passes.
+ if not isinstance(rows,list) or len(rows)>1500 or not rows and stat!='penalty_save':raise ValueError('Missing statistic rows')
  seen=set()
  for r in rows:
   pid=str(r.get('id'));tid=str(r.get('teamId'))
@@ -226,7 +228,7 @@ def extend_teams(payload,pages,league,context):
   t=teams.get(str(row['id']))
   if not t:raise ValueError('Unknown standings team')
   gp=number(row['played'],True);score=re.fullmatch(r'(\d+)-(\d+)',row['scoresStr'])
-  if not score or gp>2*(league['teams']-1):raise ValueError('Invalid team coverage')
+  if not score or gp>league.get('maxTeamMatches',2*(league['teams']-1)):raise ValueError('Invalid team coverage')
   t.update({'matches':gp,'minutes':gp*90,'points':number(row['pts'],True,True),'goals':int(score[1]),'conceded':int(score[2]),'xg':None,'xga':None,'clean':None,'bigChances':None,'shotsOnTargetPerMatch':None,'possession':None,'metricContexts':{}})
   for key in ['matches','minutes','points','goals','conceded']:
    t['metricContexts'][key]=context(t,'overview');t['metricContexts'][key]['minutes_captured_at']=pages['overview']['captured_at']

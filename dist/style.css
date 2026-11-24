@@ -325,3 +325,5 @@ footer{flex-wrap:wrap}
 .data-dates thead th{font-weight:650}.data-dates tbody th{font-weight:500}.date-outcome{display:block;margin-top:4px;font-size:14px;color:#52645a}
 .record-dates{font-size:14px;line-height:1.6;color:#52645a;margin:10px 0}.record-dates span{white-space:nowrap}
 @media(max-width:600px){.data-dates>summary{gap:8px 12px;padding:12px}.date-heading{flex:1}.date-chips{order:3;flex-basis:100%;gap:5px 12px}.date-body{padding:0 12px 12px}.date-chip{white-space:normal}}
+
+.tablefoot{flex-wrap:wrap;gap:12px}.table-pagination{display:flex;align-items:center;gap:12px}.table-pagination[hidden]{display:none}.table-pagination button{font:inherit;border:1px solid #d5dfd9;background:#fff;color:#174b36;border-radius:6px;padding:7px 10px;cursor:pointer}.table-pagination button:disabled{opacity:.4;cursor:default}.table-pagination button:focus-visible{outline:2px solid #287853;outline-offset:2px}

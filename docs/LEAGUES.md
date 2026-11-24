@@ -1,110 +1,90 @@
 # Ligas combinadas, ámbito conjunto y rankings
 
-> Política activa desde el 24 de noviembre de 2026: catálogo **FotMob → ESPN** en todas las ligas. Understat no se carga ni se sirve y no interviene en valores, posiciones, referencias o scores de jugadores, equipos y selecciones. Se conserva solo en archivo (código, pruebas y capturas locales) para una reactivación explícita. Las prioridades anteriores que siguen abajo son históricas. LaLiga declara únicamente los huecos de xG/xGA de equipo como opcionales y mantiene las demás comprobaciones. Las cifras ausentes siguen desconocidas; nunca se oculta la fuente de una cifra usada.
+El selector ofrece **22 ligas combinadas de 15 países**, más **Todas las ligas**, temporada **2026/27**. Se habilitan únicamente después de validar sus fuentes y las mismas familias de métricas de ataque, pase, defensa, disciplina, portería y equipos. Esta disponibilidad no significa que cada jugador tenga todos los campos.
 
-> Desde el 24 de noviembre de 2026, LaLiga prioriza métricas FotMob → Understat conservado → ESPN y pausa la consulta general de Understat, conservando su catálogo/IDs y código. Las otras cuatro ligas mantienen FotMob → ESPN. [Política vigente](COMBINED.md).
+Todas usan catálogo e IDs **FotMob**, prioridad **FotMob → ESPN**, con fuente, captura y muestra por campo. **Understat no se carga, sirve ni usa en valores, posiciones, referencias o scores de jugadores/equipos/selecciones**. Sus importadores, pruebas y capturas originales permanecen archivados; los enlaces antiguos de LaLiga se traducen mediante un mapa de IDs verificados sin estadísticas archivadas.
 
-> Desde el 20 de noviembre de 2026 el mínimo de score es **200 minutos inclusive** para todas las posiciones, tanto del jugador como de cada eje. Se mantienen 2 PJ solo para ejes de portero sin minutos propios, tras verificar los 200 minutos del jugador. [Contrato vigente y referencia común](SCORES.md); los mínimos anteriores del registro histórico quedan sustituidos.
+## Cobertura comprobada
 
-> Definición vigente desde el 18 de noviembre: [score único por jugador con ejes de su perfil, referencia común, promedios de equipo y totales con cobertura](SCORES.md). Las definiciones anteriores de subperfiles, índices independientes, referencias por liga o sumas que aparezcan en el registro histórico quedan sustituidas por ese modelo.
+Los identificadores se verificaron con páginas oficiales que confirman competición y temporada `2026/2027`; ESPN confirma `2026-27`. Las 17 incorporaciones se consultaron el 24 de noviembre de 2026. Las cinco capturas anteriores conservan sus cifras y fechas. El panel Datos cargados muestra los intervalos reales de cada fuente y metadatos de fichas, sin presentar la fecha de cálculo como una consulta nueva.
+
+| Liga y país de competición | Clubes / calendario publicado | FotMob liga / temporada | ESPN | Fichas | PJ agregados FotMob |
+| --- | ---: | --- | --- | ---: | ---: |
+| LaLiga · España | 20 / 380 | 87 / 38843 | esp.1 | 488 | 110 |
+| Premier League · Inglaterra | 20 / 380 | 47 / 36781 | eng.1 | 454 | 91 |
+| Serie A · Italia | 20 / 380 | 55 / 36072 | ita.1 | 496 | 101 |
+| Bundesliga · Alemania | 18 / 306 | 54 / 40040 | ger.1 | 417 | 73 |
+| Ligue 1 · Francia | 18 / 306 | 53 / 37298 | fra.1 | 430 | 82 |
+| Liga Portugal · Portugal | 18 / 306 | 61 / 40067 | por.1 | 459 | 98 |
+| Eredivisie · Países Bajos | 18 / 306 | 57 / 36577 | ned.1 | 453 | 117 |
+| Championship · Inglaterra | 24 / 552 | 48 / 1000000498 | eng.2 | 604 | 192 |
+| 2. Bundesliga · Alemania | 18 / 306 | 146 / 40044 | ger.2 | 425 | 108 |
+| Ligue 2 · Francia | 18 / 306 | 110 / 37299 | fra.2 | 449 | 117 |
+| Serie B · Italia | 20 / 380 | 86 / 1000000670 | ita.2 | 492 | 120 |
+| LaLiga2 · España | 22 / 462 | 140 / 1000002232 | esp.2 | 580 | 162 |
+| First Division A · Bélgica | 18 / 306 | 40 / 37803 | bel.1 | 450 | 108 |
+| Premiership · Escocia | 12 / 198 · regular | 64 / 36832 | sco.1 | 306 | 81 |
+| Süper Lig · Turquía | 18 / 306 | 71 / 1000000512 | tur.1 | 439 | 108 |
+| Saudi Pro League · Arabia Saudí | 18 / 306 | 536 / 1000000494 | ksa.1 | 464 | 105 |
+| Superligaen · Dinamarca | 12 / 132 · regular | 46 / 35802 | den.1 | 313 | 90 |
+| Bundesliga · Austria | 12 / 132 · regular | 38 / 38611 | aut.1 | 293 | 78 |
+| Super League 1 · Grecia | 14 / 182 · regular | 135 / 44734 | gre.1 | 352 | 76 |
+| League One · Inglaterra | 24 / 552 | 108 / 1000000503 | eng.3 | 589 | 175 |
+| League Two · Inglaterra | 24 / 552 | 109 / 1000000505 | eng.4 | 583 | 186 |
+| A-League · Australia | 12 / 156 · regular | 113 / 1000000464 | aus.1 | 230 | 28 |
+
+**9.766 fichas jugador/liga y 398 clubes**. Las 17 ligas nuevas incorporan 7.481 fichas y cobertura agregada de 1.949 partidos en ambas clasificaciones. No son archivos de encuentros individuales ni se identifican cambios por encuentro desde estos endpoints. Nacionalidad y puestos corresponden a identidades publicadas, no a inferencias por nombre o país de liga. Los escudos se resuelven por ID FotMob del club.
+
+En Escocia se confirma la fase regular de 33 PJ por club / 198 encuentros; Australia, 26 / 156; Dinamarca y Austria, 22 / 132; Grecia, 26 / 182. Se declara solo esa fase publicada: no se inventan ni añaden las posteriores. Los límites por equipo están en `maxTeamMatches`; un formato futuro incompatible se rechaza conservando la captura válida. Las demás candidatas cargadas confirman calendario de ida/vuelta. Australia solo se habilita tras completar desde fichas verificadas los recuentos ausentes del ranking vacío de penaltis parados: ese ranking conserva valores desconocidos, sin inferir ceros. Una temporada en curso siempre sigue siendo parcial.
+
+LaLiga conserva únicamente los huecos de xG/xGA de equipo declarados como opcionales. No se relajan las otras familias ni se infiere xG del equipo para sus porteros. Las demás ligas requieren también esas métricas de equipo. Las ausencias son `null`/«—»; un cero necesita evidencia publicada o la derivación documentada de cero tiros y cero goles de la misma muestra.
+
+## Candidatas que no pasan el mismo contrato
+
+Se evaluaron 26 candidatas adicionales; estas nueve no se añaden en esta publicación. No se afirma un catálogo mundial exhaustivo ni una equivalencia basada solo en el nombre de una categoría.
+
+| Candidata | Motivo comprobado |
+| --- | --- |
+| Segunda de Portugal, Eerste Divisie, Croacia, Chequia, Serbia y Qatar | No publican las familias de xG/xA requeridas en las páginas de esta temporada |
+| Polonia | FotMob avanzado disponible; ESPN no devuelve la clasificación esperada (HTTP 400) |
+| Suiza | FotMob avanzado disponible; ESPN no confirma temporada/clasificación completa |
+| Rumanía | La página de competición consultada devuelve HTTP 404; no hay captura verificada |
 
 
-> Actualización del 8 de noviembre: la interfaz usa Score de jugador; los scores de equipo/delantera/centrocampo son promedios ponderados por minutos. Se añade xGOT al score del portero y se retiran todos los enlaces de descarga. [Fórmulas, actualización general y fuentes actuales](REFRESH.md). Las descripciones de sumas y descargas de versiones anteriores que siguen abajo son históricas.
+## Identidad y modelos
 
+Los 73 alias nuevos de clubes se revisaron contra los nombres publicados en ambas clasificaciones y quedan restringidos a su liga en `teamAliases`. No se aplica coincidencia difusa entre equipos. El cruce exige club único y mejor coincidencia de jugador única en ambos sentidos; un registro no se reutiliza. Las dudas quedan pendientes. [Reglas de combinación](COMBINED.md).
 
-El selector ofrece únicamente **LaLiga, Premier League, Serie A, Bundesliga y Ligue 1 combinadas**, más **Todas las ligas**. Las opciones se habilitan al cargar y validar sus fuentes y comprobar cobertura en las mismas familias de métricas de jugadores y equipos. Una competición que no pase ese control no aparece como disponible.
+Las posiciones usan etiquetas inequívocas y fichas FotMob verificadas. Una plantilla puede completar una posición desconocida si todos sus puestos publicados pertenecen a una sola familia POR/DEF/MED/DEL; una mezcla de familias no vota como posición definitiva. Se preservan puesto, contexto, alternativas y fecha. La nacionalidad deportiva usa identidad, club, liga, temporada y código de país publicados; no se infiere elegibilidad internacional.
 
-## Capturas reales y modelos
+Cada jugador tiene **un único score de su posición/perfil**, desde **200 minutos inclusive**, con la misma referencia de todas las ligas cargadas en cualquier vista. Las fichas verificadas completan tarjetas, recuentos y posición; los porteros añaden xGOT recibido solo con muestras atribuibles y autogoles comprobados. La referencia ampliada puede cambiar scores previos aunque sus cifras no cambien. No hay un ajuste por dificultad o fuerza de la liga; los percentiles comparan las acciones disponibles del conjunto. Los clubes usan promedios por minutos de esos mismos scores, y las selecciones, media simple de once titulares. [Fórmulas y mínimos](SCORES.md), [selecciones](NATIONS.md).
 
-Temporada fijada: 2026/27. Los identificadores de FotMob se obtuvieron de páginas públicas que confirman `2026/2027`; no se eligieron por aproximación a otra temporada.
+## Todas, filtros y actualización
 
-| Liga | Equipos / calendario | FotMob liga / temporada | Fuente principal | Catálogo visible |
-| --- | --- | --- | --- | --- |
-| LaLiga | 20 / 380 | 87 / 38843 | Understat; ESPN y FotMob complementan | 487 |
-| Premier League | 20 / 380 | 47 / 36781 | FotMob; ESPN complementa | 454 |
-| Serie A | 20 / 380 | 55 / 36072 | FotMob; ESPN complementa | 496 |
-| Bundesliga | 18 / 306 | 54 / 40040 | FotMob; ESPN complementa | 417 |
-| Ligue 1 | 18 / 306 | 53 / 37298 | FotMob; ESPN complementa | 430 |
+Todas concatena fichas y equipos con IDs prefijados por liga, fuentes y fechas originales; no fusiona por nombre personas de ligas distintas. La deduplicación de las selecciones usa identidad explícita sin sumar muestras. Las tablas muestran 100 filas por página, con navegación y rango; búsqueda, filtros y ordenación se aplican primero a todas las fichas. Los filtros cambian candidatos, no las referencias del score. Los rankings de KPI ordenan por su medida y los de posición por score; el score sigue en la primera columna.
 
-La suma es **2.284 fichas jugador/liga y 96 equipos**. La cobertura es parcial de temporada y de cada ranking; no todos los jugadores tienen todas las métricas. Understat conserva su captura real del 1 de noviembre. FotMob LaLiga reutiliza páginas de jugadores del 6 de noviembre y añade rankings de equipos consultados el 7; las otras ligas y ESPN se consultaron el 7 de noviembre. Cada campo guarda fecha y denominadores de origen. La fecha general conserva la consulta más antigua del conjunto, sin renovarla al calcular un área.
+Actualizar datos consulta FotMob/ESPN con acceso del propietario, sin contraseña adicional, como máximo dos ligas simultáneas y tres trabajos de fichas por lote. Las actualizaciones válidas se conservan en el navegador; una fuente fallida conserva sus datos y fechas anteriores. Las cachés y rutas incluyen liga y temporada, también en IDs con dígitos como `laliga-2`. La actualización informa jugadores nuevos/modificados y cobertura de partidos por fuente; no atribuye una nueva fecha de consulta a un cambio de cifras. No hay botones CSV, JSON o SQLite. [Servicio y fechas](REFRESH.md), [rendimiento](PERFORMANCE.md).
 
-Understat devolvió mantenimiento («We will come back soon») durante las comprobaciones, también en LaLiga y temporadas anteriores. Por eso no se afirma una nueva descarga Understat para las otras ligas: sus xG/xA proceden de FotMob. Los modelos se mantienen identificados. Las ocasiones creadas FotMob permanecen separadas de los pases clave Understat; no se inventa una equivalencia entre definiciones. Los pases progresivos de StatsBomb tampoco se renombran desde los rompelíneas.
+## Generar y reproducir
 
-Se descargaron los 28 rankings de pase, defensa, ataque, disciplina y portería que se utilizaban en LaLiga, junto con xG/xA, goles/asistencias, tiros/90, clasificación y métricas de equipos. El importador procesa 42 páginas por cada nueva liga y 35 para el complemento FotMob de LaLiga. Los tiros totales y tiros a puerta totales se completan desde ESPN mediante coincidencias inequívocas; las tasas FotMob se conservan aparte, sin reconstruir recuentos redondeados.
-
-`GradaCombined.coverage` comprueba 30 campos/familias de jugadores y 9 de equipos antes de habilitar una liga. Esto confirma disponibilidad de las métricas, no cobertura completa de cada ficha. Un jugador omitido en un ranking sigue con `null`, incluso en tarjetas o acciones cuyo valor podría ser cero; solo se añade cero si un proveedor lo publica.
-
-## Todas las ligas
-
-Se concatenan las fichas de las ligas disponibles, sin unir por nombre a jugadores de competiciones distintas. IDs de jugadores/equipos se prefijan por liga y se añade una columna **Liga**. Las fuentes y fechas de cada campo se copian desde su liga, incluidos los campos ESPN; una fecha global no sustituye a su procedencia.
-
-Los percentiles se recalculan con la población conjunta seleccionada. No se ordenan áreas calculadas por separado en cinco ligas. Al volver a una liga, vuelve a calcularse su referencia local. Los filtros de tabla y el mínimo del ranking no cambian los percentiles: filtran candidatos de una referencia fija por perfil y ámbito.
-
-Los modelos xG/xA pueden diferir por proveedor, especialmente entre LaLiga y las demás. El área es un índice estadístico relativo al conjunto, perfil y ejes, no una probabilidad o una valoración universal. Un jugador transferido puede tener más de una ficha de liga; no se mezclan sus periodos ni se atribuyen sus minutos de una competición a otra.
-
-## Ocho rankings por área
-
-La pestaña **Rankings por área** muestra inicialmente el área descendente, con los valores de los ejes en sus unidades exactas (/90, /PJ, porcentaje o ratio). La unidad de los ejes se conserva en tabla, ficha y CSV. Se puede buscar, filtrar, cambiar el mínimo y ordenar por otras columnas.
-
-| Perfil | Ejes prioritarios | Mínimo inicial |
-| --- | --- | --- |
-| Delanteros | Goles/90, xG/90, tiros a puerta/90, xA/90, regates/90, conversión | 450 min |
-| Porteros | Paradas %, paradas/PJ, goles recibidos/PJ (invertido), goles evitados/90, balones aéreos/90, acciones de líbero/90 | 180 min |
-| Defensas | Entradas/90, intercepciones/90, despejes/90, bloqueos/90, recuperaciones/90, pase preciso/90 | 450 min |
-| Centrocampistas: perfil defensivo | Pase preciso/90, acierto, recuperaciones/90, entradas/90, intercepciones/90, pases rompelíneas/90 | 450 min |
-| Centrocampistas: perfil ofensivo | xA/90, ocasiones creadas/90, grandes ocasiones creadas/90, tiros a puerta/90, regates/90, goles/90 | 450 min |
-| Equipos: ataque | Goles/PJ, xG/PJ, tiros a puerta/PJ, grandes ocasiones/PJ, goles/xG | 5 PJ |
-| Equipos: defensa | Goles recibidos/PJ y xG recibidos/PJ (invertidos), porterías a cero/PJ | 5 PJ |
-| Equipos: rendimiento global | Puntos/PJ, diferencia de goles/PJ, diferencia de xG/PJ, goles/PJ, goles recibidos/PJ (invertido), porterías a cero/PJ | 5 PJ |
-
-Los dos perfiles de centrocampistas evalúan las acciones de los jugadores clasificados como MED. No inventan una posición detallada: un centrocampista puede aparecer en ambos. La posición amplia procede del proveedor; si falta en la fuente principal, se completa con ESPN solo cuando la identidad y el club coinciden de forma única y el rol portero/campo es coherente.
-
-Se requieren al menos cinco referencias por eje y tres ejes. Los ejes se fijan por perfil y ámbito; los rankings de jugadores solo admiten candidatos con todos los ejes comunes. En equipos se mantienen visibles los índices pendientes, sin puesto al ordenar por ese índice. Las muestras mínimas se comprueban también en los denominadores de origen de los ejes. Cuando una fuente de portero no ofrece minutos, exige al menos dos PJ propios. Los índices incompletos pueden verse en una ficha como radar parcial; la tabla los muestra pendientes y el equipo conserva su área general de plantilla.
-
-El área relativa es `sum(r[i] * r[(i+1) % n]) / n`, con `r = percentil / 100`. Su máximo es 1; todos los radios en P50 dan 0,25. Depende del orden y número de ejes. Los rangos de empate usan media; la ordenación utiliza precisión completa y muestra tres decimales.
-
-Las tasas de equipos usan sus propios PJ. Las diferencias de goles y xG conservan el signo y exigen proveedor y cobertura compatibles en ambos términos. No se asigna xG del equipo a un portero.
-
-## Actualización y descargas
-
-- «Actualizar ESPN y combinar» consulta la liga seleccionada y valida todas sus plantillas, competición y temporada antes de sustituirla.
-- «Actualizar ESPN · todas» consulta como máximo dos ligas simultáneamente, con tres plantillas por liga. Las ligas fallidas conservan sus capturas; se informa cuántas se actualizaron. Understat/FotMob conservan sus fechas.
-- Las cachés ESPN se separan por liga; una respuesta de otra competición se rechaza aunque su temporada y número de equipos coincidan.
-- Por liga se ofrecen JSON originales, combinado JSON, CSV filtrado y SQLite de FotMob; LaLiga conserva JSON/SQLite Understat. En Todas se ofrecen combinado JSON y CSV con la columna Liga y procedencia por campo. Las descargas originales se consultan eligiendo una liga.
-
-El alojamiento es estático: el botón consulta ESPN desde el navegador, no ejecuta Python en Sites ni publica datos para otros visitantes. Regenerar y publicar una versión renueva las capturas de la web compartida.
-
-## Código generador
-
-Python 3.11+ y Node 18+, sin paquetes adicionales. El catálogo único es `dist/leagues.json`, consumido por JavaScript y los importadores.
+Python 3.11+ y Node 22+, biblioteca estándar, sin base de pago ni paquetes adicionales. `dist/leagues.json` es el catálogo compartido por el navegador, Worker e importadores. Fuentes y SQLite se generan localmente; no se incluyen en GitHub.
 
 ```sh
-python scripts/import_leagues.py --all
-python scripts/import_leagues.py --league bundesliga
+python scripts/import_leagues.py --all --squads --profiles
+python scripts/download_club_badges.py
+python scripts/build_worker.py
 ```
 
-El proceso prepara cada liga en un directorio temporal, genera JSON/SQLite y valida el combinado y su cobertura antes de reemplazar cada archivo individualmente. Hay que publicar el conjunto después de que finalice; no se afirma una transacción de todos los archivos. Una fuente no disponible no se sustituye por fixtures. En modo `--all` se informa de ligas no disponibles y se continúa con las que pasan. Si ninguna pasa, el proceso falla. Una captura Understat existente se reutiliza con su fecha original durante el mantenimiento.
+Se prepara cada liga en staging, valida fuentes/cobertura y genera JSON original, JSON combinado y SQLite FotMob antes de promover archivos. No se afirma una transacción atómica de todo el conjunto. `--all` informa fuentes no disponibles y continúa con las válidas; si ninguna pasa, falla. Para publicar, deben existir las capturas reales de cada liga registrada: el empaquetador falla ante una captura ausente.
 
-Se puede repetir una descarga real sin red mediante `--input-root /ruta/capturas`: cada subdirectorio `<liga>/` contiene los HTML con los nombres de `SPECS`, `CORE` y `TEAM_SPECS`; `<liga>/espn/` contiene `standings.json` y `roster-<id>.json`. Deben conservarse los tiempos originales de consulta. También se pueden ejecutar los importadores por separado con `--league`; el constructor `scripts/build_combined.cjs` admite `--league` y `--data-dir`.
+Para reproducir sin red:
 
-Los datos y las bases están ignorados por GitHub. El repositorio distribuye su generador, validadores y pruebas. [FOTMOB.md](FOTMOB.md) y [COMBINED.md](COMBINED.md) detallan el origen y la unión inicial.
+```sh
+python scripts/import_leagues.py --league portugal \
+  --input-root /ruta/rankings --squads-root /ruta/plantillas \
+  --profiles-root /ruta/fichas --output-dir /ruta/staging
+```
 
-## Área general de equipo: suma de jugadores
+`rankings/<liga>/raw/` (o directamente `<liga>/`) contiene HTML de `SPECS`, `CORE` y `TEAM_SPECS`; `<liga>/espn/`, `standings.json` y `roster-<id>.json`. `plantillas/<liga>/<club-id>.html` y `fichas/<liga>/<jugador-id>.html` conservan los tiempos originales. `enrich_squads.py` reutiliza cada plantilla para posiciones/nacionalidad, con validación por ID, club, liga y temporada. `enrich_fotmob.py --minimum-minutes 200 --missing-only` consulta solo quienes alcanzan el mínimo y porteros, reutilizando fichas ya capturadas con su fecha original; `--keepers-only` limita a porteros. Son opciones explícitas de importación, no cambios al refresco de la web.
 
-Por petición expresa del usuario, **Área equipo (suma)** es la suma, a precisión completa, de las áreas válidas de posición (POR/DEF/MED/DEL) de todos los jugadores asignados al equipo por ID. No se promedian ni ponderan por minutos, ni se aplican los mínimos del ranking a esta suma. Cada área individual sigue entre 0 y 1; la suma de plantilla puede superar 1. La referencia corresponde a la liga o Todas seleccionadas. Cambiar de perfil, búsqueda o filtros no cambia la suma.
-
-Se informa **Jugadores con área** como válidos/plantilla asignada y se conservan los pendientes. Un equipo sin ninguna área válida queda desconocido, no cero. Un área individual realmente cero sí se suma y cuenta como válida. No se asignan fichas agregadas de traspasos a un club por su nombre; los IDs duplicados se rechazan. La ficha y el JSON combinado incluyen las contribuciones exactas y su cobertura. El CSV conserva los valores y el origen derivado GRADA.
-
-El usuario eligió mantener los índices específicos de ataque y defensa separados de la suma general. El ranking global y la tabla Equipos se ordenan inicialmente por la suma de plantilla; ataque y defensa se ordenan por su índice 0–1. Los equipos con índice incompleto permanecen visibles con — y el motivo, sin puesto al ordenar por ese índice. El radar de equipos llama **Índice del perfil** a su área normalizada.
-
-Diagnóstico real: Racing Santander está unido entre Understat 293, ESPN 87 y FotMob 8696. Su ausencia en los antiguos rankings defensivo/global se debía a clean ausente, no a un nombre de equipo distinto. Se mantiene ese dato desconocido. LaLiga: suma 4,185619726674771 (4,186 visible), 16/25 áreas válidas y 9 pendientes. En Todas: 3,941190924696183, por recalcular la referencia conjunta. La búsqueda acepta «Racing de Santander» además del nombre publicado.
-
-El inicio muestra bloques independientes de equipos ofensivos, mejores defensas de equipos y ambos perfiles de centrocampistas, con cinco candidatos válidos y accesos a cada ranking completo. Esos accesos limpian filtros anteriores para mostrar la clasificación completa del ámbito seleccionado.
-
-## Defensas individuales y centros del campo por equipo
-
-El inicio añade los mejores defensas individuales según DEF, área entre 0 y 1 y mínimo inicial 450 minutos, y dos bloques de equipos por centro del campo ofensivo y defensivo. Los rankings TEAM_MED_ATT/TEAM_MED_DEF suman las áreas válidas de MED_ATT/MED_DEF de todos los jugadores clasificados MED asignados al club por ID. No se incluyen DEF/DEL, no se infiere una posición táctica más detallada y un MED puede contribuir a ambos perfiles.
-
-Las sumas pueden superar 1, no se ponderan ni limitan a titulares y muestran válidos/total MED, pendientes y contribuciones. Sin ninguna área válida el resultado es null; un área cero real cuenta. La referencia de cada perfil usa MED con 450 minutos propios por eje; el ranking de equipos empieza con 5 PJ y ese filtro no modifica la suma. Cambiar de liga a Todas recalcula los percentiles antes de sumar. Las áreas ofensiva/defensiva y sus coberturas aparecen también en la tabla Equipos y sus fichas; los índices de ataque/defensa/global se conservan.
-
-Por nueva petición del usuario se retiran los controles CSV y JSON, tanto globales como por proveedor/combinado. Los JSON siguen generándose para cargar la web y reproducir los cálculos; no se han borrado datos. La interfaz conserva las descargas SQLite por liga. Las referencias a exportaciones CSV/JSON en secciones históricas describen las versiones anteriores.
+Los generadores separados admiten `--league`; `build_combined.cjs`, `--data-dir` y `--reference-dir`. Tras importar ligas nuevas, se regeneran todos los combinados con el mismo conjunto final como referencia. No se editan cifras a mano. [Datos](DATA.md), [FotMob](FOTMOB.md), [tarea y verificación](../loop/tasks/20261124-codex-equivalent-leagues.md).

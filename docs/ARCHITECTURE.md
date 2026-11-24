@@ -59,21 +59,15 @@ Un push es una operación de Git, un workflow es una ejecución y una URL public
 
 `dist/metrics.js` contiene la normalización y las tasas; `dist/laliga.js`, la consulta/validación y adaptación de ESPN. `scripts/import_laliga.py` genera una captura real atómica para Sites, reutilizando ese adaptador. El botón actualiza la copia del navegador. Consulta [LALIGA.md](LALIGA.md) para campos, cobertura y límites. El hosting continúa siendo estático.
 
-## Captura de Understat
+## Fuentes y perfiles por posición
 
-`scripts/import_understat.py` extrae y valida datos públicos de LaLiga 2026/27, genera JSON y SQLite. `dist/understat.js` valida la captura consumida por la UI; `dist/security.js` restringe enlaces y protege CSV. El selector conserva las vistas individuales junto al combinado autorizado. El botón de Understat recarga la captura publicada, según [UNDERSTAT.md](UNDERSTAT.md).
+La aplicación activa usa catálogo FotMob y complemento ESPN. `import_fotmob.py` extrae rankings públicos y genera JSON/SQLite con contexto por campo; `fotmob.js` valida la captura y `combined.js` aplica FotMob → ESPN con identidad y club únicos. Las fichas verificadas aportan recuentos, tarjetas, posición y xGOT atribuible al portero. `enrich_squads.py` valida la plantilla una vez para completar puestos y país deportivo. Los alias revisados de clubes son específicos de cada liga. Las tasas conservan denominadores propios.
 
-## Vista combinada, radar y filtros
-
-La vista combinada autorizada da prioridad a Understat y complementa coincidencias inequívocas con ESPN y FotMob, conservando origen, fecha y denominadores por métrica. Añade descargas explícitas, radar por posición y filtros numéricos. Consulta [definiciones y límites](COMBINED.md).
-
-## FotMob y perfiles por posición
-
-`scripts/import_fotmob.py` extrae rankings públicos de HTML y genera JSON/SQLite con contexto por campo. `dist/fotmob.js` valida la captura y declara sus métricas; `dist/combined.js` aplica prioridad Understat → ESPN → FotMob. `dist/metrics.js` conserva tasas publicadas y denominadores propios. `dist/radar.js` calcula referencias compartidas por posición, percentiles y área relativa; `dist/app.js` guarda perfiles derivados en memoria, sin mutar las capturas originales. `dist/filters.js` permite un lector de métricas para filtrar el área derivada. Consulta [FOTMOB.md](FOTMOB.md) y [COMBINED.md](COMBINED.md).
+Understat conserva código, importador, pruebas y capturas originales en archivo; no se carga ni se sirve ni participa en cifras, posiciones, referencias o scores. Los enlaces antiguos se conservan mediante alias de IDs verificados sin estadísticas archivadas. [Contrato de combinación](COMBINED.md), [FotMob](FOTMOB.md).
 
 ## Catálogo de ligas y ámbitos
 
-`dist/leagues.json` es la configuración compartida por Python y `dist/leagues.js`. Los validadores comprueban la competición y temporada específicas, incluidos 18/20 clubes y 306/380 partidos. `scripts/import_leagues.py` prepara cada conjunto en un directorio temporal y valida cobertura antes de promover sus archivos.
+`dist/leagues.json` es la configuración compartida por Python y `dist/leagues.js`. Los validadores comprueban la competición y temporada específicas, incluidos 12–24 clubes, calendarios verificados y límites por equipo para las fases regulares declaradas. `scripts/import_leagues.py` prepara cada conjunto en un directorio temporal y valida cobertura antes de promover sus archivos.
 
 `dist/scopes.js` concatena combinados por liga con IDs propios, fechas por campo y columna Liga. `dist/radar.js` fija referencias por perfil y ámbito y admite jugadores y equipos; sus perfiles de centrocampistas describen acciones, sin inventar posiciones detalladas. `dist/app.js` mantiene una caché por liga y recalcula áreas al cambiar de ámbito; los filtros solo cambian candidatos. El botón de actualización limita concurrencia y conserva cada liga fallida. Consulta [LEAGUES.md](LEAGUES.md).
 
@@ -92,4 +86,4 @@ La vista combinada autorizada da prioridad a Understat y complementa coincidenci
 
 ## Identidad visual de clubes y competiciones
 
-`dist/branding.js` resuelve escudos desde IDs FotMob de equipos verificados, clubes canónicos de jugadores y banderas por liga; no participa en matching ni métricas. `scripts/download_club_badges.py` genera una caché de PNG validada, ignorada en Git. `build_worker.py` incluye escudos locales, cinco SVG pasivos y su licencia, con rutas limitadas; la UI conserva texto/fallback y no amplía CSP ni pide imágenes externas. [Procedencia y reproducción](ASSETS.md).
+`dist/branding.js` resuelve escudos desde IDs FotMob de equipos verificados, clubes canónicos de jugadores y banderas por liga; no participa en matching ni métricas. `scripts/download_club_badges.py` genera una caché de PNG validada, ignorada en Git. `build_worker.py` incluye escudos locales, banderas SVG pasivas revisadas y su licencia, con rutas limitadas; la UI conserva texto/fallback y no amplía CSP ni pide imágenes externas. [Procedencia y reproducción](ASSETS.md).

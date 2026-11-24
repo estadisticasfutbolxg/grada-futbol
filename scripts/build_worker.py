@@ -17,6 +17,50 @@ from download_club_badges import validate_png
 ROOT = Path(__file__).resolve().parents[1]
 
 
+def validate_flag(body):
+    """Allow only bounded passive SVG, including verified local reuse/clip IDs."""
+    if len(body) > 128 * 1024 or b'<!' in body:
+        raise ValueError('Unexpected flag document')
+    flag = ET.fromstring(body)
+    svg, href = '{http://www.w3.org/2000/svg}', '{http://www.w3.org/1999/xlink}href'
+    tags = {svg + tag for tag in ['svg', 'path', 'g', 'circle', 'defs', 'clipPath', 'use']}
+    attributes = {'clip-path', 'cx', 'cy', 'd', 'fill', 'fill-opacity', 'fill-rule', 'height', 'id', 'r', 'stroke', 'stroke-linecap', 'stroke-linejoin', 'stroke-width', 'transform', 'viewBox', 'width', 'x', 'y', 'href', href}
+    elements = list(flag.iter())
+    if flag.tag != svg + 'svg' or len(elements) > 4000:
+        raise ValueError('Unexpected SVG structure')
+    ids = {}
+    for element in elements:
+        value = element.attrib.get('id')
+        if value is not None:
+            if value in ids or not re.fullmatch(r'[A-Za-z0-9_-]{1,80}', value):
+                raise ValueError('Invalid flag ID')
+            ids[value] = element
+    for element in elements:
+        if element.tag not in tags or set(element.attrib) - attributes:
+            raise ValueError('Active or unsupported flag content')
+        for key, value in element.attrib.items():
+            if '@import' in value.lower():
+                raise ValueError('Active flag content')
+            if key in {'href', href} and (element.tag != svg + 'use' or not value.startswith('#') or value[1:] not in ids):
+                raise ValueError('External flag reference')
+            if 'url(' in value.lower() and (key != 'clip-path' or not re.fullmatch(r'url\(#[A-Za-z0-9_-]+\)', value) or value[5:-1] not in ids):
+                raise ValueError('External flag resource')
+    visits = 0
+    def check_reuse(element, seen):
+        nonlocal visits
+        visits += 1
+        if visits > 10000 or len(seen) > 40:
+            raise ValueError('Excessive flag reuse')
+        for child in element.iter():
+            if child.tag != svg + 'use':
+                continue
+            target = child.attrib.get(href, child.attrib.get('href', ''))[1:]
+            if not target or target in seen:
+                raise ValueError('Cyclic or missing flag reference')
+            check_reuse(ids[target], seen | {target})
+    check_reuse(flag, set())
+
+
 def build():
     modules = {}
 
@@ -81,17 +125,10 @@ def build():
             raise ValueError('Unsafe crest path')
         validate_png(path.read_bytes())
         files.append(path)
-    for name in ['es', 'gb-eng', 'it', 'de', 'fr']:
+    for name in ['es', 'gb-eng', 'it', 'de', 'fr', 'pt', 'nl', 'be', 'gb-sct', 'tr', 'sa', 'dk', 'at', 'gr', 'au']:
         path = asset_root / 'flags' / (name + '.svg')
         body = path.read_bytes()
-        if len(body) > 128 * 1024 or b'<!' in body:
-            raise ValueError('Unexpected flag document')
-        flag = ET.fromstring(body)
-        for element in flag.iter():
-            if element.tag not in {'{http://www.w3.org/2000/svg}svg', '{http://www.w3.org/2000/svg}path', '{http://www.w3.org/2000/svg}g'}:
-                raise ValueError('Unsupported flag element')
-            if any(key.lower().startswith('on') or 'href' in key.lower() or 'url(' in value.lower() or '@import' in value.lower() for key, value in element.attrib.items()):
-                raise ValueError('Active or external flag content')
+        validate_flag(body)
         files.append(path)
     files.append(asset_root / 'flags/LICENSE.txt')
     for path in files:

@@ -8,6 +8,7 @@ import unittest
 spec=importlib.util.spec_from_file_location('fotmob',Path(__file__).resolve().parents[1]/'scripts/import_fotmob.py')
 module=importlib.util.module_from_spec(spec)
 spec.loader.exec_module(module)
+ARCHIVED_PARTIAL={**module.DEFAULT,'primary':'Understat'}
 
 
 def pages():
@@ -31,8 +32,18 @@ def pages():
 
 
 class FotmobContract(unittest.TestCase):
+    def test_verified_empty_penalty_ranking_preserves_unknown_values_until_profiles_supply_counts(self):
+        source=pages();source['penalty_save']['data']['statsData']=[]
+        def body(stat):return ('<script id="__NEXT_DATA__">'+json.dumps({'props':{'pageProps':{'data':source[stat]['data']}}})+'</script>').encode()
+        self.assertEqual(module.parse(body('penalty_save'),'penalty_save')['statsData'],[])
+        self.assertIsNone(module.build(source,ARCHIVED_PARTIAL)['players'][0]['penaltiesSaved'])
+        source['saves']['data']['statsData']=[]
+        with self.assertRaises(ValueError):module.parse(body('saves'),'saves')
+        source['penalty_save']['data']['currentSeasonId']='2025'
+        with self.assertRaises(ValueError):module.parse(body('penalty_save'),'penalty_save')
+
     def test_does_not_back_calculate_counts_and_retains_signed_stat(self):
-        data=module.build(pages());p=data['players'][0]
+        data=module.build(pages(),ARCHIVED_PARTIAL);p=data['players'][0]
         self.assertIsNone(p['passes']);self.assertIsNone(p['completed'])
         self.assertEqual(p['metricContexts']['completed']['reportedPer90'],105.9)
         self.assertEqual(p['tackles'],20);self.assertEqual(p['metricContexts']['tackles']['reportedPer90'],2.6)
@@ -48,7 +59,7 @@ class FotmobContract(unittest.TestCase):
     def test_missing_rows_remain_unknown_and_different_clubs_are_not_joined(self):
         source=pages();source['interception']['data']['statsData']=[]
         source['ball_recovery']['data']['statsData'][0]['teamId']=2
-        p=module.build(source)['players'][0]
+        p=module.build(source,ARCHIVED_PARTIAL)['players'][0]
         self.assertIsNone(p['interceptions']);self.assertIsNone(p['recoveries'])
 
     def test_html_extraction_validates_season_and_count_formats(self):
@@ -58,7 +69,7 @@ class FotmobContract(unittest.TestCase):
         doc['props']['pageProps']['data']['currentSeasonId']='2025'
         with self.assertRaises(ValueError):module.parse(body(),'total_tackle')
         source['total_tackle']['data']['statsData'][0]['substatValue']['value']=2.5
-        with self.assertRaises(ValueError):module.build(source)
+        with self.assertRaises(ValueError):module.build(source,ARCHIVED_PARTIAL)
 
 
 if __name__=='__main__':unittest.main()

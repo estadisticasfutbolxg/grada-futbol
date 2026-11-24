@@ -46,7 +46,7 @@ function parseFotmob(html,stat,league){
  }
  const d=page?.data;
  if(String(d?.currentSeasonId)!==String(league.fotmobSeason)||d.currentStatName!==stat||d.type!==specs(league)[stat]||d.leagueDetails?.id!==league.fotmobId||!d.seasons?.some(s=>String(s.id)===String(league.fotmobSeason)&&s.name==='2026/2027'))throw new Error('FotMob: competición, temporada o métrica incorrecta.');
- if(!Array.isArray(d.statsData)||!d.statsData.length||d.statsData.length>1500)throw new Error('Ranking incompleto.');
+ if(!Array.isArray(d.statsData)||!d.statsData.length&&stat!=='penalty_save'||d.statsData.length>1500)throw new Error('Ranking incompleto.');
  const seen=new Set();for(const r of d.statsData){const pid=id(r.id);id(r.teamId);name(r.name);if(seen.has(pid)||r.statValue?.name!==stat)throw new Error('Fila incoherente.');seen.add(pid);number(r.statValue.value,{signed:stat==='_goals_prevented'});}
  return {statsData:d.statsData};
 }
@@ -84,7 +84,7 @@ function buildFotmob(pages,league){
  const teamsById=new Map(teams.map(t=>[t.id,t]));
  for(const row of rows('overview')){
   const t=teamsById.get(String(row.id)),score=String(row.scoresStr).match(/^(\d+)-(\d+)$/),gp=number(row.played,{integer:true});
-  if(!t||!score||gp>2*(league.teams-1))throw new Error('Clasificación inválida.');
+  if(!t||!score||gp>leagues.teamMatchLimit(league))throw new Error('Clasificación inválida.');
   Object.assign(t,{matches:gp,minutes:gp*90,points:number(row.pts,{integer:true,signed:true}),goals:Number(score[1]),conceded:Number(score[2]),xg:null,xga:null,clean:null,bigChances:null,shotsOnTargetPerMatch:null,possession:null,metricContexts:{}});
   for(const key of ['matches','minutes','points','goals','conceded'])t.metricContexts[key]={...context(t,'overview'),minutes_captured_at:pages.overview.captured_at};
  }

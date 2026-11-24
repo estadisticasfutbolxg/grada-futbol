@@ -13,8 +13,9 @@
   const fields = [...new Set(['matches','minutes','goals','assists','xg','xa','shots','shotsOnTarget','shotsPer90','passes','completed','accuracy','conversion','delta','saves','savepct','conceded','xga','xgaOnTarget','clean','tackles','interceptions','recoveries','keypasses','progressive','psxg','prevented','points','bigChances','shotsOnTargetPerMatch','possession',...fotmob.fields])];
   const numeric = n => typeof n === 'number' && Number.isFinite(n);
   function normalize(value) { return String(value ?? '').normalize('NFKD').replace(/\p{M}/gu,'').toLowerCase().replace(/[^a-z0-9]/g,''); }
-  function teamKey(name) {
+  function teamKey(name,league) {
     const key = normalize(name);
+    if(league?.teamAliases&&Object.hasOwn(league.teamAliases,key))return league.teamAliases[key];
     // Public names in the validated league snapshots; no fuzzy matching.
     return ({deportivo:'deportivolacoruna',deportivoacoruna:'deportivolacoruna',deportivoalaves:'alaves',racingdesantander:'racingsantander',
       internazionale:'inter',acmilan:'milan',asroma:'roma',bayernmunich:'bayernmunchen',scfreiburg:'freiburg',svelversberg:'elversberg',hamburgsv:'hamburgersv',mainz:'mainz05',fcaugsburg:'augsburg',tsghoffenheim:'hoffenheim',fccologne:'1fckoln',scpaderborn07:'paderborn','1fcunionberlin':'unionberlin',staderennais:'rennes',asmonaco:'monaco',ajauxerre:'auxerre',lehavreac:'lehavre'})[key] || key;
@@ -48,14 +49,15 @@
     if(primarySource!==league.primary&&primarySource!==league.archivedPrimary)throw new Error('Fuente principal no admitida para esta liga.');
     if (u.metadata.competition !== e.metadata.competition || u.metadata.season !== e.metadata.season) throw new Error('Las fuentes no corresponden a la misma competición y temporada.');
     if(f&&(f.metadata.competition!==u.metadata.competition||f.metadata.season!==u.metadata.season||primarySource==='FotMob'))throw new Error('Combinación de fuentes o ligas inválida.');
-    const uTeams = new Map(u.teams.map(t=>[String(t.id),teamKey(t.name)]));
-    const eTeams = new Map(e.teams.map(t=>[String(t.id),teamKey(t.name)]));
+    const clubKey=name=>teamKey(name,league);
+    const uTeams = new Map(u.teams.map(t=>[String(t.id),clubKey(t.name)]));
+    const eTeams = new Map(e.teams.map(t=>[String(t.id),clubKey(t.name)]));
     // An aggregated transfer row has no single team_id; keep it solely Understat.
     const uKey = p => playerKey(p,primarySource,uTeams.get(String(p.team_id)));
     const eKey = p => playerKey(p,'ESPN',eTeams.get(String(p.team_id)));
-    const uTeamIndex = index(u.teams,t=>teamKey(t.name)), eTeamIndex = index(e.teams,t=>teamKey(t.name));
-    const fTeams = new Map((f?.teams||[]).map(t=>[String(t.id),teamKey(t.name)]));
-    const fTeamIndex = index(f?.teams||[],t=>teamKey(t.name));
+    const uTeamIndex = index(u.teams,t=>clubKey(t.name)), eTeamIndex = index(e.teams,t=>clubKey(t.name));
+    const fTeams = new Map((f?.teams||[]).map(t=>[String(t.id),clubKey(t.name)]));
+    const fTeamIndex = index(f?.teams||[],t=>clubKey(t.name));
     const matchedIDs = new Set(), matchedFotmobIDs = new Set();
     const sourceMetadata={[primarySource]:u.metadata,ESPN:e.metadata,...(f?{FotMob:f.metadata}:{})};
     const configuredPriority=primarySource===league.primary?league.metricPriority:league.archivedMetricPriority;
@@ -186,19 +188,19 @@
       if(row.combination.conflicting_fields.length)stats.conflicting_players++;
       return row;
     });
-    const et = index(e.teams,t=>teamKey(t.name)), ut = index(u.teams,t=>teamKey(t.name));
+    const et = index(e.teams,t=>clubKey(t.name)), ut = index(u.teams,t=>clubKey(t.name));
     const teams = u.teams.map(t=>{
-      const club = teamKey(t.name), candidates = et.get(club) || [];
+      const club = clubKey(t.name), candidates = et.get(club) || [];
       const fc=fTeamIndex.get(club)||[],extra=fc.length===1&&ut.get(club)?.length===1?fc[0]:null;
-      return merge(t,club && candidates.length === 1 && ut.get(teamKey(t.name)).length === 1 ? candidates[0] : null,'team',extra);
+      return merge(t,club && candidates.length === 1 && ut.get(clubKey(t.name)).length === 1 ? candidates[0] : null,'team',extra);
     });
     stats.position_corrected_players=players.filter(p=>p.pos!==p.sourceRecords[primarySource].pos).length;
     stats.position_conflicting_players=players.filter(p=>p.positionResolution.conflicting).length;
     stats.generic_name_matches=players.reduce((n,p)=>n+Object.values(p.combination.match_methods).filter(m=>!['name_team','verified_identity'].includes(m)).length,0);
     const sources=Object.fromEntries(priority.map(source=>[source,{...sourceMetadata[source]}]));
-    return {metadata:{...u.metadata,league_key:league.id,catalog_source:primarySource,primary_source:priority[0],metric_priority:priority,understat_refresh:league.understatRefresh!==false,kind:'combined',source:priority.join(' + '),url:sourceMetadata[priority[0]].url,complete:false,sources,combination:{...stats,understat_only_players:primarySource==='Understat'?stats.understat_only_players:0,primary_only_players:stats.understat_only_players,espn_players_not_joined:e.players.length-matchedIDs.size,fotmob_players_not_joined:f?f.players.length-matchedFotmobIDs.size:0},
+    return {metadata:{...u.metadata,league_key:league.id,calendar_phase:league.calendarPhase||null,catalog_source:primarySource,primary_source:priority[0],metric_priority:priority,understat_refresh:league.understatRefresh!==false,kind:'combined',source:priority.join(' + '),url:sourceMetadata[priority[0]].url,complete:false,sources,combination:{...stats,understat_only_players:primarySource==='Understat'?stats.understat_only_players:0,primary_only_players:stats.understat_only_players,espn_players_not_joined:e.players.length-matchedIDs.size,fotmob_players_not_joined:f?f.players.length-matchedFotmobIDs.size:0},
       imported_at:new Date(Math.min(...Object.values(sources).map(m=>Date.parse(m.imported_at)))).toISOString(),
-      notes:'Catálogo e IDs de '+primarySource+'. Prioridad de métricas: '+priority.join(' → ')+'. Los proveedores completan solo coincidencias inequívocas de nombres y club o identidades revisadas. Las posiciones usan consenso y ficha FotMob como respaldo, con independencia de esta prioridad. Un recuento de goles distinto con más PJ verificados o, con iguales PJ, una captura posterior puede sustituir al prioritario; sus derivados conservan componentes originales de una sola fuente y muestra. '+stats.matched_players+'/'+players.length+' jugadores complementados. Cada campo conserva fuente, fecha, minutos y PJ propios; los huecos no se rellenan con cero. No se equiparan pases clave y ocasiones creadas. '+(priority.includes('Understat')&&league.understatRefresh===false?'La actualización general de Understat está pausada; su captura conservada y código permanecen disponibles. ':'')+(league.optionalMetrics?.length?'Cobertura parcial: los xG de equipo pueden no estar disponibles. ':'')+'Las tasas usan la muestra del numerador o su tasa publicada; no se infieren minutos de ESPN ni xG de equipo para porteros.'},
+      notes:'Catálogo e IDs de '+primarySource+'. Prioridad de métricas: '+priority.join(' → ')+'. Los proveedores completan solo coincidencias inequívocas de nombres y club o identidades revisadas. Las posiciones usan consenso y ficha FotMob como respaldo, con independencia de esta prioridad. Un recuento de goles distinto con más PJ verificados o, con iguales PJ, una captura posterior puede sustituir al prioritario; sus derivados conservan componentes originales de una sola fuente y muestra. '+stats.matched_players+'/'+players.length+' jugadores complementados. Cada campo conserva fuente, fecha, minutos y PJ propios; los huecos no se rellenan con cero. No se equiparan pases clave y ocasiones creadas. '+(priority.includes('Understat')&&league.understatRefresh===false?'La actualización general de Understat está pausada; su captura conservada y código permanecen disponibles. ':'')+(league.optionalMetrics?.length?'Cobertura parcial: los xG de equipo pueden no estar disponibles. ':'')+(league.calendarPhase==='regular'?'Cobertura de la fase regular publicada; las fases posteriores no se incluyen. ':'')+'Las tasas usan la muestra del numerador o su tasa publicada; no se infieren minutos de ESPN ni xG de equipo para porteros.'},
       players,teams,matches:u.matches.map(m=>({...m}))};
   }
   function isCombined(data){return data?.metadata?.kind==='combined'||data?.metadata?.source===SOURCE;}

@@ -37,7 +37,13 @@
   if(data.metadata?.source!=='FotMob')throw new Error('Fuente de posiciones incorrecta.');
   const league=leagues.resolve(data.metadata),byId=new Map();
   for(const squad of squads){if(squad.source!=='FotMob'||squad.league_key!==league.id||squad.season!==league.season||!data.teams.some(t=>String(t.id)===squad.team_id))throw new Error('Ámbito de plantilla incorrecto.');for(const p of squad.players){if(!valid(p)||byId.has(p.id))throw new Error('Posición normalizada inválida o duplicada.');byId.set(p.id,p);}}
-  let matched=0;const players=data.players.map(p=>{const role=byId.get(String(p.id));if(!role||String(role.team_id)!==String(p.team_id))return p;matched++;return {...p,tacticalPositions:[...role.tacticalPositions],tacticalContext:{...role.tacticalContext}};});
+  let matched=0;const players=data.players.map(p=>{const role=byId.get(String(p.id));if(!role||String(role.team_id)!==String(p.team_id))return p;matched++;
+   const next={...p,tacticalPositions:[...role.tacticalPositions],tacticalContext:{...role.tacticalContext}};
+   // An unambiguous published squad role can classify a ranking-only record.
+   // Mixed families keep their unknown base position until a profile/ESPN resolves it.
+   const families=[...new Set(role.tacticalPositions.map(code=>Object.values(groups).find(g=>g.codes.includes(code)).position))];
+   if(p.pos==='—'&&families.length===1){next.pos=families[0];next.positionContext={...role.tacticalContext,label:role.tacticalPositions.map(code=>labels[code]).join(' / '),kind:'squad_position'};}
+   return next;});
   return {...data,players,metadata:{...data.metadata,tactical_enrichment:{source:'FotMob',teams:squads.length,matched_players:matched,captured_at:squads.map(s=>s.captured_at).sort()[0]||null,definition:'Posiciones explícitas de la plantilla actual, con ID, club, liga y temporada verificados. Pueden incluir varios puestos; no describen minutos por posición ni cambian cifras de juego.'}}};
  }
  function restore(data,previous){

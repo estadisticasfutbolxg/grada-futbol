@@ -55,7 +55,7 @@
       }
     }
     const partial=league.optionalMetrics?.includes('equipos: xg')&&league.optionalMetrics.includes('equipos: xga');
-    if(league.primary==='FotMob'&&!partial&&(m.profile!=='full'||!data.teams.every(t=>numeric(t.xg)&&numeric(t.xga)&&Number.isInteger(t.matches)&&t.matches<=2*(league.teams-1)&&t.minutes===t.matches*90)))throw new Error('Faltan métricas principales de esta liga.');
+    if(league.primary==='FotMob'&&!partial&&(m.profile!=='full'||!data.teams.every(t=>numeric(t.xg)&&numeric(t.xga)&&Number.isInteger(t.matches)&&t.matches<=leagues.teamMatchLimit(league)&&t.minutes===t.matches*90)))throw new Error('Faltan métricas principales de esta liga.');
     if(m.profile==='full'){
       const played=data.teams.reduce((s,t)=>s+t.matches,0)/2;
       if(!Number.isInteger(played)||played<0||played>league.matches||m.imported_matches!==played||m.available_matches!==league.matches||data.teams.reduce((s,t)=>s+t.goals,0)!==data.teams.reduce((s,t)=>s+t.conceded,0))throw new Error('Cobertura FotMob incoherente.');

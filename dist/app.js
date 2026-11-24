@@ -10,6 +10,8 @@ let liveData = null, understatData = null, fotmobData = null, combinedData = nul
 let radarProfiles = new Map(),rankingAxisKeys=new Set(),squadAreas={teams:new Map(),unassignedPlayerIds:[]},unitAreas=new Map();
 let scoreModel=null,scoreCache={inputs:[],reference:null,models:new WeakMap()};
 let activeLeaderKey=null;
+const tablePageSize=100;
+let tablePage=0,tableRows=[],tablePageKey='',tableData=null;
 let selectedNation='ESP';const nationCache=new WeakMap();
 const leaderMinimums={field:450,saves:180};
 const captureStore=GradaRefresh.captureStore();
@@ -357,10 +359,15 @@ function renderTable() {
   if(leaderRate){$('#leader-kpi-min').value=leaderMinimum(activeLeaderKey);$('#leader-kpi-note').textContent=labels[activeLeaderKey]+' · minutos de la fuente de esta tasa. El mismo mínimo se aplica en portada.';}
   hideHelp(true);
   const cols = columns(), a = rows();
+  const pageKey=[currentLeague,view,rankingProfile,sort,direction,unit,activeLeaderKey].join('|');
+  if(data!==tableData||pageKey!==tablePageKey||a.length!==tableRows.length||a.some((p,i)=>p!==tableRows[i]))tablePage=0;
+  tableRows=a;tablePageKey=pageKey;tableData=data;
+  tablePage=Math.min(tablePage,Math.max(0,Math.ceil(a.length/tablePageSize)-1));
+  const offset=tablePage*tablePageSize,page=a.slice(offset,offset+tablePageSize);
   $('#thead').innerHTML = '<tr>'+cols.map((k,i)=>k==='rank'?'<th scope="col" class="rank-column"><button class="column-info" data-help="rank" aria-label="Descripción del puesto" aria-describedby="column-tooltip">#</button></th>':'<th scope="col"'+(i===0?' class="score-main"':'')+' aria-sort="'+(sort===k?direction<0?'descending':'ascending':'none')+'"><div class="column-head"><button data-sort="'+k+'">'+esc(columnLabel(k))+(sort===k?direction<0?' ↓':' ↑':'')+'</button><button class="column-info" data-help="'+k+'" aria-label="Descripción: '+esc(columnLabel(k))+'" aria-describedby="column-tooltip">ⓘ</button></div></th>').join('')+'</tr>';
-  $('#tbody').innerHTML = a.map((p,i)=>'<tr>'+cols.map((k,column)=>{
+  $('#tbody').innerHTML = page.map((p,i)=>'<tr>'+cols.map((k,column)=>{
     let content;
-    if(k==='rank')content=view==='rankings'&&isTeamView()&&squadMetricKeys.has(sort)&&metric(p,sort)===null?'—':String(i+1).padStart(2,'0');
+    if(k==='rank')content=view==='rankings'&&isTeamView()&&squadMetricKeys.has(sort)&&metric(p,sort)===null?'—':String(offset+i+1).padStart(2,'0');
     else if(k==='name')content='<button class="namebtn" data-detail="'+esc(p.id)+'">'+(isTeamView()?GradaBranding.teamLabel(p):'<span class="initials">'+esc(initials(p.name))+'</span>'+esc(p.name))+'</button>';
     else if(k==='tacticalRole')content='<span class="role-label" title="'+esc(GradaRoles.info(p).label)+'">'+esc(GradaRoles.info(p).codes.join(' / ')||'—')+'</span>';
     else if(k==='pos')content='<span class="pos" tabindex="0" title="'+esc(GradaPositions.describe(p))+'">'+esc(p.pos)+'</span>';
@@ -370,6 +377,11 @@ function renderTable() {
     return '<td class="'+(column===0?'score-main':k==='rank'?'rank-column':['goals','xg','saves'].includes(k)?'highlight':'')+'">'+content+'</td>';
   }).join('')+'</tr>').join('') || '<tr><td colspan="'+cols.length+'" class="empty">'+(loaded?'No hay resultados con estos filtros.':'Aún no hay datos importados.')+'</td></tr>';
   $('#count').textContent = a.length+' '+(isTeamView()?'equipos':'jugadores')+' · '+source()+(isLive()?' · plantillas actuales':'')+(view==='rankings'?' · unidades por eje':unit === '90'?' · volumen por 90 min':'');
+  $('#table-pagination').hidden=a.length<=tablePageSize;
+  $('#table-page-status').textContent=Math.min(offset+1,a.length)+'–'+(offset+page.length)+' de '+a.length;
+  $('#table-previous').disabled=tablePage===0;$('#table-next').disabled=offset+page.length>=a.length;
+  $('#table-previous').onclick=()=>{if(tablePage>0){tablePage--;renderTable();$('#thead').scrollIntoView({block:'nearest'});}};
+  $('#table-next').onclick=()=>{if(offset+page.length<a.length){tablePage++;renderTable();$('#thead').scrollIntoView({block:'nearest'});}};
   $('#radar-table-note').hidden=false;
   $('#radar-table-note').textContent=view==='rankings'&&activeUnit()?GradaSquads.unitDefinition(activeUnit())+' Los filtros y el mínimo de PJ del equipo no cambian los pesos.':isTeamView()?GradaSquads.definition+' Entre 0 y 1; cobertura en Jugadores ponderados. Los filtros no cambian pesos ni scores.':view==='rankings'?'Orden por el score único de su posición y perfil; muestra filtrada desde '+rankingMinimum+' minutos. La referencia y el score se mantienen al cambiar de ranking o liga.':'Score único por jugador y perfil, entre 0 y 1; — si faltan ejes o muestra. La liga y los filtros no cambian la referencia.';
   if(view==='rankings'&&GradaRadar.definition(rankingProfile).roleKey)$('#radar-table-note').textContent+=' Solo puestos publicados verificados; los polivalentes pueden aparecer en varios grupos. Se conserva el mismo score individual; los laterales/carrileros combinan ataque y defensa.';
@@ -595,12 +607,12 @@ const terms = [
   ['Pases precisos por 90',descriptions.completedPer90],
   ['Precisión de pase',descriptions.accuracy+' El panel de líderes exige al menos 30 intentos; si solo hay porcentaje publicado, exige 450 minutos de su proveedor.'],['Pases clave y progresivos',descriptions.keypasses+' '+descriptions.progressive],['Minutos y por 90',descriptions.minutes+' Volumen × 90 ÷ minutos. Los porcentajes conservan su denominador. ESPN no proporciona minutos en esta consulta: las tasas se muestran —.'],
   ['Entradas e intercepciones',descriptions.tackles+' '+descriptions.interceptions],['Portería a cero y porcentaje de paradas',descriptions.clean+' '+descriptions.savepct],
-  ['Vista combinada y filtros','Se conserva el catálogo y prioridad declarados para cada liga (FotMob → ESPN en las cinco ligas); se exige coincidencia inequívoca de nombre y equipo. Las tasas usan los denominadores de la fuente original. Los filtros de tabla se aplican a totales y se combinan con Y; un dato ausente no satisface un filtro. Cada métrica conserva su procedencia.'],
+  ['Vista combinada y filtros','Se conserva el catálogo y prioridad declarados para cada liga (FotMob → ESPN); se exige coincidencia inequívoca de nombre y equipo. Las tasas usan los denominadores de la fuente original. Los filtros de tabla se aplican a totales y se combinan con Y; un dato ausente no satisface un filtro. Cada métrica conserva su procedencia.'],
   ['Score de jugador',descriptions.radarArea],
   ['Score general de equipo',descriptions.teamArea],
   ['Centros del campo y delantera',GradaSquads.definition+' Los perfiles describen acciones y pueden solaparse; no identifican una posición detallada ni valoran el sistema táctico completo.'],
   ['Pases rompelíneas y métricas FotMob',descriptions.lineBreakingPasses+' '+descriptions.shotsOnTargetPer90+' '+descriptions.chancesCreated+' Más métricas disponibles en la ficha y en Añadir otra métrica; no todas las páginas publican todos los jugadores.'],
-  ['Radar estadístico','Percentiles frente a jugadores de la misma posición: mínimo '+GradaRadar.minimumScoreMinutes+' minutos verificados del jugador y de cada eje (en porteros, 2 PJ por eje si su proveedor no publica minutos). Cada eje exige al menos cinco referencias; el gráfico necesita tres ejes. Los volúmenes usan /90 o /PJ según su etiqueta. En goles recibidos menos es mejor; el resto de ejes aumenta con el valor. Son estadísticas disponibles, no una valoración física.'],
+  ['Radar estadístico','Percentiles frente a jugadores de la misma posición: mínimo '+GradaRadar.minimumScoreMinutes+' minutos verificados del jugador y de cada eje (en porteros, 2 PJ por eje si su proveedor no publica minutos). Cada eje exige al menos cinco referencias; el gráfico necesita tres ejes. Los volúmenes usan /90 o /PJ según su etiqueta. En goles recibidos menos es mejor; el resto de ejes aumenta con el valor. Los scores comparan estas estadísticas y no están ajustados por la dificultad de cada liga.'],
   ['Actualizar datos','Consulta ESPN y FotMob desde el servidor de GRADA, con caché breve. Solo el propietario identificado puede iniciar una actualización; no se pide contraseña adicional. Cada captura se valida antes de combinar. Si falla una fuente se conserva su captura y fecha anterior. Las capturas válidas se guardan en este navegador y los scores se recalculan sin cambiar su fórmula.']
 ];
 function renderTerms(){

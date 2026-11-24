@@ -4,11 +4,31 @@ const {access}=require('./helpers/owner.cjs');
 // Keep the archived source parser/cache tested without enabling it in production.
 leagues.configure(leagues.list().map(l=>l.id==='laliga'?{...l,primary:'Understat',metricPriority:[...l.archivedMetricPriority]}:l));
 function cache(){const map=new Map();return {map,async match(k){return map.get(k)?.clone();},async put(k,r){map.set(k,r.clone());}};}
+test('second-division snapshot paths serve the last valid refreshed capture rather than an older bundled asset',async()=>{
+ const origin='https://numeric-league-cache.test',store=cache(),path='/downloads/fotmob-laliga-2-2026-27.json',old=require('./helpers/league-snapshots.cjs').snapshots('laliga-2').f,fresh=structuredClone(old);fresh.metadata.imported_at='2026-11-24T14:00:00Z';
+ await store.put(app.apiKey(origin,'fotmob','laliga-2'),new Response(JSON.stringify(fresh),{headers:{'X-Grada-Checked-At':fresh.metadata.imported_at}}));
+ const response=await app.handle(new Request(origin+path),{[path]:{type:'application/json',sha:'old',gzip:gzipSync(JSON.stringify(old)).toString('base64')}},{cache:store});
+ assert.equal((await response.json()).metadata.imported_at,fresh.metadata.imported_at);assert.equal((await app.handle(new Request(origin+'/downloads/fotmob-unregistered-2-2026-27.json'),{},{cache:store})).status,404);
+});
 test('refresh routes constrain method, origin, provider, league and roster before any upstream request',async()=>{
  const {env,headers}=await access();
  let calls=0;const options={env,cache:cache(),fetcher:async()=>{calls++;throw new Error();}},base='https://grada.test';
  for(const [path,status,extra] of [['/api/source/fotmob?league=all',400],['/api/source/fotmob?league=laliga&url=https://example.com',400],['/api/source/understat?league=serie-a',400],['/api/source/fotmob?league=laliga',405,{method:'POST'}],['/api/source/fotmob?league=laliga',403,{headers:{Origin:'https://other.test'}}],['/api/player/fotmob?league=laliga&player=999',400]])assert.equal((await app.handle(new Request(base+path,{...extra,headers:{...headers,...extra?.headers}}),{},options)).status,status);
  assert.equal(calls,0);
+});
+test('decoded season captures are shared during concurrent reads and evicted as more leagues load',async()=>{
+ const original=globalThis.DecompressionStream;let decodes=0,active=0,maxActive=0;globalThis.DecompressionStream=class{constructor(format){const stream=new original(format);decodes++;active++;maxActive=Math.max(maxActive,active);return {writable:stream.writable,readable:stream.readable.pipeThrough(new TransformStream({flush(){active--;}}))};}};
+ try{
+  const origin='https://bounded-decodes.test',store=cache(),assets={};
+  for(const id of ['portugal','eredivisie','championship','ligue-2','bundesliga-2']){
+   const old=require('./helpers/league-snapshots.cjs').snapshots(id).f,fresh=structuredClone(old);fresh.metadata.imported_at='2026-11-24T14:00:00Z';
+   assets['/downloads/fotmob-'+id+'-2026-27.json']={type:'application/json',sha:id,gzip:gzipSync(JSON.stringify(old)).toString('base64')};
+   await store.put(app.apiKey(origin,'fotmob',id),new Response(JSON.stringify(fresh)));
+  }
+  const read=async id=>{const r=await app.handle(new Request(origin+'/downloads/fotmob-'+id+'-2026-27.json'),assets,{cache:store});assert.equal((await r.json()).metadata.imported_at,'2026-11-24T14:00:00Z');};
+  await Promise.all([read('portugal'),read('portugal')]);assert.equal(decodes,1);
+  await read('eredivisie');await read('championship');assert.equal(decodes,3);await read('portugal');assert.equal(decodes,4);await Promise.all(['portugal','eredivisie','championship','ligue-2','bundesliga-2'].map(read));assert.equal(maxActive,2);
+ }finally{globalThis.DecompressionStream=original;}
 });
 test('simultaneous refreshes are deduplicated, failures are bounded, and last valid data stays available',async()=>{
  const store=cache(),origin='https://grada.test',key=app.apiKey(origin,'understat','laliga'),now=Date.parse('2026-11-08T12:00:00Z');let calls=0;
