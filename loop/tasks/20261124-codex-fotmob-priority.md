@@ -1,12 +1,12 @@
 # 20261124-codex-fotmob-priority · Sustituir métricas Understat por FotMob
 
-- Estado: `review`
+- Estado: `done`
 - Responsable: Codex
 - Revisor: autocontrol; sin revisión independiente
 - Rama: `feat/fotmob-priority`
 - Base Sites: `1160d5ac4e88ce3a622d115036a0a2e3c0234486`
 - Base GitHub: `ef8ab3c6e2dfa19c8a9faf18bd667b8a240fa80a`, main comprobado
-- PR: pendiente
+- PR: [#63](https://github.com/estadisticasfutbolxg/grada-futbol/pull/63), integrado en `5c6212a78dc4f6fe66e284f5e44f46e0a92a8c75`; main comprobado
 - Entrega: merge y publicación privada
 
 ## Objetivo
@@ -22,7 +22,7 @@ Política de ligas, combinación, actualización general, generador, textos de f
 - [x] FotMob sustituye los valores disponibles; ceros válidos respetados y huecos conservan Understat/ESPN con procedencia.
 - [x] Capturas y código originales intactos; consultas generales Understat pausadas y reactivación documentada.
 - [x] Scores, equipos y selecciones recalculados con muestras coherentes; cobertura y cambios contados, sin cifras inventadas.
-- [ ] Pruebas y artefacto comprobados, GitHub integrado y Sites privado actualizado.
+- [x] Pruebas y artefacto comprobados, GitHub integrado y Sites privado actualizado.
 
 ## Plan
 
@@ -43,4 +43,10 @@ Autocontrol del diff y contratos realizado. Fuente, modelos y muestras se mantie
 
 ## Resultado y relevo
 
-Validado localmente; publicación e integración pendientes.
+[GRADA privada](https://grada-futbol-analitica.ivanmatema2.chatgpt.site) publicada como versión **34**, verificada el 24 de noviembre de 2026 a las 08:07 Madrid. Fuente Sites `dfa3ebd32df5a51b4708d16c04dd2204aaded3c5`, versión `appgprj_6ae0b8b2eb1881918601230d00603255~appgver_9ae6b260b5508191ba226d57936dbb6a`, despliegue `appgdep_6b05375d4b9881919335fb6e335a4e57` en `succeeded`.
+
+HTTP de producción confirma HTML y bundle exactos, configuración FotMob → Understat → ESPN y pausa de Understat, cinco capturas FotMob intactas y API sin identidad denegada 401. Estado sin contraseña adicional y login antiguo 404. El token de servicio no es identidad del propietario; no se ejecuta una descarga real de proveedores.
+
+Audiencia owner-only custom revisión 3: un propietario y cero editores, grupos o visitantes; runtime revisión 1 sin cambios. PR #63 fusionado tras verificar head/base, mergeable clean y ausencia de checks/protecciones configurados. Autocontrol, sin aprobación independiente.
+
+Código, integración y publicación completados. La documentación final se sincroniza aparte sin republicar el mismo Worker. Lista de 477 jugadores y medidas afectadas entregada como CSV privado; **0 jugadores nuevos y 0 partidos descargados/modificados**. No quedan criterios pendientes.
