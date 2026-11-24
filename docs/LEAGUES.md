@@ -1,5 +1,7 @@
 # Ligas combinadas, ámbito conjunto y rankings
 
+> Política activa desde el 24 de noviembre de 2026: catálogo **FotMob → ESPN** en todas las ligas. Understat no se carga ni se sirve y no interviene en valores, posiciones, referencias o scores de jugadores, equipos y selecciones. Se conserva solo en archivo (código, pruebas y capturas locales) para una reactivación explícita. Las prioridades anteriores que siguen abajo son históricas. LaLiga declara únicamente los huecos de xG/xGA de equipo como opcionales y mantiene las demás comprobaciones. Las cifras ausentes siguen desconocidas; nunca se oculta la fuente de una cifra usada.
+
 > Desde el 24 de noviembre de 2026, LaLiga prioriza métricas FotMob → Understat conservado → ESPN y pausa la consulta general de Understat, conservando su catálogo/IDs y código. Las otras cuatro ligas mantienen FotMob → ESPN. [Política vigente](COMBINED.md).
 
 > Desde el 20 de noviembre de 2026 el mínimo de score es **200 minutos inclusive** para todas las posiciones, tanto del jugador como de cada eje. Se mantienen 2 PJ solo para ejes de portero sin minutos propios, tras verificar los 200 minutos del jugador. [Contrato vigente y referencia común](SCORES.md); los mínimos anteriores del registro histórico quedan sustituidos.

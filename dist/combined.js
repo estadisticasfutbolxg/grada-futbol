@@ -40,12 +40,12 @@
   }
   function combine(u,e,f=null) {
     const primarySource=u?.metadata?.source;
+    const league=leagues.resolve(u?.metadata);
     if(primarySource==='Understat')understat.validate(u);
-    else if(primarySource==='FotMob'&&u.metadata.profile==='full')fotmob.validate(u);
+    else if(primarySource==='FotMob'&&(u.metadata.profile==='full'||league.optionalMetrics?.length))fotmob.validate(u);
     else throw new Error('Falta la fuente principal completa.');
     espn.validate(e); if(f) fotmob.validate(f);
-    const league=leagues.resolve(u.metadata);
-    if(primarySource!==league.primary)throw new Error('Fuente principal no admitida para esta liga.');
+    if(primarySource!==league.primary&&primarySource!==league.archivedPrimary)throw new Error('Fuente principal no admitida para esta liga.');
     if (u.metadata.competition !== e.metadata.competition || u.metadata.season !== e.metadata.season) throw new Error('Las fuentes no corresponden a la misma competición y temporada.');
     if(f&&(f.metadata.competition!==u.metadata.competition||f.metadata.season!==u.metadata.season||primarySource==='FotMob'))throw new Error('Combinación de fuentes o ligas inválida.');
     const uTeams = new Map(u.teams.map(t=>[String(t.id),teamKey(t.name)]));
@@ -58,7 +58,8 @@
     const fTeamIndex = index(f?.teams||[],t=>teamKey(t.name));
     const matchedIDs = new Set(), matchedFotmobIDs = new Set();
     const sourceMetadata={[primarySource]:u.metadata,ESPN:e.metadata,...(f?{FotMob:f.metadata}:{})};
-    const priority=(league.metricPriority||[primarySource,'ESPN',...(f?['FotMob']:[])]).filter(source=>sourceMetadata[source]);
+    const configuredPriority=primarySource===league.primary?league.metricPriority:league.archivedMetricPriority;
+    const priority=(configuredPriority||[primarySource,'ESPN',...(f?['FotMob']:[])]).filter(source=>sourceMetadata[source]);
     function fieldContext(record,key,source){
       const original=record.metricContexts?.[key];
       return {...original,source,captured_at:original?.captured_at||sourceMetadata[source].imported_at,matches:original&&Object.hasOwn(original,'matches')?original.matches:record.matches??null,minutes:original&&Object.hasOwn(original,'minutes')?original.minutes:record.minutes??null};
@@ -96,7 +97,7 @@
       for (const key of fields) {
         // A rate alone cannot replace a known total in the migration. Keep the
         // total's cohort; explicitly published rate fields remain independent.
-        const knownTotal=league.metricPriority?candidates.find(([,r])=>r&&numeric(r[key])):null;
+        const knownTotal=configuredPriority?candidates.find(([,r])=>r&&numeric(r[key])):null;
         const preferred=knownTotal||candidates.find(([,r])=>r&&(numeric(r[key])||numeric(r.metricContexts?.[key]?.reportedPer90)));
         const chosen=key==='goals'?currentGoals(candidates,preferred):preferred;
         const source = chosen?.[0], sourceRow = chosen?.[1];
@@ -132,7 +133,7 @@
         // derived measure from one backup cohort. Never mix visible columns or
         // hide a sample conflict when that provider does publish both components.
         const main=row.sourceRecords[priority[0]];
-        if(league.metricPriority&&(!numeric(main?.[a])||!numeric(main?.[b])))for(const source of priority.slice(1)){
+        if(configuredPriority&&(!numeric(main?.[a])||!numeric(main?.[b])))for(const source of priority.slice(1)){
           const raw=row.sourceRecords[source];if(!raw||!numeric(raw[a])||!numeric(raw[b]))continue;
           const original=metrics.pair({...raw,metricContexts:{[a]:fieldContext(raw,a,source),[b]:fieldContext(raw,b,source)}},a,b,key==='delta'?'same_source_difference':'same_source_ratio');
           if(!original)continue;
@@ -197,7 +198,7 @@
     const sources=Object.fromEntries(priority.map(source=>[source,{...sourceMetadata[source]}]));
     return {metadata:{...u.metadata,league_key:league.id,catalog_source:primarySource,primary_source:priority[0],metric_priority:priority,understat_refresh:league.understatRefresh!==false,kind:'combined',source:priority.join(' + '),url:sourceMetadata[priority[0]].url,complete:false,sources,combination:{...stats,understat_only_players:primarySource==='Understat'?stats.understat_only_players:0,primary_only_players:stats.understat_only_players,espn_players_not_joined:e.players.length-matchedIDs.size,fotmob_players_not_joined:f?f.players.length-matchedFotmobIDs.size:0},
       imported_at:new Date(Math.min(...Object.values(sources).map(m=>Date.parse(m.imported_at)))).toISOString(),
-      notes:'Catálogo, IDs y partidos guardados de '+primarySource+'. Prioridad de métricas: '+priority.join(' → ')+'. Los proveedores completan solo coincidencias inequívocas de nombres y club o identidades revisadas. Las posiciones usan consenso y ficha FotMob como respaldo, con independencia de esta prioridad. Un recuento de goles distinto con más PJ verificados o, con iguales PJ, una captura posterior puede sustituir al prioritario; sus derivados conservan componentes originales de una sola fuente y muestra. '+stats.matched_players+'/'+players.length+' jugadores complementados. Cada campo conserva fuente, fecha, minutos y PJ propios; los huecos no se rellenan con cero. No se equiparan pases clave y ocasiones creadas. '+(league.understatRefresh===false?'La actualización general de Understat está pausada; su captura conservada y código permanecen disponibles. ':'')+'Las tasas usan la muestra del numerador o su tasa publicada; no se infieren minutos de ESPN ni xG de equipo para porteros.'},
+      notes:'Catálogo e IDs de '+primarySource+'. Prioridad de métricas: '+priority.join(' → ')+'. Los proveedores completan solo coincidencias inequívocas de nombres y club o identidades revisadas. Las posiciones usan consenso y ficha FotMob como respaldo, con independencia de esta prioridad. Un recuento de goles distinto con más PJ verificados o, con iguales PJ, una captura posterior puede sustituir al prioritario; sus derivados conservan componentes originales de una sola fuente y muestra. '+stats.matched_players+'/'+players.length+' jugadores complementados. Cada campo conserva fuente, fecha, minutos y PJ propios; los huecos no se rellenan con cero. No se equiparan pases clave y ocasiones creadas. '+(priority.includes('Understat')&&league.understatRefresh===false?'La actualización general de Understat está pausada; su captura conservada y código permanecen disponibles. ':'')+(league.optionalMetrics?.length?'Cobertura parcial: los xG de equipo pueden no estar disponibles. ':'')+'Las tasas usan la muestra del numerador o su tasa publicada; no se infieren minutos de ESPN ni xG de equipo para porteros.'},
       players,teams,matches:u.matches.map(m=>({...m}))};
   }
   function isCombined(data){return data?.metadata?.kind==='combined'||data?.metadata?.source===SOURCE;}
@@ -208,7 +209,8 @@
     const teamKeys=['goals','conceded','xg','xga','matches','points','clean','shotsOnTargetPerMatch','bigChances'];
     const team_counts=Object.fromEntries(teamKeys.map(k=>[k,data.teams.filter(t=>metrics.metric(t,k,'total')!==null).length]));
     const missing=[...keys.filter(k=>!counts[k]),...teamKeys.filter(k=>!team_counts[k]).map(k=>'equipos: '+k)];
-    return {counts,team_counts,missing,complete:!missing.length};
+    const optional=leagues.resolve(data.metadata).optionalMetrics||[],requiredMissing=missing.filter(k=>!optional.includes(k));
+    return {counts,team_counts,missing,requiredMissing,partial:!!missing.length,complete:!requiredMissing.length};
   }
   const api = {combine,normalize,SOURCE,isCombined,coverage};
   if (node) module.exports = api; else root.GradaCombined = api;

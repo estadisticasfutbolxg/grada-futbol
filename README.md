@@ -7,6 +7,8 @@ Web en español de estadísticas, perfiles y rankings por score del radar de jug
 
 ## Datos reales y fuentes
 
+Desde el 24 de noviembre, la aplicación activa usa **solo FotMob y ESPN**, incluido el catálogo de LaLiga y todos los scores. Understat queda archivado; las referencias anteriores de esta documentación son históricas. Los xG de equipo no publicados de LaLiga se muestran como desconocidos, con cobertura parcial explícita. Se conservan los enlaces antiguos mediante un mapa de IDs verificados.
+
 La columna Nacionalidad y el apartado **Selecciones** reúnen países publicados por FotMob y onces teóricos elegidos entre siete sistemas coherentes, con contención, creación y score como media simple de sus once titulares. [Cobertura, procedencia, fórmula y generadores](docs/NATIONS.md). Son simulaciones con las ligas disponibles; no convocatorias oficiales.
 
 LaLiga prioriza FotMob → Understat conservado → ESPN para las métricas; mantiene el catálogo e IDs de Understat y pausa su consulta general mientras no está disponible. Su código e importador permanecen para reactivación futura; los goles admiten un recuento distinto de mayor cobertura o, con iguales PJ, captura posterior, con fuente y fecha explícitas. Las otras ligas priorizan FotMob → ESPN, incluidos xG/xA FotMob, tras comprobar las mismas familias de métricas de pase, ataque, defensa y portería. Los modelos, capturas, PJ y minutos de cada campo se conservan. No hay datos de demostración; las ausencias siguen `null`.

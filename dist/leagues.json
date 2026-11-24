@@ -10,10 +10,23 @@
     "fotmobId": 87,
     "fotmobSeason": 38843,
     "fotmobSlug": "laliga",
-    "primary": "Understat",
-    "metricPriority": ["FotMob", "Understat", "ESPN"],
+    "primary": "FotMob",
+    "metricPriority": [
+      "FotMob",
+      "ESPN"
+    ],
     "understatRefresh": false,
-    "espnFile": "laliga-2026-27.json"
+    "espnFile": "laliga-2026-27.json",
+    "archivedPrimary": "Understat",
+    "archivedMetricPriority": [
+      "FotMob",
+      "Understat",
+      "ESPN"
+    ],
+    "optionalMetrics": [
+      "equipos: xg",
+      "equipos: xga"
+    ]
   },
   {
     "id": "premier-league",

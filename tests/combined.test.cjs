@@ -1,6 +1,8 @@
 'use strict';
 const test=require('node:test'),assert=require('node:assert/strict');
 const {combine}=require('../dist/combined.js'),{metric}=require('../dist/metrics.js');
+// Offline archive tests; active source behavior is covered in active-sources.test.cjs.
+const archivedLeagues=require('../dist/leagues.js');archivedLeagues.configure(archivedLeagues.list().map(l=>l.id==='laliga'?{...l,primary:'Understat',metricPriority:[...l.archivedMetricPriority]}:l));
 function fixture(){
  const meta=source=>({source,competition:'LaLiga',season:'2026/27',season_id:2026,imported_at:'2026-11-01T12:00:00Z',imported_matches:20,available_matches:380,complete:false,notes:'Isolated test response, never served'});
  const teams=Array.from({length:20},(_,i)=>({id:String(i+1),name:'Club '+i,matches:2,minutes:180,goals:2,conceded:2,xg:2,xga:2}));
@@ -157,7 +159,7 @@ test('FotMob priority preserves catalog identities, raw captures, fallback field
  f.players[0].xg=0;f.players[0].xa=0;const zero=combine(u,e,f).players[0];assert.equal(zero.xg,0);assert.equal(zero.xa,0);assert.equal(zero.fieldSources.xa,'FotMob');
  const without=combine(u,e);assert.equal(without.players[0].xg,u.players[0].xg);assert.equal(without.metadata.primary_source,'Understat');
  f.players[0].xg=null;f.players[0].metricContexts.xg.reportedPer90=0.7;
- const total=combine(u,e,f).players[0];assert.equal(total.xg,u.players[0].xg);assert.equal(total.fieldSources.xg,'Understat');assert.equal(metric(total,'xg','90'),u.players[0].xg*90/u.players[0].minutes,'a rate-only provider cannot erase a known total or lend its minutes');
+ const total=combine(u,e,f).players[0];assert.equal(total.xg,u.players[0].xg);assert.equal(total.fieldSources.xg,'Understat');assert(Math.abs(metric(total,'xg','90')-u.players[0].xg*90/u.players[0].minutes)<1e-12,'a rate-only provider cannot erase a known total or lend its minutes');
 });
 
 test('general refresh skips paused Understat while retaining it, and configuration can reactivate the same integration',async()=>{

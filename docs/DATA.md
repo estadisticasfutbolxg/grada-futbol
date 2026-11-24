@@ -1,5 +1,7 @@
 # Contrato de datos y métricas
 
+> Política activa desde el 24 de noviembre de 2026: catálogo **FotMob → ESPN** en todas las ligas. Understat no se carga ni se sirve y no interviene en valores, posiciones, referencias o scores de jugadores, equipos y selecciones. Se conserva solo en archivo (código, pruebas y capturas locales) para una reactivación explícita. Las prioridades anteriores que siguen abajo son históricas. LaLiga declara únicamente los huecos de xG/xGA de equipo como opcionales y mantiene las demás comprobaciones. Las cifras ausentes siguen desconocidas; nunca se oculta la fuente de una cifra usada.
+
 > Desde el 24 de noviembre de 2026: FotMob sustituye las métricas disponibles de Understat en LaLiga; se conservan los huecos, catálogo y código Understat. `primary_source` indica prioridad estadística y `catalog_source` la identidad del catálogo. [Contrato vigente](COMBINED.md).
 
 > Desde el 23 de noviembre: [goles con frescura por campo](COMBINED.md#goles-y-capturas-de-distinta-fecha). Un recuento distinto con más PJ conocidos o, si son iguales, fecha posterior puede sustituir al prioritario. Los derivados conservan pares de la misma fuente/muestra; `fromSourceRecord` y `componentValues` declaran los componentes originales cuando difieren de otras columnas.

@@ -90,7 +90,7 @@ descriptions.points='Puntos publicados en la clasificación de FotMob; se conser
 descriptions.shotsPer90='Tiros realizados por 90 minutos, tasa publicada por FotMob. No se deduce un recuento a partir de su valor redondeado.';
 Object.assign(descriptions,GradaFotmob.descriptions,{
   radarArea:'Score de jugador entre 0 y 1: área del polígono del radar respecto al máximo (todos los ejes en percentil 100). Con radios r = percentil ÷ 100, se calcula la media de r[i] × r[i+1], cerrando el polígono. Se ofrece con todos los ejes comunes y muestra suficiente de su posición. Se usa una referencia común de ligas en tablas, fichas, rankings y equipos. Cada score mide rendimiento relativo a su posición. En MED, se resuelve primero el perfil ofensivo, defensivo o equilibrado y se usan los ejes de ese perfil. Sin perfil verificable se declara general. Los laterales/carrileros DEF con puesto publicado combinan entradas, intercepciones, recuperaciones, goles, xG y xA por 90, con referencia de laterales. Al área base se aplica juego limpio: intensidad = (amarillas + 10 × rojas) × 90 / minutos propios; descuento = mínimo(1; 0,10 × intensidad); factor = 1 − descuento. Penalización lineal con score mínimo 0. Los pesos son decisiones de diseño de GRADA; los recuentos agregados no permiten verificar sanciones cumplidas, dobles amarillas ni minutos en inferioridad. Sin tarjetas emparejadas y muestra suficiente, se conserva base con aviso de sin ajuste. Cambiar de ranking no lo recalcula. No es la probabilidad de jugar bien.',
-  prevented:'Goles evitados publicados por FotMob: su comparación postiro entre goles esperados a puerta recibidos y goles encajados. Puede ser negativo. No se recalcula con goles de ESPN ni con xG de Understat, y no se infiere PSxG a partir del redondeo.'
+  prevented:'Goles evitados publicados por FotMob: su comparación postiro entre goles esperados a puerta recibidos y goles encajados. Puede ser negativo. No se recalcula con goles de ESPN ni con xG de otros proveedores, y no se infiere PSxG a partir del redondeo.'
 });
 const rates = GradaMetrics.rates;
 const per90Columns={shots:'shotsPer90',goals:'goalsPer90',assists:'assistsPer90',saves:'savesPer90'};
@@ -148,10 +148,10 @@ function description(k,isTeam = isTeamView()) {
   if (unit === '90' && rates.has(k)) text += ' Se muestra por 90 minutos: total × 90 ÷ minutos; sin minutos válidos, —.';
   if (isLive() && ['minutes','xg','xa','xga','xga90','xgaPerMatch','goalsPerXg','assistsPerXa','conceded90','passes','completed','accuracy','progressive','keypasses','tackles','interceptions','recoveries','completedPer90','clean','delta'].includes(k)) text += ' No disponible en la consulta de ESPN de LaLiga 2026/27.';
   if(isCombined()&&primarySource()==='FotMob'&&k==='xg')text='Goles esperados de la fuente indicada en cada cifra. FotMob tiene prioridad; los huecos conservan su proveedor de respaldo y su modelo.';
-  if(isCombined()&&primarySource()==='FotMob'&&k==='xa')text='Asistencias esperadas de la fuente indicada en cada cifra. FotMob tiene prioridad; Understat puede completar huecos en LaLiga con otra definición.';
+  if(isCombined()&&primarySource()==='FotMob'&&k==='xa')text='Asistencias esperadas de la fuente indicada en cada cifra. FotMob tiene prioridad; cada cifra conserva su definición y fuente. Un dato ausente se muestra como —.';
   if(isCombined()&&primarySource()==='FotMob'&&k==='minutes')text='Minutos de la fuente indicada por registro, con prioridad FotMob. Cada tasa conserva sus minutos propios; en equipos se usan 90 minutos nominales por partido de su fuente.';
   if(isCombined()&&primarySource()==='FotMob'&&k==='conversion')text='Goles entre tiros de una misma fuente y muestra, o porcentaje publicado. Se conserva la procedencia; no se mezclan goles y tiros de distintos proveedores.';
-  if(isAll()&&k==='xg')text='Goles esperados del proveedor indicado en cada registro. Se prioriza FotMob; LaLiga conserva Understat como respaldo cuando falta el dato. Los modelos pueden diferir.';
+  if(isAll()&&k==='xg')text='Goles esperados del proveedor indicado en cada registro. Se prioriza FotMob y ESPN complementa los datos disponibles. Cada registro indica su fuente y los huecos permanecen desconocidos.';
   if(isAll()&&k==='xa')text='Asistencias esperadas del proveedor indicado en cada registro. Se mantienen los modelos de la liga original.';
   if(isAll()&&k==='minutes')text='Minutos publicados por la fuente de cada jugador; cada métrica conserva los minutos o PJ de su propio proveedor.';
   if(isTeam&&k==='radarArea')text=GradaSquads.definition;
@@ -501,7 +501,7 @@ function applyData(next) {
     const m = data.metadata, when = new Intl.DateTimeFormat('es-ES',{dateStyle:'medium',timeStyle:'short',timeZone:'Europe/Madrid'}).format(new Date(m.imported_at));
     $('.scope').textContent = m.imported_matches+'/'+m.available_matches+' partidos · '+(m.complete?'cobertura completa':'cobertura parcial');
     $('#data-status').textContent = m.competition+' '+m.season+' · '+m.source+' · '+m.imported_matches+'/'+m.available_matches+' partidos. Captura: '+when+' (Madrid). '+(isSeason()?m.notes:m.complete?'Cobertura completa de la competición.':'Cobertura parcial: los rankings no representan toda la competición.');
-    $('#active-source').textContent = isAll()?'FotMob':primarySource(); $('#active-source').href = GradaSecurity.sourceURL(isAll()?'FotMob':primarySource(),currentLeague); $('#secondary-source').hidden = !isCombined(); $('#secondary-source a').href=GradaSecurity.sourceURL('ESPN',currentLeague); $('#fotmob-source').hidden=primarySource()==='FotMob'||!m.sources?.FotMob; $('#fotmob-source a').href=GradaSecurity.sourceURL('FotMob',currentLeague); $('#understat-source').hidden=!m.sources?.Understat;$('#understat-source a').href=GradaSecurity.sourceURL('Understat',currentLeague);
+    $('#active-source').textContent = isAll()?'FotMob':primarySource(); $('#active-source').href = GradaSecurity.sourceURL(isAll()?'FotMob':primarySource(),currentLeague); $('#secondary-source').hidden = !isCombined(); $('#secondary-source a').href=GradaSecurity.sourceURL('ESPN',currentLeague); $('#fotmob-source').hidden=primarySource()==='FotMob'||!m.sources?.FotMob; $('#fotmob-source a').href=GradaSecurity.sourceURL('FotMob',currentLeague);
     $('#coverage-details').hidden = !isCombined(); $('#coverage-notes').textContent = isCombined()?m.notes:'';
     if (isCombined()) $('#data-status').textContent = m.competition+' '+m.season+' · '+m.source+' · '+m.imported_matches+'/'+m.available_matches+' partidos del catálogo '+(m.catalog_source||m.primary_source)+'. '+m.combination.matched_players+'/'+data.players.length+' jugadores complementados. Prioridad '+Object.keys(m.sources).join(' → ')+'; coincidencias inequívocas. Capturas: '+Object.entries(m.sources).map(([name,meta])=>name+' '+new Intl.DateTimeFormat('es-ES',{dateStyle:'medium',timeStyle:'short',timeZone:'Europe/Madrid'}).format(new Date(meta.imported_at))+' (Madrid)').join('; ')+'.';
     if(isAll()){$('#data-status').textContent='Todas las ligas · '+data.metadata.leagues.length+' ligas · '+data.players.length+' jugadores. Scores con referencia común de las ligas cargadas. xG/xA conservan el modelo de su fuente; consulta los detalles de cobertura.';$('#coverage-notes').textContent=m.notes+' '+m.leagues.map(l=>l.name+': '+Object.entries(l.sources).map(([s,m])=>s+' '+new Intl.DateTimeFormat('es-ES',{dateStyle:'medium',timeStyle:'short',timeZone:'Europe/Madrid'}).format(new Date(m.imported_at))).join(', ')).join('; ');}
@@ -526,10 +526,11 @@ function activateLeague(id){
   applyData(combinedData);
 }
 function joinSources(state,espn=state.espn){
-  const next=state.understat?GradaCombined.combine(state.understat,espn,state.fotmob):GradaCombined.combine(state.fotmob,espn);
+  const league=GradaLeagues.resolve(state.fotmob.metadata);
+  const next=league.primary==='Understat'?GradaCombined.combine(state.understat,espn,state.fotmob):GradaCombined.combine(state.fotmob,espn);
   const coverage=GradaCombined.coverage(next);
   if(!coverage.complete)throw new Error('Falta cobertura para: '+coverage.missing.map(k=>labels[k]||k).join(', '));
-  next.metadata.metric_coverage=coverage.counts;return next;
+  next.metadata.metric_coverage=coverage.counts;next.metadata.missing_metrics=coverage.missing;return next;
 }
 async function readProvider(key,league){
   const response=await fetch('/api/source/'+key+'?league='+encodeURIComponent(league.id),{signal:AbortSignal.timeout(120000),cache:'no-store'});
@@ -587,20 +588,20 @@ const terms = [
   ['Puestos publicados y perfiles estadísticos',descriptions.tacticalRole+' El perfil ofensivo/defensivo/equilibrado compara percentiles de dos índices MED; una diferencia de hasta 10 puntos se considera equilibrada. Selecciona los ejes del único score MED.'],
   ['Calidad de ocasión · xG por tiro',descriptions.xgPerShot],
   ['Participación en goles y producción esperada',descriptions.goalInvolvementsPer90+' '+descriptions.xgXaPer90],
-  ['Fuentes y cobertura','Selector de ligas combinadas 2026/27. LaLiga prioriza FotMob → Understat conservado → ESPN para las métricas. Mantiene el catálogo e IDs de Understat. Las demás ligas usan FotMob → ESPN. Los modelos de xG/xA pueden diferir entre proveedores; las cifras conservan origen, fecha y denominador. Solo se habilitan ligas con todas las familias de métricas verificadas.'],
+  ['Fuentes y cobertura','Selector de ligas combinadas 2026/27. Todas las ligas usan catálogo FotMob y complemento ESPN. LaLiga puede tener cobertura parcial de xG de equipo, que permanece desconocido cuando no se publica. Los modelos de xG/xA pueden diferir entre proveedores; las cifras conservan origen, fecha y denominador. Se declaran los huecos de cobertura sin inventar valores.'],
   ['xG · Goles esperados',descriptions.xg+' Los endpoints de ESPN usados aquí no lo incluyen.'],['xA derivada de tiros',descriptions.xa],['Conversión y goles − xG',descriptions.conversion+' '+descriptions.delta],
   ['Paradas y xG recibidos',descriptions.saves+' '+descriptions.xga],['Goles/xG y asistencias/xA',descriptions.goalsPerXg+' '+descriptions.assistsPerXa],['xG recibidos por partido',descriptions.xgaPerMatch],['Tasas de porteros por 90',descriptions.xga90+' '+descriptions.conceded90],['PSxG y goles evitados',descriptions.psxg+' '+descriptions.prevented],
   ['Recuperaciones e intercepciones',descriptions.recoveries+' '+descriptions.interceptions+' Las entradas son otra acción distinta; no se presentan como robos ganados si el proveedor no lo especifica.'],
   ['Pases precisos por 90',descriptions.completedPer90],
   ['Precisión de pase',descriptions.accuracy+' El panel de líderes exige al menos 30 intentos; si solo hay porcentaje publicado, exige 450 minutos de su proveedor.'],['Pases clave y progresivos',descriptions.keypasses+' '+descriptions.progressive],['Minutos y por 90',descriptions.minutes+' Volumen × 90 ÷ minutos. Los porcentajes conservan su denominador. ESPN no proporciona minutos en esta consulta: las tasas se muestran —.'],
   ['Entradas e intercepciones',descriptions.tackles+' '+descriptions.interceptions],['Portería a cero y porcentaje de paradas',descriptions.clean+' '+descriptions.savepct],
-  ['Vista combinada y filtros','Se conserva el catálogo y prioridad declarados para cada liga (FotMob → Understat conservado → ESPN en LaLiga; FotMob → ESPN en las demás); se exige coincidencia inequívoca de nombre y equipo. Las tasas usan los denominadores de la fuente original. Los filtros de tabla se aplican a totales y se combinan con Y; un dato ausente no satisface un filtro. Cada métrica conserva su procedencia.'],
+  ['Vista combinada y filtros','Se conserva el catálogo y prioridad declarados para cada liga (FotMob → ESPN en las cinco ligas); se exige coincidencia inequívoca de nombre y equipo. Las tasas usan los denominadores de la fuente original. Los filtros de tabla se aplican a totales y se combinan con Y; un dato ausente no satisface un filtro. Cada métrica conserva su procedencia.'],
   ['Score de jugador',descriptions.radarArea],
   ['Score general de equipo',descriptions.teamArea],
   ['Centros del campo y delantera',GradaSquads.definition+' Los perfiles describen acciones y pueden solaparse; no identifican una posición detallada ni valoran el sistema táctico completo.'],
   ['Pases rompelíneas y métricas FotMob',descriptions.lineBreakingPasses+' '+descriptions.shotsOnTargetPer90+' '+descriptions.chancesCreated+' Más métricas disponibles en la ficha y en Añadir otra métrica; no todas las páginas publican todos los jugadores.'],
   ['Radar estadístico','Percentiles frente a jugadores de la misma posición: mínimo '+GradaRadar.minimumScoreMinutes+' minutos verificados del jugador y de cada eje (en porteros, 2 PJ por eje si su proveedor no publica minutos). Cada eje exige al menos cinco referencias; el gráfico necesita tres ejes. Los volúmenes usan /90 o /PJ según su etiqueta. En goles recibidos menos es mejor; el resto de ejes aumenta con el valor. Son estadísticas disponibles, no una valoración física.'],
-  ['Actualizar datos','Consulta ESPN y FotMob desde el servidor de GRADA, con caché breve. Understat conserva su captura como respaldo y su código, pero su consulta general está pausada mientras la página no está disponible. Solo el propietario identificado puede iniciar una actualización; no se pide contraseña adicional. Cada captura se valida antes de combinar. Si falla una fuente se conserva su captura y fecha anterior. Las capturas válidas se guardan en este navegador y los scores se recalculan sin cambiar su fórmula.']
+  ['Actualizar datos','Consulta ESPN y FotMob desde el servidor de GRADA, con caché breve. Solo el propietario identificado puede iniciar una actualización; no se pide contraseña adicional. Cada captura se valida antes de combinar. Si falla una fuente se conserva su captura y fecha anterior. Las capturas válidas se guardan en este navegador y los scores se recalculan sin cambiar su fórmula.']
 ];
 function renderTerms(){
   const concepts=terms.map(item=>{let t=[...item];if(t[0].startsWith('xG ·'))t[1]=description('xg');if(t[0]==='xA derivada de tiros')t=['xA · Asistencias esperadas',description('xa')];return '<article class="panel"><h2 class="detailtitle">'+esc(t[0])+'</h2><p>'+esc(t[1])+'</p></article>';}).join('');
@@ -674,7 +675,12 @@ async function start(){
     else if(failures.length)$('#refresh-status').textContent='Solo se muestran ligas con las familias de métricas verificadas. No disponibles: '+failures.map(f=>f.split(':')[0]).join(', ')+'.';
     if(loaded&&publishedCapture)$('#refresh-status').textContent+=' Estás viendo las capturas de esta publicación. Tus datos guardados se conservan; recargar sin «datos=publicados» vuelve a usarlos.';
     if(loaded&&initialQuery.get('vista')==='selecciones'){selectedNation=initialQuery.get('pais')||selectedNation;navigate('nations',false);return;}
-    const requestedPlayer=data?.players.find(p=>p.id===initialQuery.get('jugador'));
+    const requestedId=initialQuery.get('jugador');
+    let requestedPlayer=data?.players.find(p=>p.id===requestedId);
+    if(loaded&&requestedId&&!requestedPlayer&&/^combined:\d{1,12}$/.test(requestedId))try{
+      const response=await fetch('legacy-player-links.json',{signal:AbortSignal.timeout(5000),cache:'no-store'});
+      if(response.ok){const links=await response.json(),key=currentLeague+'|'+requestedId,target=Object.hasOwn(links,key)?links[key]:null;if(typeof target==='string'&&/^combined:\d{1,12}$/.test(target))requestedPlayer=data.players.find(p=>p.id===target);}
+    }catch(_){/* A missing optional bookmark alias must not block the page. */}
     if(requestedPlayer){navigate('players');$('#search').value=requestedPlayer.name;renderTable();detail(requestedPlayer.id);}
   }catch(e){$('#data-status').textContent='No se pudieron cargar las ligas: '+e.message;}
 }

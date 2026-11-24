@@ -1,6 +1,8 @@
 'use strict';
 const test=require('node:test'),assert=require('node:assert/strict'),{gzipSync}=require('node:zlib'),app=require('../worker/app.cjs'),providers=require('../worker/providers.cjs'),leagues=require('../dist/leagues.js');
 const {access}=require('./helpers/owner.cjs');
+// Keep the archived source parser/cache tested without enabling it in production.
+leagues.configure(leagues.list().map(l=>l.id==='laliga'?{...l,primary:'Understat',metricPriority:[...l.archivedMetricPriority]}:l));
 function cache(){const map=new Map();return {map,async match(k){return map.get(k)?.clone();},async put(k,r){map.set(k,r.clone());}};}
 test('refresh routes constrain method, origin, provider, league and roster before any upstream request',async()=>{
  const {env,headers}=await access();
