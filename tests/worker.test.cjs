@@ -7,7 +7,7 @@ function cache(){const map=new Map();return {map,async match(k){return map.get(k
 test('first-division snapshot paths with digits serve the last valid refreshed capture rather than an older bundled asset',async()=>{
  const origin='https://numeric-league-cache.test',store=cache(),path='/downloads/fotmob-ligue-1-2026-27.json',old=require('./helpers/league-snapshots.cjs').snapshots('ligue-1').f,fresh=structuredClone(old);fresh.metadata.imported_at='2026-11-24T14:00:00Z';
  await store.put(app.apiKey(origin,'fotmob','ligue-1'),new Response(JSON.stringify(fresh),{headers:{'X-Grada-Checked-At':fresh.metadata.imported_at}}));
- const response=await app.handle(new Request(origin+path),{[path]:{type:'application/json',sha:'old',gzip:gzipSync(JSON.stringify(old)).toString('base64')}},{cache:store});
+ const response=await app.handle(new Request(origin+path,{headers:{'If-None-Match':'"old"'}}),{[path]:{type:'application/json',sha:'old',gzip:gzipSync(JSON.stringify(old)).toString('base64')}},{cache:store});
  assert.equal((await response.json()).metadata.imported_at,fresh.metadata.imported_at);assert.equal((await app.handle(new Request(origin+'/downloads/fotmob-unregistered-2-2026-27.json'),{},{cache:store})).status,404);
 });
 test('refresh routes constrain method, origin, provider, league and roster before any upstream request',async()=>{

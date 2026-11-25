@@ -3,7 +3,7 @@ const test=require('node:test'),assert=require('node:assert/strict'),leagues=req
 function snapshot(id){const d=fixture(),l=leagues.get(id);Object.assign(d.metadata,{league_key:id,competition:l.name,primary_source:'FotMob',source:'FotMob + ESPN',sources:{FotMob:{imported_at:d.metadata.imported_at},ESPN:{imported_at:d.metadata.imported_at}}});return d;}
 function loaded(){const h=harness(),sets=leagues.list().map(l=>[l.id,{combined:snapshot(l.id)}]);h.run("for(const [id,state]of sets)datasets.set(id,state);initialLoadsComplete=true;activateLeague('laliga');navigate('players',false)",{sets});return h;}
 test('registry allows only first divisions and seven European members, rejecting retired or arbitrary groups',()=>{
- assert.equal(leagues.list().length,15);assert(leagues.list().every(l=>l.division===1&&/\.1$/.test(l.espn)));
+ assert.equal(leagues.list().length,18);assert.equal(leagues.members('leagues').length,15);assert(leagues.members('leagues').every(l=>l.division===1&&/\.1$/.test(l.espn)));assert.equal(leagues.list().filter(l=>l.kind==='tournament').length,3);
  assert.deepEqual(leagues.group('europe-top7').leagueIds,['laliga','premier-league','serie-a','bundesliga','ligue-1','portugal','eredivisie']);
  for(const id of ['championship','bundesliga-2','ligue-2','serie-b','laliga-2','league-one','league-two'])assert.throws(()=>leagues.get(id));
  assert.throws(()=>leagues.group('custom',['championship']));assert.throws(()=>leagues.group('custom',['laliga','laliga']));assert.throws(()=>leagues.group('custom',['<script>']));
@@ -21,16 +21,19 @@ test('top seven and custom aggregates retain identity, original dates and canoni
 test('league checkbox events combine several leagues, keep the picker open and search without narrowing the score reference',()=>{
  const h=loaded();h.node('#league').open=true;
  const choose=(id,checked)=>{const input=h.node('#league-options').labels.find(l=>l.input.value===id).input;input.checked=checked;h.node('#league-options').onchange({target:input});};
- choose('portugal',true);assert.equal(h.run('currentLeague'),'custom');assert.equal(h.run('players().length'),64);assert.equal(h.node('#league-summary').textContent,'2 ligas seleccionadas');assert.equal(h.node('#league').open,true);assert.equal(h.run('scoreContext().reference.players.length'),15*32);assert.match(h.node('#thead').innerHTML,/data-sort="league"/);
+ choose('portugal',true);assert.equal(h.run('currentLeague'),'custom');assert.equal(h.run('players().length'),64);assert.equal(h.node('#league-summary').textContent,'2 competiciones seleccionadas');assert.equal(h.node('#league').open,true);assert.equal(h.run('scoreContext().reference.players.length'),18*32);assert.match(h.node('#thead').innerHTML,/data-sort="league"/);
  h.run("selectedClubs=new Set(['laliga:1']);teamCompareChoices=['laliga:1','portugal:1'];");choose('belgium',true);assert.equal(h.run('selectedClubs.size'),0);assert.equal(h.run('teamCompareChoices.length'),0);assert.equal(h.run('players().length'),96);
  h.node('#league-search').value='PAÍSES BAJOS';h.node('#league-search').oninput();assert.equal(h.node('#league-options').labels.filter(l=>!l.hidden).length,1);
  h.node('#league-top7').onclick();assert.equal(h.run('currentLeague'),'europe-top7');assert.equal(h.run('players().length'),224);assert.equal(h.node('#league-options').labels.filter(l=>l.input.checked).length,7);
  h.node('#league-all').onclick();assert.equal(h.run('players().length'),480);h.node('#league-clear').onclick();assert.equal(h.run('players().length'),0);assert.equal(h.node('#refresh').disabled,true);assert.match(h.node('#data-status').textContent,/Selecciona una o más/);choose('a-league',true);assert.equal(h.run('currentLeague'),'a-league');assert.equal(h.run('players().length'),32);
 });
 test('national navigation includes all available leagues, including non-European leagues',()=>{
- const h=loaded();h.run("selectLeagues(['scotland','a-league']);navigate('nations',false)");assert.equal(h.run('currentLeague'),'all');assert.equal(h.run('data.metadata.leagues.length'),15);assert.match(h.node('#nation-coverage').textContent,/15\/15 disponibles/);
- h.run("for(const id of GradaLeagues.group('europe-top7').leagueIds)datasets.delete(id);activateLeague('a-league');navigate('nations',false)");assert.equal(h.run('currentLeague'),'all');assert.equal(h.run('data.players.length'),8*32);assert.match(h.node('#nation-coverage').textContent,/8\/15 disponibles/);assert.equal(h.node('#nation-select').disabled,true);
+ const h=loaded();h.run("selectLeagues(['scotland','a-league']);navigate('nations',false)");assert.equal(h.run('currentLeague'),'leagues');assert.equal(h.run('data.metadata.leagues.length'),15);assert.match(h.node('#nation-coverage').textContent,/15\/15 disponibles/);
+ h.run("for(const id of GradaLeagues.group('europe-top7').leagueIds)datasets.delete(id);activateLeague('a-league');navigate('nations',false)");assert.equal(h.run('currentLeague'),'leagues');assert.equal(h.run('data.players.length'),8*32);assert.match(h.node('#nation-coverage').textContent,/8\/15 disponibles/);assert.equal(h.node('#nation-select').disabled,true);
 });
 test('multi-league refresh consults only the chosen real leagues and preserves that selection',async()=>{
  const h=loaded(),calls=[];h.context.GradaRefresh={...h.context.GradaRefresh,refresh:async(state,l)=>{calls.push(l.id);return {state,checked:[],updated:[],failed:[]};},report:()=>({})};h.run("selectLeagues(['laliga','belgium']);showRefreshReport=()=>''");await h.run('refreshData()');assert.deepEqual(calls.sort(),['belgium','laliga']);assert.equal(h.run('currentLeague'),'custom');assert.equal(h.run('activeLeagueIds().join()'),'laliga,belgium');
+});
+test('short UEFA phases use a 200-minute rate default and preserve explicit user minimums',()=>{
+ const h=loaded();h.run("activateLeague('conference-league')");assert.equal(h.run("leaderMinimum('goalsPer90')"),200);h.run("setLeaderMinimum('field',500);activateLeague('laliga');activateLeague('conference-league')");assert.equal(h.run("leaderMinimum('goalsPer90')"),500);
 });

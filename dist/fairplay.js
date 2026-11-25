@@ -5,6 +5,7 @@
   // GRADA design parameters, not observed suspension lengths or causal estimates.
   const method='linear_cards_v2',yellowPenaltyPer90=0.10,redWeight=10,maximumPenalty=1;
   function evaluate(record,minimumMinutes=minimumScoreMinutes){
+    record=record.competitionAggregate?(record.disciplineSample||{metricContexts:{}}):record;
     const yellow=record.yellowCards,red=record.redCards;
     const a=metrics.context(record,'yellowCards'),b=metrics.context(record,'redCards');
     const count=value=>Number.isSafeInteger(value)&&value>=0?value:null;

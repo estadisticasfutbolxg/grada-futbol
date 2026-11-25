@@ -8,13 +8,13 @@
  const method=formations.method,mean=formations.mean;
  const positions={POR:{label:'Portería'},DEF:{label:'Defensa y carriles'},MED:{label:'Centro del campo'},DEL:{label:'Delantera'}};
  function build(model){
-  const scope=leagues.group('all'),input=model.data;
+  const scope=leagues.group('leagues'),input=model.data;
   const leagueKey=player=>player.league_key||input.metadata?.league_key;
   const players=input.players.filter(p=>scope.leagueIds.includes(leagueKey(p))),data={...input,players},people=new Map(),countries=new Map();let known=0,conflicts=0,duplicateRecords=0;
   const available=new Set([...(input.metadata?.leagues||[]).map(l=>l.id),input.metadata?.league_key,...players.map(leagueKey)]);
   for(const player of data.players){
    const country=nationality.info(player);if(!country)continue;known++;const person=String(country.context.player_id),profile=model.players.get(player),score=profile?.score;
-   const row={person,player,country,score:Number.isFinite(score)&&score>=0&&score<=1?score:null,midfieldProfile:model.roles?.get(player)||null,profileLabel:profile?.profileLabel||player.pos};
+   const row={person,player,country,scoreMinutes:profile?.scoreSample?.minutes??player.minutes,score:Number.isFinite(score)&&score>=0&&score<=1?score:null,midfieldProfile:model.roles?.get(player)||null,profileLabel:profile?.profileLabel||player.pos};
    if(!people.has(person))people.set(person,[]);people.get(person).push(row);
   }
   for(const entries of people.values()){
@@ -24,7 +24,7 @@
    if(!countries.has(code))countries.set(code,{code,name:nationality.label(p.country),country:p.country,players:[]});countries.get(code).players.push(p);
   }
   for(const country of countries.values()){
-   const pool=country.players.filter(p=>p.score!==null&&Number.isFinite(p.player.minutes)&&p.player.minutes>=minimumScoreMinutes&&Object.hasOwn(positions,p.player.pos));
+   const pool=country.players.filter(p=>p.score!==null&&Number.isFinite(p.scoreMinutes)&&p.scoreMinutes>=minimumScoreMinutes&&Object.hasOwn(positions,p.player.pos));
    Object.assign(country,formations.propose(pool),{eligible:pool.length});
    country.missing=country.slots.filter(s=>!s.candidate).map(s=>s.label);
    country.units=Object.fromEntries(Object.keys(positions).map(pos=>{
@@ -61,7 +61,7 @@
    const u=country.units[pos];return '<div class="nation-unit"><span>'+d.label+'</span><b>'+fmt(u.score)+'</b><small>'+u.known+'/'+u.total+' puestos cubiertos</small>'+(u.score===null?'':'<meter min="0" max="1" value="'+u.score+'" aria-label="Score de '+d.label+'"></meter>')+'</div>';
   }).join('');
   const roster=country.slots.filter(s=>s.candidate).map(s=>{
-   const p=s.candidate.player;return '<tr><td>'+fmt(s.candidate.score)+'</td><td><button type="button" class="nation-choice" data-national-player="'+esc(p.id)+'">'+esc(p.name)+'</button></td><td>'+esc(s.label)+'</td><td>'+esc(s.evidence)+'</td><td>'+esc(s.candidate.profileLabel)+'</td><td>'+branding.playerClub(p,model.data.teams)+'</td><td>'+new Intl.NumberFormat('es-ES').format(p.minutes)+'</td></tr>';
+   const p=s.candidate.player;return '<tr><td>'+fmt(s.candidate.score)+'</td><td><button type="button" class="nation-choice" data-national-player="'+esc(p.id)+'">'+esc(p.name)+'</button></td><td>'+esc(s.label)+'</td><td>'+esc(s.evidence)+'</td><td>'+esc(s.candidate.profileLabel)+'</td><td>'+branding.playerClub(p,model.data.teams)+'</td><td>'+new Intl.NumberFormat('es-ES').format(s.candidate.scoreMinutes)+'</td></tr>';
   }).join('');
   const alternatives=country.alternatives.map(a=>'<tr'+(a.formation===country.formation?' class="national-selected"':'')+'><td>'+fmt(a.score)+'</td><td>'+esc(a.formation)+(a.formation===country.formation?' · elegido':'')+'</td><td>'+a.selected+'/11'+(!a.complete?' · Faltan: '+esc(a.slots.filter(s=>!s.candidate).map(s=>s.label).join(', ')):'')+'</td></tr>').join('');
   return '<div class="national-heading"><div><span class="badge">Once teórico · '+esc(country.formation)+'</span><h2>'+label(country.country)+'</h2></div><div class="national-total"><span>Score teórico</span><b>'+fmt(country.score)+'</b><small>'+country.selected+'/11 puestos</small></div></div>'+

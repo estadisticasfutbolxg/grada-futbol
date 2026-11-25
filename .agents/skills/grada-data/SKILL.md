@@ -16,4 +16,4 @@ description: Importa, modifica o verifica datos de StatsBomb Open Data, métrica
 
 No presentes xG previo al tiro como PSxG ni calcules goles evitados sin la fuente adecuada. Un dato desconocido se conserva como `null` y se muestra como `—`. Las fixtures mínimas de una prueba automatizada nunca se sirven como estadísticas del producto.
 
-Para ligas y rankings, aplica [LEAGUES.md](../../../docs/LEAGUES.md) desde la raíz documental del repositorio. Comprueba 18/20 equipos y 306/380 partidos según el catálogo, fuente por campo, modelos xG/xA, mínimos y referencia del área por perfil/ámbito. No infieras posiciones detalladas de centrocampistas: los perfiles defensivo/ofensivo son estadísticos.
+Para ligas y rankings, aplica [LEAGUES.md](../../../docs/LEAGUES.md) desde la raíz documental del repositorio. Comprueba clubes y calendario explícitos del catálogo, incluidas las fases regulares domésticas y los tres torneos UEFA de 36 clubes y 8/8/6 PJ máximos por club, fuente por campo, modelos xG/xA, mínimos y referencia del área por perfil/ámbito. No infieras posiciones detalladas de centrocampistas: los perfiles defensivo/ofensivo son estadísticos.

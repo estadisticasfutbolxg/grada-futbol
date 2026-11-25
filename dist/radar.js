@@ -69,7 +69,7 @@
     const samePosition = all.filter(p=>p.pos === position&&(!def.roleKey||tactical.matches(p,def.roleKey)));
     function eligible(record,key) {
       if(!baseEligible(record,minimum))return false;
-      const ctx = metrics.context(record,key);
+      const ctx = metrics.context(record,key,axes[key]?.[1]);
       const minutes = ctx && Object.hasOwn(ctx,'minutes') ? ctx.minutes : record.minutes;
       const matches = ctx && Object.hasOwn(ctx,'matches') ? ctx.matches : record.matches;
       return Number.isFinite(minutes) ? minutes >= minimum : position === 'POR' && Number.isFinite(matches) && matches >= 2;
@@ -81,18 +81,18 @@
     }
     return {definition:def,minimum,samples,ranked:new Map([...samples].map(([key,values])=>[key,[...values].sort((a,b)=>a-b)])),keys:[...samples.keys()].filter(k=>!(position==='POR'&&samples.has('psxgEfficiency')&&k==='prevented')).slice(0,6),peerCount:samePosition.filter(p=>candidates.some(key=>eligible(p,key)&&Number.isFinite(metrics.metric(p,key,axes[key][1])))).length};
   }
-  function baseEligible(record,minimum){return Number.isFinite(record.minutes)&&record.minutes>=minimum;}
+  function baseEligible(record,minimum){return !record.identityConflict&&Number.isFinite(record.minutes)&&record.minutes>=minimum;}
   function profile(player,all,plan) {
     if(!plan)return profiles([player],{referencePlayers:all}).get(player);
     const values=[];
     for(const key of plan.keys){
       const [label,unit,lower]=axes[key],value=metrics.metric(player,key,unit),sample=plan.samples.get(key);
       if(!Number.isFinite(value))continue;
-      values.push({key,label,value,percentile:plan.ranked?.has(key)?rankedPercentile(value,plan.ranked.get(key),lower):percentile(value,sample,lower),lowerBetter:!!lower,referenceCount:sample.length,source:metrics.context(player,key)?.source||null});
+      values.push({key,label,value,percentile:plan.ranked?.has(key)?rankedPercentile(value,plan.ranked.get(key),lower):percentile(value,sample,lower),lowerBetter:!!lower,referenceCount:sample.length,source:metrics.context(player,key,unit)?.source||null});
     }
     const visible=values.length>=3?values:[],area=relativeArea(visible.map(a=>a.percentile));
     const insufficientSamples=values.flatMap(a=>{
-      const c=metrics.context(player,a.key),minutes=c&&Object.hasOwn(c,'minutes')?c.minutes:player.minutes,matches=c&&Object.hasOwn(c,'matches')?c.matches:player.matches;
+      const c=metrics.context(player,a.key,axes[a.key]?.[1]),minutes=c&&Object.hasOwn(c,'minutes')?c.minutes:player.minutes,matches=c&&Object.hasOwn(c,'matches')?c.matches:player.matches;
       const enough=Number.isFinite(minutes)?minutes>=plan.minimum:player.pos==='POR'&&Number.isFinite(matches)&&matches>=2;
       return enough?[]:[{key:a.key,source:c?.source||null,minutes:Number.isFinite(minutes)?minutes:null,matches:Number.isFinite(matches)?matches:null}];
     });
@@ -133,12 +133,13 @@
     const team=profile.kind==='team',base=team?record.matches:record.minutes;
     if(!Number.isFinite(base)||base<minimum)return false;
     return profile.axes.every(a=>{
-      const ctx=metrics.context(record,a.key),minutes=ctx&&Object.hasOwn(ctx,'minutes')?ctx.minutes:record.minutes,matches=ctx&&Object.hasOwn(ctx,'matches')?ctx.matches:record.matches;
+      const ctx=metrics.context(profile.scoreRecord||record,a.key,axes[a.key]?.[1]),minutes=ctx&&Object.hasOwn(ctx,'minutes')?ctx.minutes:record.minutes,matches=ctx&&Object.hasOwn(ctx,'matches')?ctx.matches:record.matches;
       return team?Number.isFinite(matches)&&matches>=minimum:Number.isFinite(minutes)?minutes>=minimum:record.pos==='POR'&&minimum<=minimumScoreMinutes&&Number.isFinite(matches)&&matches>=2;
     });
   }
   const axis=key=>axes[key]?{label:axes[key][0],unit:axes[key][1],lowerBetter:!!axes[key][2]}:null;
   function explain(profile){
+    if(profile?.identityConflict)return 'Score pendiente: el mismo ID tiene posiciones de portero y jugador de campo incompatibles entre fuentes.';
     if(!profile)return 'No hay una referencia suficiente para calcular el score.';
     if(profile.kind==='team')return Number.isFinite(profile.score)?'Score ponderado de sus jugadores con minutos suficientes; faltan posiciones para dibujar el radar completo.':'Faltan scores de jugadores con minutos positivos para ponderar este equipo.';
     if(profile.score!==null&&Number.isFinite(profile.score))return 'Score completo de '+profile.profileLabel+'. Los ceros publicados cuentan como valores válidos.';

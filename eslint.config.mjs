@@ -3,6 +3,6 @@ import globals from 'globals';
 export default [
   {ignores:['dist/server/**','dist/downloads/**','node_modules/**']},
   js.configs.recommended,
-  {files:['dist/app.js'],languageOptions:{globals:Object.fromEntries(['Branding','Radar','Leagues','Refresh','Dates','Fotmob','Squads','Metrics','Combined','Scopes','Scores','Explore','Clubs','Security','Positions','Roles','Nationality','Nations','Owner','Filters','Profiles','Understat','LaLiga','Components'].map(name=>['Grada'+name,'readonly']))}},
+  {files:['dist/app.js'],languageOptions:{globals:Object.fromEntries(['Branding','Radar','Leagues','Refresh','Dates','Fotmob','Squads','Metrics','Combined','Scopes','Scores','Explore','Clubs','Security','Positions','Roles','Nationality','Nations','Owner','Filters','Profiles','Understat','LaLiga','Components','Competitions'].map(name=>['Grada'+name,'readonly']))}},
   {languageOptions:{ecmaVersion:2023,sourceType:'commonjs',globals:{...globals.browser,...globals.node}},rules:{'no-unused-vars':['warn',{args:'none',caughtErrors:'none'}],'no-useless-escape':'warn','no-empty':['error',{allowEmptyCatch:true}]}}
 ];

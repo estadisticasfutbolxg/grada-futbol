@@ -16,7 +16,12 @@ SOURCE = re.compile(r'(?:fotmob|espn|combined)-([a-z0-9-]+)-\d{4}-\d{2}\.(?:json
 
 def plan(data_dir, catalog, cache_root=None, assets_dir=None):
     allowed = {row['id'] for row in catalog}
-    if not allowed or any(row.get('division') != 1 or not re.fullmatch(r'[a-z]{3}\.1', row['espn']) for row in catalog):
+    cups = {'champions-league': (42, 'uefa.champions', 8), 'europa-league': (73, 'uefa.europa', 8), 'conference-league': (10216, 'uefa.europa.conf', 6)}
+    def valid(row):
+        if row.get('kind') == 'tournament':
+            return cups.get(row['id']) == (row.get('fotmobId'), row.get('espn'), row.get('maxTeamMatches')) and row.get('teams') == 36
+        return row.get('division') == 1 and re.fullmatch(r'[a-z]{3}\.1', row['espn'])
+    if not allowed or any(not valid(row) for row in catalog):
         raise ValueError('A verified first-division catalog is required')
     files, directories = [], []
     for path in data_dir.iterdir():

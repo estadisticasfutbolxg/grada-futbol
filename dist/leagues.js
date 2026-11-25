@@ -4,7 +4,8 @@
   let catalog=[];
   const europeanTop7=Object.freeze(['laliga','premier-league','serie-a','bundesliga','ligue-1','portugal','eredivisie']);
   function group(id,leagueIds=[]){
-    if(id==='all')return {id,name:'Todas las ligas',leagueIds:catalog.map(l=>l.id)};
+    if(id==='all')return {id,name:'Todas las competiciones',leagueIds:catalog.map(l=>l.id)};
+    if(id==='leagues')return {id,name:'Todas las ligas',leagueIds:catalog.filter(l=>l.kind!=='tournament').map(l=>l.id)};
     if(id==='europe-top7')return {id,name:'7 principales ligas europeas',leagueIds:[...europeanTop7]};
     if(id==='custom'){
       if(!Array.isArray(leagueIds)||leagueIds.length>catalog.length||new Set(leagueIds).size!==leagueIds.length||leagueIds.some(key=>!catalog.some(l=>l.id===key)))throw new Error('Selección de ligas inválida.');
@@ -13,9 +14,14 @@
     return null;
   }
   function members(id,leagueIds=[]){const scope=group(id,leagueIds);if(!scope)throw new Error('Grupo de ligas no admitido.');return catalog.filter(l=>scope.leagueIds.includes(l.id));}
+  function validLevel(row){
+    const cups={'champions-league':[42,'uefa.champions',8],'europa-league':[73,'uefa.europa',8],'conference-league':[10216,'uefa.europa.conf',6]};
+    if(row.kind==='tournament'){const config=cups[row.id];return !!config&&row.fotmobId===config[0]&&row.espn===config[1]&&row.maxTeamMatches===config[2]&&row.teams===36&&row.calendarPhase==='regular';}
+    return row.kind===undefined&&row.division===1&&/^[a-z]{3}\.1$/.test(row.espn);
+  }
   function configure(rows){
     if(!Array.isArray(rows)||!rows.length||rows.length>32||new Set(rows.map(r=>r.id)).size!==rows.length)throw new Error('Catálogo de ligas inválido.');
-    for(const r of rows)if(!/^[a-z0-9-]+$/.test(r.id)||typeof r.name!=='string'||r.name.length>80||r.year!==2026||r.season!=='2026/27'||r.division!==1||!Number.isInteger(r.teams)||r.teams<4||r.teams>32||!Number.isInteger(teamMatchLimit(r))||teamMatchLimit(r)<1||teamMatchLimit(r)>60||!Number.isInteger(r.matches)||r.matches!==r.teams*teamMatchLimit(r)/2||!/^[a-z]{3}\.1$/.test(r.espn)||!Number.isInteger(r.fotmobId)||!Number.isInteger(r.fotmobSeason)||!['Understat','FotMob'].includes(r.primary)||!/^[a-z0-9-]+\.json$/.test(r.espnFile)||r.calendarPhase!==undefined&&!['regular'].includes(r.calendarPhase))throw new Error('Configuración de liga inválida.');
+    for(const r of rows)if(!/^[a-z0-9-]+$/.test(r.id)||typeof r.name!=='string'||r.name.length>80||r.year!==2026||r.season!=='2026/27'||!validLevel(r)||!Number.isInteger(r.teams)||r.teams<4||r.teams>36||!Number.isInteger(teamMatchLimit(r))||teamMatchLimit(r)<1||teamMatchLimit(r)>60||!Number.isInteger(r.matches)||r.matches!==r.teams*teamMatchLimit(r)/2||!Number.isInteger(r.fotmobId)||!Number.isInteger(r.fotmobSeason)||!['Understat','FotMob'].includes(r.primary)||!/^[a-z0-9-]+\.json$/.test(r.espnFile)||r.calendarPhase!==undefined&&!['regular'].includes(r.calendarPhase))throw new Error('Configuración de liga inválida.');
     for(const r of rows){
       if(r.teamAliases!==undefined&&(!r.teamAliases||Array.isArray(r.teamAliases)||typeof r.teamAliases!=='object'||Object.keys(r.teamAliases).length>32||Object.entries(r.teamAliases).some(([a,b])=>!/^[a-z0-9]{1,100}$/.test(a)||typeof b!=='string'||!/^[a-z0-9]{1,100}$/.test(b))))throw new Error('Alias de clubes inválidos.');
       if(r.metricPriority!==undefined&&(!Array.isArray(r.metricPriority)||!r.metricPriority.length||r.metricPriority.length>3||new Set(r.metricPriority).size!==r.metricPriority.length||r.metricPriority.some(s=>!['FotMob','Understat','ESPN'].includes(s))||r.primary==='FotMob'&&r.metricPriority.includes('Understat')))throw new Error('Prioridad de métricas inválida.');
@@ -36,7 +42,7 @@
   }
   function list(){return [...catalog];}
   function teamMatchLimit(league){return league.maxTeamMatches??2*(league.teams-1);}
-  const api={configure,get,resolve,list,group,members,teamMatchLimit,ready:null};
+  const api={configure,get,resolve,list,group,members,validLevel,teamMatchLimit,ready:null};
   if(node){configure(require('./leagues.json'));api.ready=Promise.resolve();module.exports=api;}
   else{root.GradaLeagues=api;api.ready=fetch('leagues.json',{cache:'no-store',signal:AbortSignal.timeout(10000)}).then(r=>{if(!r.ok)throw new Error('No se pudo cargar el catálogo de ligas.');return r.json();}).then(configure);api.ready.catch(()=>{});}
 })(typeof window==='object'?window:globalThis);

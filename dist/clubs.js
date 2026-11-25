@@ -3,7 +3,7 @@
  const multiKey='__multiple_clubs__';
  const normalize=value=>String(value??'').normalize('NFKD').replace(/\p{M}/gu,'').toLowerCase().replace(/[^a-z0-9]/g,'');
  function info(player,teams){
-  const available=teams.filter(t=>!player.league_key||!t.league_key||t.league_key===player.league_key);
+  const available=teams.filter(t=>player.competitionAggregate||!player.league_key||!t.league_key||t.league_key===player.league_key);
   const assigned=player.team_id===null||player.team_id===undefined?null:available.find(t=>String(t.id)===String(player.team_id));
   if(assigned)return {kind:'single',clubs:[assigned],label:assigned.name,description:assigned.name};
   const parts=String(player.team||'').split(',').map(s=>s.trim()).filter(Boolean),clubs=[];
@@ -12,7 +12,7 @@
   return {kind:'unassigned',clubs:[],label:'Club sin asignar',description:'La fuente no permite asignar estas cifras a un único equipo.'};
  }
  function options(data){
-  const result=data.teams.map(t=>({id:String(t.id),label:(data.metadata?.scope==='all'?t.league+' · ':'')+t.name})).sort((a,b)=>a.label.localeCompare(b.label,'es'));
+  const result=data.teams.map(t=>({id:String(t.id),label:(data.metadata?.scope?t.league+' · ':'')+t.name})).sort((a,b)=>a.label.localeCompare(b.label,'es'));
   if(data.players.some(p=>info(p,data.teams).kind==='multiple'))result.push({id:multiKey,label:'Varios clubes · totales de temporada'});
   return result;
  }

@@ -1,7 +1,7 @@
 'use strict';
 // Read real provider captures. Never write changes back to them.
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
-const leagues=require('../dist/leagues.js'),combined=require('../dist/combined.js'),scopes=require('../dist/scopes.js'),scores=require('../dist/scores.js'),refresh=require('../dist/refresh.js'),profiles=require('../dist/profiles.js'),radar=require('../dist/radar.js'),tactical=require('../dist/roles.js');
+const leagues=require('../dist/leagues.js'),combined=require('../dist/combined.js'),scopes=require('../dist/scopes.js'),scores=require('../dist/scores.js'),refresh=require('../dist/refresh.js'),profiles=require('../dist/profiles.js'),radar=require('../dist/radar.js'),tactical=require('../dist/roles.js'),competitions=require('../dist/competitions.js');
 function audit(directory,{recovery=true,now=Date.now()}={}){
  const read=(file,key,league)=>refresh.validate(JSON.parse(fs.readFileSync(path.join(directory,file),'utf8')),key,league,{now});
  const sources=leagues.list().map(league=>({league,espn:read(league.espnFile,'espn',league),fotmob:read('fotmob-'+league.id+'-2026-27.json','fotmob',league),understat:league.primary==='Understat'?read('understat-'+league.id+'-2026-27.json','understat',league):null}));
@@ -16,7 +16,8 @@ function audit(directory,{recovery=true,now=Date.now()}={}){
  for(const p of all.players){
   const profile=model.players.get(p),role=model.roles.get(p);
   assert.equal(profile.profileKey,p.pos==='DEF'&&tactical.matches(p,'FB')?'DEF_FB':p.pos==='MED'?role||'MED':p.pos,'Declared profile and score axes disagree');
-  if(profile.baseScore===null)assert.equal(profile.score,null);
+  if(profile.identityConflict)assert.equal(profile.score,null);
+  else if(profile.baseScore===null)assert.equal(profile.score,null);
   else if(profile.fairPlay.status==='verified'){
    assert(profile.score>=0&&profile.score<=profile.baseScore,'Fair play must stay between zero and the radar base');
    const c=profile.fairPlay,raw=(0.10*c.yellowCards+1.00*c.redCards)*90/c.minutes,expected=profile.baseScore*Math.max(0,1-raw);assert(Math.abs(profile.score-expected)<1e-12,'Wrong linear card penalty or own denominator');assert.equal(c.method,'linear_cards_v2');assert(Math.abs(c.rawPenaltyFraction-raw)<1e-12);fairPlayChecks++;
@@ -25,11 +26,11 @@ function audit(directory,{recovery=true,now=Date.now()}={}){
   profileChecks++;
  }
  for(const {league,data}of sets){
-  const local=scores.build(data,{referencePlayers:all.players});
-  for(const p of data.players){assert.equal(local.players.get(p).score,model.players.get(byId.get(league.id+':'+p.id)).score,'Score differs between league and all leagues');scoreChecks++;}
+  const aligned=competitions.alignPositions(data,all.players),local=scores.build(aligned,{referencePlayers:all.players});
+  for(const p of aligned.players){const canonical=byId.get(league.id+':'+p.id)||all.players.find(q=>competitions.identity(q)===competitions.identity(p)&&(q.pos==='POR')===(p.pos==='POR'));assert(canonical,'Missing canonical identity');assert.equal(local.players.get(p).score,model.players.get(canonical).score,'Score differs between competition and season');scoreChecks++;}
   for(const summary of [local.overall,...local.units.values()])for(const team of summary.teams.values()){
    const included=team.players.filter(p=>p.included);
-   for(const member of included){const p=data.players.find(p=>String(p.id)===member.id),profile=local.players.get(p);assert.equal(member.area,profile.score,'Contribution differs from the player score');assert.equal(member.scoreProfile,profile.profileKey,'Contribution uses another score profile');}
+   for(const member of included){const p=aligned.players.find(p=>String(p.id)===member.id),profile=local.players.get(p);assert.equal(member.area,profile.score,'Contribution differs from the player score');assert.equal(member.scoreProfile,profile.profileKey,'Contribution uses another score profile');}
    if(!included.length){assert.equal(team.area,null);continue;}
    const mean=included.reduce((sum,p)=>sum+p.area*p.minutes,0)/included.reduce((sum,p)=>sum+p.minutes,0);
    assert(Math.abs(team.area-mean)<1e-12,'Team score is not the minute-weighted mean');
@@ -46,7 +47,7 @@ function audit(directory,{recovery=true,now=Date.now()}={}){
   });
   const simulated=scopes.aggregate(datasets),simModel=scores.build(simulated),lost=[],gained=[];let positionChanges=0,scoreChanges=0;
   for(const p of simulated.players){
-   const before=byId.get(p.id),beforeScore=model.players.get(before).score,afterScore=simModel.players.get(p).score;
+   const before=byId.get(p.id)||all.players.find(q=>competitions.identity(q)===competitions.identity(p)&&(q.pos==='POR')===(p.pos==='POR'));assert(before,'Simulation changed provider identity');const beforeScore=model.players.get(before).score,afterScore=simModel.players.get(p).score;
    if(before.pos!==p.pos)positionChanges++;
    if(beforeScore!==afterScore)scoreChanges++;
    const detail={id:p.id,name:p.name,league:p.league,from:before.pos,to:p.pos,missing:simModel.players.get(p).missingAxes};

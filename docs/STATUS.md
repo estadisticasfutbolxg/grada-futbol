@@ -1,5 +1,11 @@
 # Estado comprobado de GRADA
 
+## Ligas, torneos y score de temporada · implementación verificada · 25 de noviembre de 2026
+
+Incremento 1 publicado en v38: LaLiga con xG/xGA de veinte equipos y Real Madrid 33,6/12,9; +19 partidos agregados y una ficha Rüdiger revisada, sin inventar sus intercepciones. ESLint/Ruff/CI activos; selecciones con quince ligas, 135 países y 37 XI. [PR #70](https://github.com/estadisticasfutbolxg/grada-futbol/pull/70) integrado, CI correcto. Navegación local con mismas entradas 168,85 → 87,44 ms; sin QA visual.
+
+Segundo incremento preparado: Champions, Europa y Conference 2026/27, fase de liga, 2.258 fichas de competición, 798 IDs nuevos y 207 encuentros de cobertura agregada por proveedor. Dieciocho competiciones, 6.766 personas distintas y 286 clubes. Un score/posición de temporada en todas las vistas; recuentos sumados, tasas con muestras propias y desglose. Selecciones mantiene candidatos de quince ligas y media simple del XI. Treinta fuentes v38 intactas. Publicación del segundo incremento pendiente; no se confunde implementación local con producción. [Tarea](../loop/tasks/20261125-codex-laliga-quality-cups.md).
+
 ## Primeras divisiones, selección múltiple y siete europeas · publicación privada verificada · 25 de noviembre de 2026
 
 - Solo **15 primeras divisiones**, con casillas para elegir varias, accesos Todas y siete principales europeas. Selecciones admite únicamente candidatos de LaLiga, Premier League, Serie A, Bundesliga, Ligue 1, Liga Portugal y Eredivisie; países de todo el mundo, siete sistemas coherentes y media simple de once. [Contrato de ligas](LEAGUES.md), [selecciones](NATIONS.md).

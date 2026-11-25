@@ -19,6 +19,6 @@ for(const l of leagues.list()){
 }
 const reference=aggregate(snapshots);
 const output=path.join(folder,'combined-'+league.id+'-2026-27.json'),temporary=output+'.tmp';
-try { fs.writeFileSync(temporary,JSON.stringify(withScores(data,{referencePlayers:reference.players,referenceLabel:snapshots.length+' ligas cargadas'})));fs.renameSync(temporary,output); }
+try { fs.writeFileSync(temporary,JSON.stringify(withScores(data,{referencePlayers:reference.players,referenceLabel:snapshots.length+' competiciones cargadas'})));fs.renameSync(temporary,output); }
 finally {if(fs.existsSync(temporary))fs.unlinkSync(temporary);}
 process.stdout.write(JSON.stringify({output,...data.metadata.combination})+'\n');

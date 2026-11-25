@@ -29,7 +29,7 @@ test('one provider ID appears once across leagues; most minutes wins rather than
 });
 test('all loaded leagues supply national candidates while duplicate country conflicts stay excluded',()=>{
  const f=fixture(),outside=player(12,'POR',['GK'],0.99,9000,'belgium');f.model.data.players.push(outside.player);f.model.players.set(outside.player,{score:outside.score});
- const result=nations.build(f.model);assert(result.countries[0].complete);assert.equal(result.countries[0].slots.find(s=>s.pos==='POR').candidate.score,0.99);assert.equal(result.coverage.records,12);assert.equal(result.coverage.excludedRecords,0);assert.equal(result.scope,'all');
+ const result=nations.build(f.model);assert(result.countries[0].complete);assert.equal(result.countries[0].slots.find(s=>s.pos==='POR').candidate.score,0.99);assert.equal(result.coverage.records,12);assert.equal(result.coverage.excludedRecords,0);assert.equal(result.scope,'leagues');
 });
 test('dynamic field and score-first tables show real club IDs, evidence, score profiles and seven alternatives safely',()=>{
  const {model}=fixture(),result=nations.build(model),country=result.countries[0],ranking=nations.ranking(result),html=nations.lineup(country,result);
@@ -37,4 +37,7 @@ test('dynamic field and score-first tables show real club IDs, evidence, score p
  assert.equal((html.match(/class="nation-club"/g)||[]).length,11);assert.equal((html.match(/class="nation-club">[\s\S]*?src="\/assets\/clubs\/101.png"/g)||[]).length,11);assert(html.includes('Perfil del score'));assert(html.includes('Encaje'));assert(html.includes('Los siete sistemas'));assert.equal(country.alternatives.length,7);
  model.data.players[0].name='<img src=x onerror=alert(1)>';assert(nations.lineup(nations.build(model).countries[0],nations.build(model)).includes('&lt;img'));assert.equal(nationality.label({code:'ESP',name:'Spain'}),'España');
  model.data.teams[0].sourceRecords.FotMob.id='../../fake';const fallback=nations.lineup(country,result);assert(!fallback.includes('/assets/clubs/'));assert(fallback.includes('club-monogram'));
+});
+test('national eligibility uses the verified canonical season minutes when league and cup have been combined',()=>{
+ const f=fixture(),p=f.rows[10].player;p.minutes=150;f.model.players.get(p).scoreSample={minutes:250};assert(nations.build(f.model).countries[0].complete);f.model.players.get(p).scoreSample.minutes=199;assert(!nations.build(f.model).countries[0].complete);
 });
