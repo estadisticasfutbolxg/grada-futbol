@@ -141,7 +141,7 @@ async function handle(request,assets,{cache=sharedCache(),fetcher=fetch,now=Date
     // queued league requests retain streams rather than full season objects.
     const published=validator.validate(await assetJSON(asset)),current=validator.validate(await cached.json());
     const newer=Date.parse(current.metadata.imported_at)>Date.parse(published.metadata.imported_at);
-    const restore=source.source==='fotmob'?profiles.restore:espn.restoreIdentities;
+    const restore=source.source==='fotmob'?(data,backup)=>fotmob.restoreTeams(profiles.restore(data,backup),backup):espn.restoreIdentities;
     const restored=validator.validate(restore(newer?current:published,newer?published:current));
     return request.method==='HEAD'?new Response(null,{headers:json(null).headers}):json(restored);
    }catch(_){/* Invalid cached data must not hide the verified published capture. */}
