@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>GRADA · Comparador de fuentes</title>
+  <link rel="stylesheet" href="/comparar-fuentes.css">
+  <script defer src="/comparar-fuentes.js"></script>
+</head>
+<body>
+<main>
+  <p class="brand">GRADA <span>LABORATORIO DE DATOS</span></p>
+  <h1>Comparador de fuentes</h1>
+  <p>Compara el mismo partido sin mezclar datos de proveedores. Este piloto no cambia los rankings de GRADA.</p>
+  <section class="controls" aria-label="Controles del comparador">
+    <label for="fixture">Partido<select id="fixture"></select></label>
+    <label for="source">Fuente<select id="source">
+      <option value="compare">Comparar ambas</option>
+      <option value="bzz">Bzzoiro</option>
+      <option value="reference">FotMob + ESPN</option>
+    </select></label>
+    <label for="reference">Referencia local del partido<input id="reference" type="file" accept=".json,application/json"></label>
+    <button id="load" type="button">Consultar Bzzoiro</button>
+  </section>
+  <p id="notice" role="status" aria-live="polite"></p>
+  <p>La referencia se lee en tu navegador, sin subirla. Una captura de temporada no equivale a un partido. «—» indica dato no verificado o no disponible.</p>
+  <section id="comparison" aria-label="Resultados de la comparación"></section>
+  <details><summary>Criterios del piloto</summary>
+    <p>Se muestran paradas, goles de jugador, xG, xA y cobertura del mapa cuando constan. No se igualan minutos de proveedores, no se reconstruye el xGOT del portero desde datos de equipo y no se calculan scores. En filas Bzzoiro, un cero susceptible de representar un valor ausente se deja sin confirmar.</p>
+  </details>
+</main>
+</body>
+</html>
