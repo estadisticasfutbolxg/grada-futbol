@@ -8,15 +8,26 @@
     const info=profile?.fairPlay;if(!info)return '';
     if(info.status!=='verified'){
       const reason=info.status==='insufficient_sample'?'muestra propia insuficiente':info.status==='incompatible_sample'?'amarillas y rojas de muestras diferentes':'faltan tarjetas verificadas';
-      return '<p class="sub fairplay-note">Juego limpio sin ajuste: '+esc(reason)+'. Se conserva la base del radar.</p>';
+      return '<p class="sub fairplay-note">Juego limpio sin ajuste: '+esc(reason)+'. Se conserva la base del score.</p>';
     }
     const sample=record.disciplineSample||record,coverage=info.contexts?.yellowCards?.coverage;
     const fixed=n=>new Intl.NumberFormat('es-ES',{minimumFractionDigits:3,maximumFractionDigits:3}).format(n),penalty=numberFormat.format(info.penaltyFraction*100),yellow=provenance(sample,'yellowCards',metadata),red=provenance(sample,'redCards',metadata),source=yellow?.date===red?.date?yellow?.text:'Amarillas: '+yellow?.text+'; rojas: '+red?.text;
     return '<p class="sub fairplay-note">Juego limpio: '+info.yellowCards+(info.yellowCards===1?' amarilla y ':' amarillas y ')+info.redCards+(info.redCards===1?' roja · ':' rojas · ')+format(info.weightedCardsPer90)+' puntos /90 · descuento '+penalty+' %. '+
-      (Number.isFinite(profile.baseScore)?'Base del radar '+fixed(profile.baseScore)+' × factor '+fixed(info.factor)+' ≈ score '+fixed(profile.score)+'. ':'')+
+      (Number.isFinite(profile.baseScore)?'Base del score '+fixed(profile.baseScore)+' × factor '+fixed(info.factor)+' ≈ score '+fixed(profile.score)+'. ':'')+
       'Descuento por amarillas: '+format(info.yellowPenaltyFraction*100)+' %; por rojas: '+format(info.redPenaltyFraction*100)+' % antes del mínimo de score 0. '+
       'Una roja pesa como '+info.redWeight+' amarillas; penalización lineal de '+format(info.yellowPenaltyPer90*100)+' % por punto /90. Pesos propios de GRADA. '+
       'No estima sanciones cumplidas ni minutos en inferioridad. '+esc(source||info.source)+' · muestra emparejada de ambas tarjetas.'+(coverage&&coverage.known<coverage.total?' Ajuste parcial: '+coverage.known+'/'+coverage.total+' competiciones con ambas tarjetas verificadas.':'')+'</p>';
+  }
+  function attackNote(record,metadata,profile){
+    const attack=profile.attack;
+    if(!attack)return '';
+    const entries=attack.entries.map(metric=>{
+      const label=root.GradaRadar.axis(metric.key).label;
+      if(metric.percentile===null)return '<li>'+esc(label)+' · sin dato o muestra válida para el score</li>';
+      const info=provenance(record,metric.key,metadata,'90');
+      return '<li>'+esc(label)+' · '+format(metric.value)+' · P'+format(metric.percentile)+' · '+format(metric.weight*100)+' % del score base'+(info?' <small title="'+esc(info.text)+'">'+esc(info.label)+'</small>':'')+'</li>';
+    });
+    return '<details><summary>Aporte ofensivo · '+format(attack.usedWeight*100)+' % de la base (máx. '+format(attack.maxWeight*100)+' %)</summary><p class="sub">Goles, asistencias, xG y xA por 90. Se comparan con jugadores de la misma posición'+(record.pos==='DEF'?', con laterales y otros defensas en grupos distintos':'')+'. El peso de las métricas sin muestra válida pasa al radar.</p><ul>'+entries.join('')+'</ul></details>';
   }
   function provenance(record,key,metadata,unit='total') {
     const ctx = root.GradaMetrics.context(record,key,unit), source = ctx?.source || record.fieldSources?.[key];
@@ -63,7 +74,7 @@
       axes.map((a,i)=>{const p = point(i,radius*a.percentile/100),info=teamMean?null:provenance(scoreRecord,a.key,metadata,root.GradaRadar.axis(a.key)?.unit),text=teamMean?a.label+': '+new Intl.NumberFormat('es-ES',{minimumFractionDigits:3,maximumFractionDigits:3}).format(a.value)+'; promedio ponderado de '+a.referenceCount+' jugadores':a.label+': '+format(a.value)+'; percentil '+Math.round(a.percentile)+'; '+a.referenceCount+' jugadores de referencia; '+(info?.text||metadata.source)+(a.lowerBetter?'; menor valor es mejor':'');return '<g tabindex="0" role="img" aria-label="'+esc(text)+'"><title>'+esc(text)+'</title><circle class="radar-point" cx="'+p[0]+'" cy="'+p[1]+'" r="4"/></g>';}).join('')+'</svg>';
     const areaText=profile.score===null?'—':new Intl.NumberFormat('es-ES',{minimumFractionDigits:3,maximumFractionDigits:3}).format(profile.score);
     return '<figure class="radar-card"><figcaption>'+esc(profile.profileLabel||record.pos)+(teamMean?' · medias por minutos':' · percentiles de su grupo')+'</figcaption>'+svg+
-      '<div class="radar-area"><span>'+(teamMean?'Score de equipo · 0–1':'Score de jugador · 0–1')+'</span><strong>'+areaText+'</strong></div><p class="sub">'+(teamMean?'Score general = promedio de los scores finales de todos sus jugadores ponderado por minutos. Cada eje muestra el promedio de esa posición.':'Base: área del polígono respecto al máximo (todos los ejes en P100). El score incorpora después el ajuste de juego limpio cuando está verificado. '+(profile.score===null?esc(root.GradaRadar.explain(profile)):'Mismo score en tablas, fichas y rankings. Los ceros publicados se incluyen.'))+'</p>'+(teamMean?'':fairPlayNote(scoreRecord,metadata,profile))+
+      '<div class="radar-area"><span>'+(teamMean?'Score de equipo · 0–1':'Score de jugador · 0–1')+'</span><strong>'+areaText+'</strong></div><p class="sub">'+(teamMean?'Score general = promedio de los scores finales de todos sus jugadores ponderado por minutos. Cada eje muestra el promedio de esa posición.':'El radar mide el área del polígono respecto a su máximo (todos los ejes en P100). '+(profile.attack?'La base combina esa área con el aporte ofensivo. ':'')+'Juego limpio ajusta esa base cuando hay datos verificados. '+(profile.score===null?esc(root.GradaRadar.explain(profile)):'Mismo score en tablas, fichas y rankings. Los ceros publicados se incluyen.'))+'</p>'+(teamMean?'':attackNote(scoreRecord,metadata,profile)+fairPlayNote(scoreRecord,metadata,profile))+
       '<p class="sub">Referencia: '+esc(profile.referenceRule)+'. '+(teamMean?'Pesos: minutos publicados de cada jugador; cobertura y contribuciones en la ficha.':'Volúmenes por 90 o por PJ, según el eje.'+(axes.some(a=>a.lowerBetter)?' En goles y xG recibidos, menos es mejor.':'')+' Es rendimiento estadístico, no una valoración física.')+'</p>'+
       '<details><summary>Ver valores y procedencia</summary><ul>'+axes.map(a=>{const info=teamMean?null:provenance(scoreRecord,a.key,metadata,root.GradaRadar.axis(a.key)?.unit);return '<li>'+esc(a.label)+': <b>'+format(a.value)+'</b>'+(teamMean?' · '+a.referenceCount+' jugadores ponderados':' · P'+Math.round(a.percentile)+' · '+a.referenceCount+' referencias · '+esc(info?.source||metadata.source))+'</li>';}).join('')+'</ul></details></figure>';
   }

@@ -28,6 +28,8 @@
     MED_ATT:['xa','chancesCreated','bigChancesCreated','shotsOnTargetPer90','dribblesPer90','goals'],
     MED_BALANCED:['completedPer90','xa','chancesCreated','recoveries','tackles','interceptions'],
   };
+  const attackKeys = ['goals','assists','xg','xa'];
+  const attackWeights = Object.freeze({DEF:0.05,DEF_FB:0.15,MED_DEF:0.05,MED:0.10,MED_BALANCED:0.15,MED_ATT:0.25,DEL:0.35});
   const rankingDefinitions=[
     {key:'DEL',label:'Delanteros',position:'DEL',kind:'player',minimum:minimumScoreMinutes},
     {key:'POR',label:'Porteros',position:'POR',kind:'player',minimum:minimumScoreMinutes},
@@ -63,7 +65,7 @@
     // Shoelace area / area of the regular polygon at P100. Equal angular gaps.
     return percentiles.reduce((sum,p,i)=>sum+p/100*(percentiles[(i+1)%percentiles.length]/100),0)/percentiles.length;
   }
-  function reference(all,key) {
+  function reference(all,key,{withAttack=false}={}) {
     const def=definition(key),position=def.position,minimum=def.minimum;
     if(def.kind==='team')throw new Error('Los scores de equipo se calculan con los scores de sus jugadores en GradaScores.');
     const samePosition = all.filter(p=>p.pos === position&&(!def.roleKey||tactical.matches(p,def.roleKey)));
@@ -74,14 +76,35 @@
       const matches = ctx && Object.hasOwn(ctx,'matches') ? ctx.matches : record.matches;
       return Number.isFinite(minutes) ? minutes >= minimum : position === 'POR' && Number.isFinite(matches) && matches >= 2;
     }
-    const candidates=priorities[key]||[],samples=new Map();
+    const attackWeight=withAttack?attackWeights[key]:undefined;
+    const candidates=(priorities[key]||[]).filter(metric=>!attackWeight||!attackKeys.includes(metric)),samples=new Map();
     for(const key of candidates){
       const values=samePosition.filter(p=>eligible(p,key)).map(p=>metrics.metric(p,key,axes[key][1])).filter(Number.isFinite);
       if(values.length>=5)samples.set(key,values);
     }
-    return {definition:def,minimum,samples,ranked:new Map([...samples].map(([key,values])=>[key,[...values].sort((a,b)=>a-b)])),keys:[...samples.keys()].filter(k=>!(position==='POR'&&samples.has('psxgEfficiency')&&k==='prevented')).slice(0,6),peerCount:samePosition.filter(p=>candidates.some(key=>eligible(p,key)&&Number.isFinite(metrics.metric(p,key,axes[key][1])))).length};
+    const attackPeers=attackWeight&&key==='DEF'?samePosition.filter(p=>!tactical.matches(p,'FB')):samePosition;
+    const attackSamples=new Map();
+    if(attackWeight)for(const metric of attackKeys){
+      const values=attackPeers.filter(p=>eligible(p,metric)).map(p=>metrics.metric(p,metric,'90')).filter(Number.isFinite);
+      if(values.length>=5)attackSamples.set(metric,values.sort((a,b)=>a-b));
+    }
+    return {definition:def,minimum,samples,attackWeight,attackSamples,ranked:new Map([...samples].map(([key,values])=>[key,[...values].sort((a,b)=>a-b)])),keys:[...samples.keys()].filter(k=>!(position==='POR'&&samples.has('psxgEfficiency')&&k==='prevented')).slice(0,6),peerCount:samePosition.filter(p=>candidates.some(key=>eligible(p,key)&&Number.isFinite(metrics.metric(p,key,axes[key][1])))).length};
   }
   function baseEligible(record,minimum){return !record.identityConflict&&Number.isFinite(record.minutes)&&record.minutes>=minimum;}
+  function attackingContribution(player,plan,radarScore){
+    const weight=plan.attackWeight/attackKeys.length;
+    const entries=attackKeys.map(key=>{
+      const sample=plan.attackSamples.get(key),context=metrics.context(player,key,'90');
+      const minutes=context&&Object.hasOwn(context,'minutes')?context.minutes:player.minutes;
+      const value=metrics.metric(player,key,'90');
+      const percentile=baseEligible(player,plan.minimum)&&Number.isFinite(minutes)&&minutes>=plan.minimum&&sample?rankedPercentile(value,sample):null;
+      return {key,value,percentile,referenceCount:sample?.length??0,weight:percentile===null?0:weight};
+    });
+    const usedWeight=entries.reduce((sum,metric)=>sum+metric.weight,0);
+    const contribution=entries.reduce((sum,metric)=>sum+(metric.percentile===null?0:metric.weight*(metric.percentile/100)**2),0);
+    const score=Number.isFinite(radarScore)?radarScore*(1-usedWeight)+contribution:null;
+    return {maxWeight:plan.attackWeight,usedWeight,entries,score};
+  }
   function profile(player,all,plan) {
     if(!plan)return profiles([player],{referencePlayers:all}).get(player);
     const values=[];
@@ -97,8 +120,10 @@
       return enough?[]:[{key:a.key,source:c?.source||null,minutes:Number.isFinite(minutes)?minutes:null,matches:Number.isFinite(matches)?matches:null}];
     });
     const baseSampleEnough=baseEligible(player,plan.minimum),sampleEnough=baseSampleEnough&&!insufficientSamples.length;
-    const score=values.length===plan.keys.length&&sampleEnough?area:null;
-    return {axes:visible,area,score,comparableArea:score,expectedAxes:plan.keys,missingAxes:plan.keys.filter(k=>!values.some(a=>a.key===k)),sampleEnough,baseSampleEnough,insufficientSamples,minimumMinutes:plan.minimum,minimumMatches:null,kind:'player',profileKey:plan.definition.key,profileLabel:plan.definition.label,peerCount:plan.peerCount,availableAxes:values.length,
+    const radarScore=values.length===plan.keys.length&&sampleEnough?area:null;
+    const attack=plan.attackWeight?attackingContribution(player,plan,radarScore):null;
+    const score=attack?attack.score:radarScore;
+    return {axes:visible,area,score,comparableArea:score,attack,expectedAxes:plan.keys,missingAxes:plan.keys.filter(k=>!values.some(a=>a.key===k)),sampleEnough,baseSampleEnough,insufficientSamples,minimumMinutes:plan.minimum,minimumMatches:null,kind:'player',profileKey:plan.definition.key,profileLabel:plan.definition.label,peerCount:plan.peerCount,availableAxes:values.length,
       referenceRule:(plan.definition.key==='DEF_FB'?'laterales y carrileros con puesto publicado':'misma posición')+', mínimo '+plan.minimum+' min del jugador y de cada eje'+(player.pos==='POR'?' (2 PJ por eje si su proveedor no publica minutos)':'')};
   }
   function profiles(all,{referencePlayers=all,kind='player',midfieldRoles=null}={}){
@@ -106,7 +131,7 @@
     const roles=midfieldRoles||new Map(),indices=midfieldRoles?null:midfieldIndices(all,{referencePlayers});
     if(indices)for(const p of all)if(p.pos==='MED')roles.set(p,midfieldRole(p,indices));
     const keyFor=p=>p.pos==='DEF'&&tactical.matches(p,'FB')?'DEF_FB':p.pos==='MED'&&['MED_ATT','MED_DEF','MED_BALANCED'].includes(roles.get(p))?roles.get(p):p.pos;
-    const plans=new Map([...new Set(all.map(keyFor))].map(key=>[key,reference(referencePlayers,key)]));
+    const plans=new Map([...new Set(all.map(keyFor))].map(key=>[key,reference(referencePlayers,key,{withAttack:true})]));
     return new Map(all.map(p=>{
       const key=keyFor(p),result=profile(p,referencePlayers,plans.get(key));
       if(p.pos==='MED')result.profileLabel={MED_ATT:'Centrocampista · perfil ofensivo',MED_DEF:'Centrocampista · perfil defensivo',MED_BALANCED:'Centrocampista · perfil equilibrado',MED:'Centrocampista · perfil general (sin clasificar)'}[key];
@@ -150,6 +175,6 @@
     if((profile.expectedAxes?.length||0)<3)parts.push('No hay al menos tres ejes con cinco referencias suficientes');
     return (parts.join('. ')||'Faltan métricas o muestra suficiente de su posición')+'. Los ceros reales sí se incluyen; un dato ausente no se sustituye por cero.';
   }
-  const api = {profile,profiles,midfieldIndices,midfieldRole,percentile,relativeArea,rankingDefinitions,definition,rankingEligible,axis,explain,minimumScoreMinutes};
+  const api = {attackKeys,attackWeights,profile,profiles,midfieldIndices,midfieldRole,percentile,relativeArea,rankingDefinitions,definition,rankingEligible,axis,explain,minimumScoreMinutes};
   if (typeof module === 'object' && module.exports) module.exports = api; else root.GradaRadar = api;
 })(typeof window === 'object' ? window : globalThis);

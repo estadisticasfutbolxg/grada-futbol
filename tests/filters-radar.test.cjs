@@ -14,7 +14,7 @@ test('radar needs three real axes and five same-position references',()=>{
  const p={id:1,pos:'DEL',minutes:900,goals:10,xg:8,xa:4,shots:30,keypasses:10,conversion:33};
  const peers=Array.from({length:5},(_,i)=>({...p,id:i}));
  const profile=radar.profile(p,[...peers,...Array.from({length:10},()=>({...p,pos:'POR',goals:100}))]);
- assert.equal(profile.axes.length,6);assert.equal(profile.peerCount,5);assert(profile.axes.every(a=>a.percentile===50));
+ assert.equal(profile.axes.length,3);assert.equal(profile.peerCount,5);assert(profile.axes.every(a=>a.percentile===50));
  assert.equal(radar.profile(p,peers.slice(0,4)).axes.length,0);
  assert.equal(radar.profile({pos:'DEL',minutes:100},peers).axes.length,0);
 });

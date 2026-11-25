@@ -56,8 +56,8 @@ test('published zero metrics and a zero score remain valid in ranking and weight
   assert.equal(profile.score,0,position);assert(profile.sampleEnough);assert.deepEqual(profile.missingAxes,[]);
   assert.equal(scores.value(model,p,radar.definition(position)),0);assert(scores.eligible(model,p,radar.definition(position)));
   const member=model.units.get(position).teams.get(p.team_id).players.find(q=>q.id===p.id);assert.equal(member.area,0);assert(member.included);assert.equal(member.contribution,0);
-  const missing=profile.expectedAxes.find(key=>!['savesPerMatch','concededPerMatch'].includes(key));p[missing]=null;
-  assert.equal(scores.build(data,{referencePlayers:references}).players.get(p).score,null,'absence is distinct from a published zero');
+  const missing=position==='MED'?'recoveries':profile.expectedAxes.find(key=>!['savesPerMatch','concededPerMatch','completedPer90'].includes(key));p[missing]=null;
+  assert.equal(scores.build(data,{referencePlayers:references}).players.get(p).score,null,position+' '+missing+': absence is distinct from a published zero');
  }
 });
 test('pending score explanations identify the missing metric or its own insufficient provider sample',()=>{

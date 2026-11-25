@@ -8,35 +8,51 @@ Recuentos: suma de valores conocidos, sin convertir ausencias en ceros. Tasas: m
 
 Juego limpio mantiene la fórmula vigente. Solo usa contribuciones con ambas tarjetas y muestra compatible; si a un torneo le falta una, conserva el ajuste de la muestra emparejada de las otras competiciones y declara su cobertura. No supone cero ni elimina una penalización ya verificada. La regeneración debe preservar score, posición y perfil; las posiciones derivadas no se reutilizan como evidencia original.
 
-Definición actualizada el 20 de noviembre de 2026, modelo `role_fairplay_radar_v6`. Unifica el mínimo en 200 minutos inclusive para todas las posiciones; conserva la penalización lineal de v5, los perfiles MED y el radar mixto de lateral. El modelo común es `dist/scores.js`; tablas, tarjetas, fichas, comparador, filtros y generador consumen sus resultados.
+Modelo vigente `role_fairplay_radar_v7`. El score de temporada incorpora un bloque de aporte ofensivo para los jugadores de campo. El modelo común es `dist/scores.js`; tablas, tarjetas, fichas, comparador, filtros y generador consumen sus resultados.
 
 ## Jugadores
 
 Cada jugador tiene un único score. Primero se resuelve su posición con las fuentes: POR, DEF, MED o DEL. En MED se resuelve además su perfil estadístico; en DEF se comprueba si tiene puesto de lateral/carrilero publicado. Esos perfiles eligen los ejes antes de calcular el score. La posición usa consenso entre proveedores y, sin acuerdo, la ficha FotMob cuando existe; conserva alternativas y procedencia según [COMBINED.md](COMBINED.md). No se cambia la posición para obtener un score mejor. La referencia usa jugadores de la posición de todas las ligas cargadas; los laterales se comparan con laterales verificados. Se conservan fuente y denominadores por métrica. Seleccionar una liga o ranking solo filtra candidatos; no cambia perfil, ejes, ajuste o score. Una actualización de cifras o referencias sí puede cambiarlos.
 
-`radar.js` selecciona hasta seis ejes comunes por posición/perfil. Cada eje requiere cinco referencias suficientes: todos los MED con muestra válida son referencia de los ejes MED; los DEF con puesto FB publicado son referencia del perfil de lateral. Los filtros visibles no alteran esas referencias. Los percentiles usan rango medio para empates y se invierten cuando menos es mejor. La **base de rendimiento** es el área relativa del polígono: `media(r[i] × r[i+1])`, con `r = percentil / 100` y cierre del último eje con el primero. El **score final** multiplica esa base por el factor de juego limpio cuando sus datos están verificados. Ambos están entre 0 y 1; describen rendimiento relativo según esos ejes, no una misma habilidad física ni una probabilidad.
+`radar.js` selecciona hasta seis ejes comunes por posición/perfil. Cada eje requiere cinco referencias suficientes: todos los MED con muestra válida son referencia de los ejes MED; los DEF con puesto FB publicado son referencia del perfil de lateral. Los filtros visibles no alteran esas referencias. Los percentiles usan rango medio para empates y se invierten cuando menos es mejor. La **base de rendimiento** es el área relativa del polígono: `media(r[i] × r[i+1])`, con `r = percentil / 100` y cierre del último eje con el primero. El **score final** aplica juego limpio a la base de rendimiento, que combina el área con el aporte ofensivo en los jugadores de campo. Ambos están entre 0 y 1; describen rendimiento relativo según esos ejes, no una misma habilidad física ni una probabilidad.
 
 Solo hay score cuando existen al menos tres ejes, todos los ejes comunes tienen valor y tanto el jugador como cada métrica cumplen la muestra fija: **200 minutos inclusive**, con minutos publicados del jugador. Para un eje de portero cuyo proveedor no publica minutos se mantiene la alternativa de 2 PJ, siempre después de verificar los 200 minutos del jugador; esos PJ no acreditan sus minutos ni un filtro adicional más exigente. El mínimo común está en `dist/sampling.js`. Al ampliar la referencia pueden cambiar percentiles, perfiles MED y promedios de equipo aunque no cambien las cifras de origen. Un radar parcial puede dibujarse, pero su área parcial no se publica como score ni contribuye a equipos. La tabla y el radar explican si faltan métricas y qué fuente no cumple sus minutos propios. El modo total/90 y los filtros no cambian el score. Un valor publicado cero, incluido un score exactamente cero, es válido en tablas, rankings y ponderaciones. Un campo ausente o un cociente con denominador cero permanece desconocido y no se sustituye por cero.
 
 Los ejes mantienen la definición y cobertura de `metrics.js`. Un xG ausente solo se deriva a cero cuando una ficha FotMob verificada publica explícitamente cero tiros y cero goles, de la misma muestra. Se conserva el registro de origen con xG ausente y se etiqueta `zero_shot_xg`: es la suma de un conjunto vacío de tiros, no una imputación por falta de datos. El cálculo combinado también conserva los denominadores propios de sus derivados; una diferencia no hereda la tasa /90 de goles. En porteros, Eficacia vs xGOT usa los goles emparejados con esa misma muestra y sustituye el eje de goles evitados para evitar duplicidad. No se atribuye xG de equipo a un portero.
 
+## Aporte ofensivo
+
+Goles, asistencias, xG y xA por 90 usan cada uno los minutos propios de su fuente y temporada. El percentil de cada métrica se calcula por separado con al menos cinco referencias de 200 minutos propios o más. Los delanteros se comparan con delanteros, los MED con otros MED y los defensas se dividen en laterales verificados y el resto de DEF. Entre los MED, el perfil determina el peso y mantiene la referencia de su posición. Los porteros tienen peso cero.
+
+| Perfil | Peso máximo de las cuatro métricas |
+| --- | ---: |
+| Centrales y demás DEF generales | 5 % |
+| MED defensivo | 5 % |
+| MED general, sin clasificar | 10 % |
+| Laterales y carrileros | 15 % |
+| MED equilibrado | 15 % |
+| MED ofensivo | 25 % |
+| Delanteros | 35 % |
+
+Cada métrica tiene una cuarta parte del peso máximo de su perfil. Aporta su percentil dividido entre 100 y elevado al cuadrado, en la misma escala cuadrática que el área del radar. Si falta una tasa válida o su muestra, ese peso lo conserva el radar y la ficha muestra el peso utilizado. El cero publicado participa en la comparación. Los pesos son decisiones de diseño de GRADA.
+
+`base = área × (1 − suma de los pesos válidos) + Σ(peso válido × (percentil / 100)²)`
+
+El polígono de los jugadores de campo usa las demás métricas de su perfil. Así, los cuatro indicadores de ataque tienen un peso explícito y se cuentan una vez. Los índices auxiliares de clasificación MED conservan sus ejes, incluido el uso de goles y xA en el índice ofensivo.
+
 ## Laterales y carrileros
 
-Los jugadores con posición canónica DEF y alguno de LB, RB, LWB o RWB verificado por FotMob usan el perfil `DEF_FB`. Hay **un único radar mixto**, sin variantes ofensiva/defensiva. Sus ejes son entradas, intercepciones, recuperaciones, goles, xG y xA, todos por 90 con minutos propios. Tres ejes describen defensa y tres ataque; no se afirma que la fórmula geométrica sea una media lineal al 50% de dos subíndices.
-
-La referencia incluye laterales/carrileros verificados de todas las ligas cargadas y exige la muestra de cada eje. Si la fuente declara también CB, el jugador conserva el mismo perfil mixto al aparecer en los rankings de centrales y laterales. Es una decisión del modelo basada en sus puestos publicados; no identifica un puesto principal ni el reparto de minutos. Sin puesto FB verificado no se asigna el perfil por goles, xG o score. Los centrales/general DEF conservan sus ejes defensivos.
-
-En la revisión del 18 de noviembre (antes de ampliar la referencia a 200 minutos), Grimaldo figuraba en las capturas como Álex/Alejandro Grimaldo, Atlético Madrid, DEF con LWB/LB/LM. Sus 4 goles, xG 2,906666 y xA 1,790763 pasan a formar parte del radar: base **0,448704**, frente al score DEF anterior 0,107447. Sus cero amarillas y cero rojas publicados tienen muestra emparejada suficiente, por lo que su factor es 1. Ninguna cifra ni posición se cambia para obtener el resultado.
+Un DEF con LB, RB, LWB o RWB verificado por FotMob usa `DEF_FB`. Su radar contiene entradas, intercepciones y recuperaciones por 90. Su bloque de ataque comparte la referencia de laterales y carrileros. Si FotMob publica también CB, conserva ese perfil en ambos rankings. Los puestos publicados pueden ser múltiples y carecen de reparto de minutos.
 
 ## Juego limpio
 
-El ajuste se aplica una sola vez después del radar. Es una regla manual de GRADA para que la disciplina influya de forma apreciable en el score: una roja pesa **diez amarillas** y desaparece el límite indulgente del 10%. La frecuencia de amarillas recoge también el riesgo de indisponibilidad por acumulación, sin afirmar cuántas sanciones se han cumplido.
+El ajuste se aplica una sola vez a la base ponderada. Es una regla manual de GRADA para que la disciplina influya de forma apreciable en el score: una roja pesa **diez amarillas** y desaparece el límite indulgente del 10%. La frecuencia de amarillas recoge también el riesgo de indisponibilidad por acumulación, sin afirmar cuántas sanciones se han cumplido.
 
 `intensidad = (amarillas + 10 × rojas) × 90 / minutos propios`
 
 `descuento relativo = mínimo(1; 0,10 × intensidad)`
 
-`score final = base del radar × (1 − descuento relativo)`
+`score final = base × (1 − descuento relativo)`
 
 Equivale a `descuento = 0,10 × amarillas/90 + 1,00 × rojas/90`, hasta el suelo natural de score 0. A igualdad de minutos, cada amarilla adicional añade la misma penalización y cada roja añade diez veces esa cantidad; no se reduce su efecto marginal al acumular tarjetas. Son porcentajes relativos de la base, no puntos absolutos de score. Jugar el doble de minutos con el doble de tarjetas conserva la penalización.
 
@@ -66,10 +82,10 @@ La corrección del 17 de noviembre hace que ese perfil determine los ejes del sc
 
 | Perfil MED | Ejes del score, en el orden del polígono |
 | --- | --- |
-| Ofensivo | xA/90, ocasiones creadas/90, grandes ocasiones creadas/90, tiros a puerta/90, regates logrados/90, goles/90 |
+| Ofensivo | ocasiones creadas/90, grandes ocasiones creadas/90, tiros a puerta/90, regates logrados/90 |
 | Defensivo | pases completados/90, precisión de pase, recuperaciones/90, entradas/90, intercepciones/90, pases rompelíneas/90 |
-| Equilibrado | pases completados/90, xA/90, ocasiones creadas/90, recuperaciones/90, entradas/90, intercepciones/90 |
-| Sin perfil verificable | General explícito: conserva los ejes generales anteriores (pases completados/90, precisión, xA/90, recuperaciones/90, entradas/90 e intercepciones/90 con las capturas actuales) |
+| Equilibrado | pases completados/90, ocasiones creadas/90, recuperaciones/90, entradas/90, intercepciones/90 |
+| Sin perfil verificable | pases completados/90, precisión, recuperaciones/90, entradas/90, intercepciones/90 y pases clave/90, según cobertura |
 
 Sin ambos índices completos, el perfil es desconocido: no se atribuye ofensivo/defensivo por intuición. Puede tener un score general si sus propios ejes tienen muestra y datos suficientes, pero no entra en los rankings de subgrupos. Los equilibrados tienen ranking propio y pueden aparecer en ambos grupos, siempre conservando su score equilibrado. La tabla reúne los ejes de los perfiles presentes y muestra qué perfil produce cada score; no toma los ejes del primer MED de la captura.
 
@@ -110,7 +126,7 @@ Con las capturas publicadas al preparar este cambio hay 1.029 asistencias conoci
 
 ## Artefactos y reproducción
 
-`scores.build` calcula índices MED, perfil, base del radar y ajuste de juego limpio en ese orden; `scores.value`, `scores.eligible` y `scores.rankingAxes` resuelven rankings y columnas. `fairplay.js` conserva fuente/muestra de ambas tarjetas. `squads.js` produce promedios y contribuciones con el score final y el perfil utilizado. `withScores` añade `playerScore`, `playerBaseScore`, `fairPlay`, `scorePosition`, `scoreProfile`, `scoreProfileLabel`, `midfieldProfile` y scores/ledgers de equipo al combinado. El modelo se identifica como `role_fairplay_radar_v6` en `metadata.derived_metrics.playerScore`. Todas las ligas descarta derivados previos antes de recalcular.
+`scores.build` calcula índices MED, perfil, área del radar, aporte ofensivo y ajuste de juego limpio en ese orden; `scores.value`, `scores.eligible` y `scores.rankingAxes` resuelven rankings y columnas. `fairplay.js` conserva fuente/muestra de ambas tarjetas. `squads.js` produce promedios y contribuciones con el score final y el perfil utilizado. `withScores` añade `playerScore`, `playerBaseScore`, `fairPlay`, `scorePosition`, `scoreProfile`, `scoreProfileLabel`, `midfieldProfile` y scores/ledgers de equipo al combinado. El modelo se identifica como `role_fairplay_radar_v7` en `metadata.derived_metrics.playerScore`. Todas las ligas descarta derivados previos antes de recalcular.
 
 El generador lee las capturas verificadas de las ligas disponibles para compartir referencia. En una importación por etapas, `--reference-dir` aporta las otras ligas, y `import_leagues.py` recalcula todos los derivados tras completar las fuentes. No actualiza las fechas originales por recalcular scores. Todas las ligas descarta derivados anteriores y usa el modelo común. En el navegador, el modelo se invalida al cambiar una captura, no al cambiar de vista.
 
