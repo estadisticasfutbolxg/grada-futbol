@@ -105,7 +105,16 @@
     try{const tx=db.transaction('sources',mode),r=mode==='readonly'?tx.objectStore('sources').get(key):tx.objectStore('sources').put(value,key);let result=null;r.onsuccess=()=>{result=r.result;};tx.oncomplete=()=>settle(mode==='readonly'?result??null:true);tx.onerror=tx.onabort=()=>settle(mode==='readonly'?null:false);}catch(_){settle(mode==='readonly'?null:false);}
    });
   }
-  return {get:(league,key)=>operation('readonly',league+'|'+key),set:(league,key,value)=>operation('readwrite',league+'|'+key,value)};
+  async function prune(leagueIds,storage=null){
+   const allowed=new Set(leagueIds);let legacyComplete=true;
+   try{if(typeof storage?.key==='function')for(let i=storage.length-1;i>=0;i--){const key=storage.key(i),match=key?.match(/^grada:espn:([a-z0-9-]+):\d{4}-\d{2}:v1$/);if(match&&!allowed.has(match[1]))storage.removeItem(key);}}catch(_){legacyComplete=false;}
+   const db=await open();if(!db)return legacyComplete&&typeof indexedDB!=='object';
+   return new Promise(resolve=>{
+    let done=false,tx;const settle=value=>{if(done)return;done=true;clearTimeout(timer);resolve(value&&legacyComplete);},timer=setTimeout(()=>{try{tx?.abort();}catch(_){}settle(false);},2000);
+    try{tx=db.transaction('sources','readwrite');const request=tx.objectStore('sources').openCursor();request.onsuccess=()=>{const cursor=request.result;if(!cursor)return;if(typeof cursor.key!=='string'||!allowed.has(cursor.key.split('|')[0]))cursor.delete();cursor.continue();};tx.oncomplete=()=>settle(true);tx.onerror=tx.onabort=()=>settle(false);}catch(_){settle(false);}
+   });
+  }
+  return {get:(league,key)=>operation('readonly',league+'|'+key),set:(league,key,value)=>operation('readwrite',league+'|'+key,value),prune};
  }
  const api={sources,refreshSources,names,validate,selectCapture,refresh,report,captureStore,loadProfiles};if(node)module.exports=api;else root.GradaRefresh=api;
 })(typeof window==='object'?window:globalThis);

@@ -41,8 +41,12 @@ test('invalid and oversized browser history is bounded; denied storage falls bac
  for(let i=0;i<50;i++)for(const source of ['Understat','ESPN','FotMob'])assert(h.record('laliga',source,'accepted',identity));assert.equal(JSON.parse(store.value()).length,3);
  const denied=dates.history({getItem(){throw Error('Blocked');},setItem(){throw Error('Blocked');}},['laliga']);assert(denied.record('laliga','ESPN','retained',identity));assert.equal(denied.get('laliga','ESPN').status,'retained');
 });
+test('opening query history physically drops retired league records while retaining active dates',()=>{
+ const store=storage(JSON.stringify([['laliga-2','FotMob',identity,'accepted'],['laliga','FotMob',profile,'retained'],['league-one','ESPN',base,'accepted']])),h=dates.history(store,['laliga']);
+ assert.equal(h.get('laliga-2','FotMob'),null);assert.equal(h.get('laliga','FotMob').status,'retained');assert.deepEqual(JSON.parse(store.value()),[['laliga','FotMob',new Date(profile).toISOString(),'retained']]);
+});
 test('every page renders the shared panel, including nations, and keeps its expansion state',()=>{
- const h=harness(),data=sample();h.run("data=fixture;loaded=true;renderNations=()=>{};dashboard=()=>{};renderLeaders=()=>{};syncPositions=()=>{};renderClubOptions=()=>{};renderTable=()=>{};renderCompare=()=>{};renderTeamComparison=()=>{};renderTerms=()=>{};updateRadarProfiles=()=>{};",{fixture:data});
+ const h=harness(),data=sample();Object.assign(data.metadata,{kind:'combined',imported_at:base,imported_matches:0,available_matches:380,combination:{matched_players:0}});h.run("data=fixture;loaded=true;datasets.set('laliga',{combined:fixture});renderNations=()=>{};dashboard=()=>{};renderLeaders=()=>{};syncPositions=()=>{};renderClubOptions=()=>{};renderTable=()=>{};renderCompare=()=>{};renderTeamComparison=()=>{};renderTerms=()=>{};updateRadarProfiles=()=>{};",{fixture:data});
  h.node('#data-dates').open=true;
  for(const view of ['overview','players','teams','rankings','compare','nations','glossary']){h.run('navigate(target,false)',{target:view});assert(!h.node('#data-dates').hidden,view);assert(h.node('#data-dates').innerHTML.includes('Datos cargados'),view);assert(h.node('#data-dates').open);}
  h.run('loaded=false;renderDataDates()');assert(h.node('#data-dates').hidden);

@@ -1,7 +1,7 @@
 'use strict';
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
 const radar=require('../dist/radar.js'),scores=require('../dist/scores.js'),scopes=require('../dist/scopes.js'),metrics=require('../dist/metrics.js');
-function fixture(league='a'){
+function fixture(league='laliga'){
  const players=Array.from({length:12},(_,i)=>{const attack=i+1,defense=12-i;return {id:String(i),name:'Isolated midfielder '+i,team_id:'1',team:'Isolated team',pos:'MED',minutes:900,matches:10,xa:attack,chancesCreated:attack,bigChancesCreated:attack,shotsOnTargetPer90:attack,dribblesPer90:attack,goals:attack,completed:defense*100,completedPer90:defense*10,accuracy:60+defense,recoveries:defense,tackles:defense,interceptions:defense,lineBreakingPasses:defense};});
  return {metadata:{kind:'combined',league_key:league,competition:league,source:'Isolated fixture only',imported_at:'2026-11-17T18:00:00Z',imported_matches:10,available_matches:380,combination:{matched_players:0},sources:{}},players,teams:[{id:'1',name:'Isolated team',matches:10}],matches:[]};
 }
@@ -21,10 +21,10 @@ test('the declared midfield profile chooses the axes of its single score before 
  const total=model.overall.teams.get('1');assert.equal(total.area,data.players.reduce((sum,p)=>sum+model.players.get(p).score*p.minutes,0)/total.minutes);
 });
 test('profile decisions, axis references and scores agree between a league, all leagues and reversed input order',()=>{
- const a=fixture('a'),b=fixture('b');b.players.forEach((p,i)=>{p.xa+=i/10;});
+ const a=fixture('laliga'),b=fixture('premier-league');b.players.forEach((p,i)=>{p.xa+=i/10;});
  const reference=scopes.aggregate([a,b]),all=scores.build(reference),local=scores.build(a,{referencePlayers:reference.players}),reversed=scores.build({...a,players:[...a.players].reverse()},{referencePlayers:reference.players});
  for(const p of a.players){
-  const joined=reference.players.find(q=>q.id==='a:'+p.id);assert.equal(local.roles.get(p),all.roles.get(joined));assert.equal(local.players.get(p).profileKey,all.players.get(joined).profileKey);assert.deepEqual(local.players.get(p).expectedAxes,all.players.get(joined).expectedAxes);assert.equal(local.players.get(p).score,all.players.get(joined).score);assert.equal(local.players.get(p).score,reversed.players.get(p).score);
+  const joined=reference.players.find(q=>q.id==='laliga:'+p.id);assert.equal(local.roles.get(p),all.roles.get(joined));assert.equal(local.players.get(p).profileKey,all.players.get(joined).profileKey);assert.deepEqual(local.players.get(p).expectedAxes,all.players.get(joined).expectedAxes);assert.equal(local.players.get(p).score,all.players.get(joined).score);assert.equal(local.players.get(p).score,reversed.players.get(p).score);
  }
  const def=radar.definition('MED_ATT'),keys=scores.rankingAxes(local,def);assert(keys.includes('bigChancesCreated'));assert(keys.includes('recoveries'),'balanced candidates retain their own radar');assert(!keys.includes('accuracy'),'the first midfielder must not select all table axes');assert.deepEqual(keys,scores.rankingAxes(reversed,def));
  const generated=scores.withScores(a,{referencePlayers:reference.players});assert.equal(generated.metadata.derived_metrics.playerScore.method,'role_fairplay_radar_v6');assert(generated.players.every((p,i)=>p.scoreProfile===local.players.get(a.players[i]).profileKey&&p.playerScore===local.players.get(a.players[i]).score));

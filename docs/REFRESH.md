@@ -1,5 +1,7 @@
 # Actualización general y scores
 
+> Desde el 25 de noviembre: solo [15 primeras divisiones](LEAGUES.md), selección múltiple y acceso a siete ligas europeas. Selecciones usa únicamente candidatos de esas siete, manteniendo su score con referencia común de todas las primeras divisiones cargadas. No se incorporan estadísticas nuevas para este cambio.
+
 > Política activa desde el 24 de noviembre de 2026: catálogo **FotMob → ESPN** en todas las ligas. Understat no se carga ni se sirve y no interviene en valores, posiciones, referencias o scores de jugadores, equipos y selecciones. Se conserva solo en archivo (código, pruebas y capturas locales) para una reactivación explícita. Las prioridades anteriores que siguen abajo son históricas. LaLiga declara únicamente los huecos de xG/xGA de equipo como opcionales y mantiene las demás comprobaciones. Las cifras ausentes siguen desconocidas; nunca se oculta la fuente de una cifra usada.
 
 Desde el 24 de noviembre de 2026, LaLiga prioriza FotMob → Understat conservado → ESPN por métrica. El catálogo/IDs y partidos guardados siguen en Understat; las otras cuatro ligas conservan FotMob → ESPN. `understatRefresh: false` pausa su consulta general, pero mantiene la captura de respaldo, lectura de caché, validadores, importador manual y adaptador del Worker. Para reactivarla, cambiarlo a `true` cuando la página y permisos lo permitan; `metricPriority` controla la prioridad por separado. No se sustituyen ausencias por cero ni se cambia la muestra de una tasa. [Contrato vigente](COMBINED.md).

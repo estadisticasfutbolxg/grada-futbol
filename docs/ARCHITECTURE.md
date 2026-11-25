@@ -31,7 +31,7 @@ El navegador usa los datos de `dist/data.js` ya cargados. SQLite se genera como 
 
 El importador usa Python de biblioteca estándar; no existe un build de npm. El código fuente de la web vive en `dist/`, por lo que no se debe vaciar esa carpeta para regenerar datos.
 
-Desde el 9 de noviembre, el modelo de [SCORES.md](SCORES.md) es común a todas las vistas y al generador. La referencia se construye una vez con las ligas cargadas y los modelos se conservan mientras no cambien sus capturas. Ninguna tarjeta o ficha calcula otro score. El HTML empaquetado versiona los módulos por hash para evitar mezclar código de publicaciones diferentes.
+Desde el 9 de noviembre, el modelo de [SCORES.md](SCORES.md) es común a todas las vistas y al generador. `leagues.js` centraliza grupos y primera división; `scopes.js` agrega Todas, siete europeas o selección múltiple con IDs y fechas originales. `nations.js` limita candidatos a las siete antes de deduplicar y mantiene países mundiales. La referencia se construye una vez con todas las primeras divisiones cargadas y los modelos se conservan mientras no cambien sus capturas. Ninguna tarjeta o ficha calcula otro score. El HTML empaquetado versiona los módulos por hash para evitar mezclar código de publicaciones diferentes.
 
 Desde el 21 de noviembre, el empaquetador conserva el orden de esos módulos en un único script versionado. Las ligas se cargan en paralelo y las fichas FotMob se consultan en lotes acotados con las mismas validaciones. [Medición, caché y equivalencia de resultados](PERFORMANCE.md).
 

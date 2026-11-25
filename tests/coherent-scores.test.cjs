@@ -1,13 +1,13 @@
 'use strict';
 const test=require('node:test'),assert=require('node:assert/strict'),radar=require('../dist/radar.js'),scores=require('../dist/scores.js'),metrics=require('../dist/metrics.js'),scopes=require('../dist/scopes.js');
-function fixture(league='a',offset=0){
+function fixture(league='laliga',offset=0){
  const players=['POR','DEF','MED','DEL'].flatMap((pos,group)=>Array.from({length:8},(_,i)=>({id:pos+i,name:pos+i,team_id:i<4?'1':'2',team:'Team',pos,minutes:600+i*50,matches:10,goals:i+1+offset,xg:i+2,xa:i+1,shots:10+i,conversion:10+i,shotsOnTargetPer90:1+i/10,dribblesPer90:i+1,completedPer90:40+i,accuracy:70+i,recoveries:30+i,tackles:10+i,interceptions:5+i,clearances:10+i,blocks:3+i,savepct:60+i,saves:20+i,conceded:10-i,prevented:i,highClaims:3+i,sweeperActions:4+i,lineBreakingPasses:10+i,chancesCreated:3+i,bigChancesCreated:2+i})));
  return {metadata:{kind:'combined',league_key:league,competition:league,imported_at:'2026-11-09T00:00:00Z',imported_matches:10,available_matches:380,combination:{matched_players:0},sources:{}},players,teams:[{id:'1',name:'One',matches:10},{id:'2',name:'Two',matches:10}],matches:[]};
 }
 test('a player has one position score regardless of requested midfield ranking or league filter',()=>{
- const a=fixture('a'),b=fixture('b',5),reference=scopes.aggregate([a,b]),all=scores.build(reference),local=scores.build(a,{referencePlayers:reference.players});
+ const a=fixture('laliga'),b=fixture('premier-league',5),reference=scopes.aggregate([a,b]),all=scores.build(reference),local=scores.build(a,{referencePlayers:reference.players});
  for(const p of a.players){
-  const joined=reference.players.find(q=>q.id==='a:'+p.id);
+  const joined=reference.players.find(q=>q.id==='laliga:'+p.id);
   assert.equal(local.players.get(p).score,all.players.get(joined).score);
   for(const profileKey of ['MED_ATT','MED_DEF','DEF'])assert.equal(radar.profiles(a.players,{referencePlayers:reference.players,profileKey}).get(p).score,local.players.get(p).score);
  }

@@ -15,8 +15,8 @@ test('missing and duplicate identities cannot manufacture team scores',()=>{
  assert.throws(()=>squads.summarize({...data,players:[player,player]}));assert.throws(()=>squads.summarize({...data,teams:[{id:'1'},{id:1}]}));
 });
 test('all-leagues scope discards local derived scores and preserves unassigned transfers',()=>{
- const d={metadata:{kind:'combined',league_key:'a',competition:'A',imported_at:'2026-11-07T00:00:00Z',imported_matches:1,available_matches:380,combination:{matched_players:0},sources:{}},players:[{id:'p',team_id:null,pos:'—'}],teams:[{id:'1',teamArea:0.8,teamAreaMinutes:900,attackArea:{area:0.5},midfieldAreas:{MED_ATT:{area:0.4}}}]};
- const all=scopes.aggregate([d]);assert.equal(all.players[0].team_id,null);for(const key of ['teamArea','teamAreaMinutes','attackArea','midfieldAreas'])assert(!Object.hasOwn(all.teams[0],key));assert.equal(squads.summarize(all).teams.get('a:1').area,null);assert.equal(d.teams[0].teamArea,0.8);
+ const d={metadata:{kind:'combined',league_key:'laliga',competition:'A',imported_at:'2026-11-07T00:00:00Z',imported_matches:1,available_matches:380,combination:{matched_players:0},sources:{}},players:[{id:'p',team_id:null,pos:'—'}],teams:[{id:'1',teamArea:0.8,teamAreaMinutes:900,attackArea:{area:0.5},midfieldAreas:{MED_ATT:{area:0.4}}}]};
+ const all=scopes.aggregate([d]);assert.equal(all.players[0].team_id,null);for(const key of ['teamArea','teamAreaMinutes','attackArea','midfieldAreas'])assert(!Object.hasOwn(all.teams[0],key));assert.equal(squads.summarize(all).teams.get('laliga:1').area,null);assert.equal(d.teams[0].teamArea,0.8);
 });
 test('Racing alias and accent folding change search, without fuzzy identities',()=>{
  assert(filters.textMatches({name:'Racing Santander'},'RACING DE SANTANDER'));assert(filters.textMatches({name:'Álvaro Mantilla'},'alvaro'));assert(!filters.textMatches({name:'Racing Santander'},'Racing Ferrol'));

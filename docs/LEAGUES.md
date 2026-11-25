@@ -1,6 +1,6 @@
 # Ligas combinadas, ámbito conjunto y rankings
 
-El selector ofrece **22 ligas combinadas de 15 países**, más **Todas las ligas**, temporada **2026/27**. Se habilitan únicamente después de validar sus fuentes y las mismas familias de métricas de ataque, pase, defensa, disciplina, portería y equipos. Esta disponibilidad no significa que cada jugador tenga todos los campos.
+El selector ofrece **15 primeras divisiones combinadas**, con casillas para seleccionar varias ligas, **Todas las ligas** y **7 principales ligas europeas**, temporada **2026/27**. Se habilitan únicamente después de validar sus fuentes y las mismas familias de métricas de ataque, pase, defensa, disciplina, portería y equipos. Esta disponibilidad no significa que cada jugador tenga todos los campos.
 
 Todas usan catálogo e IDs **FotMob**, prioridad **FotMob → ESPN**, con fuente, captura y muestra por campo. **Understat no se carga, sirve ni usa en valores, posiciones, referencias o scores de jugadores/equipos/selecciones**. Sus importadores, pruebas y capturas originales permanecen archivados; los enlaces antiguos de LaLiga se traducen mediante un mapa de IDs verificados sin estadísticas archivadas.
 
@@ -17,11 +17,6 @@ Los identificadores se verificaron con páginas oficiales que confirman competic
 | Ligue 1 · Francia | 18 / 306 | 53 / 37298 | fra.1 | 430 | 82 |
 | Liga Portugal · Portugal | 18 / 306 | 61 / 40067 | por.1 | 459 | 98 |
 | Eredivisie · Países Bajos | 18 / 306 | 57 / 36577 | ned.1 | 453 | 117 |
-| Championship · Inglaterra | 24 / 552 | 48 / 1000000498 | eng.2 | 604 | 192 |
-| 2. Bundesliga · Alemania | 18 / 306 | 146 / 40044 | ger.2 | 425 | 108 |
-| Ligue 2 · Francia | 18 / 306 | 110 / 37299 | fra.2 | 449 | 117 |
-| Serie B · Italia | 20 / 380 | 86 / 1000000670 | ita.2 | 492 | 120 |
-| LaLiga2 · España | 22 / 462 | 140 / 1000002232 | esp.2 | 580 | 162 |
 | First Division A · Bélgica | 18 / 306 | 40 / 37803 | bel.1 | 450 | 108 |
 | Premiership · Escocia | 12 / 198 · regular | 64 / 36832 | sco.1 | 306 | 81 |
 | Süper Lig · Turquía | 18 / 306 | 71 / 1000000512 | tur.1 | 439 | 108 |
@@ -29,11 +24,9 @@ Los identificadores se verificaron con páginas oficiales que confirman competic
 | Superligaen · Dinamarca | 12 / 132 · regular | 46 / 35802 | den.1 | 313 | 90 |
 | Bundesliga · Austria | 12 / 132 · regular | 38 / 38611 | aut.1 | 293 | 78 |
 | Super League 1 · Grecia | 14 / 182 · regular | 135 / 44734 | gre.1 | 352 | 76 |
-| League One · Inglaterra | 24 / 552 | 108 / 1000000503 | eng.3 | 589 | 175 |
-| League Two · Inglaterra | 24 / 552 | 109 / 1000000505 | eng.4 | 583 | 186 |
 | A-League · Australia | 12 / 156 · regular | 113 / 1000000464 | aus.1 | 230 | 28 |
 
-**9.766 fichas jugador/liga y 398 clubes**. Las 17 ligas nuevas incorporan 7.481 fichas y cobertura agregada de 1.949 partidos en ambas clasificaciones. No son archivos de encuentros individuales ni se identifican cambios por encuentro desde estos endpoints. Nacionalidad y puestos corresponden a identidades publicadas, no a inferencias por nombre o país de liga. Los escudos se resuelven por ID FotMob del club.
+**6.044 fichas jugador/liga y 248 clubes**, con cobertura agregada de **1.346 partidos por fuente**. El 25 de noviembre se retiraron siete divisiones inferiores: 3.722 fichas, 150 clubes y 1.060 partidos de cobertura agregada. Los 30 JSON fuente, 15 SQLite y el archivo Understat conservados permanecen idénticos; no se consultaron proveedores. Los 3.939 scores válidos se recalculan contra las quince primeras divisiones y cambian 38 perfiles estadísticos MED, sin alterar posiciones publicadas, estadísticas ni fórmulas. No son archivos de encuentros individuales ni se identifican cambios por encuentro desde estos endpoints. Nacionalidad y puestos corresponden a identidades publicadas, no a inferencias por nombre o país de liga. Los escudos se resuelven por ID FotMob del club.
 
 En Escocia se confirma la fase regular de 33 PJ por club / 198 encuentros; Australia, 26 / 156; Dinamarca y Austria, 22 / 132; Grecia, 26 / 182. Se declara solo esa fase publicada: no se inventan ni añaden las posteriores. Los límites por equipo están en `maxTeamMatches`; un formato futuro incompatible se rechaza conservando la captura válida. Las demás candidatas cargadas confirman calendario de ida/vuelta. Australia solo se habilita tras completar desde fichas verificadas los recuentos ausentes del ranking vacío de penaltis parados: ese ranking conserva valores desconocidos, sin inferir ceros. Una temporada en curso siempre sigue siendo parcial.
 
@@ -53,17 +46,19 @@ Se evaluaron 26 candidatas adicionales; estas nueve no se añaden en esta public
 
 ## Identidad y modelos
 
-Los 73 alias nuevos de clubes se revisaron contra los nombres publicados en ambas clasificaciones y quedan restringidos a su liga en `teamAliases`. No se aplica coincidencia difusa entre equipos. El cruce exige club único y mejor coincidencia de jugador única en ambos sentidos; un registro no se reutiliza. Las dudas quedan pendientes. [Reglas de combinación](COMBINED.md).
+Los alias activos de clubes se revisaron contra los nombres publicados en ambas clasificaciones y quedan restringidos a su liga en `teamAliases`. No se aplica coincidencia difusa entre equipos. El cruce exige club único y mejor coincidencia de jugador única en ambos sentidos; un registro no se reutiliza. Las dudas quedan pendientes. [Reglas de combinación](COMBINED.md).
 
 Las posiciones usan etiquetas inequívocas y fichas FotMob verificadas. Una plantilla puede completar una posición desconocida si todos sus puestos publicados pertenecen a una sola familia POR/DEF/MED/DEL; una mezcla de familias no vota como posición definitiva. Se preservan puesto, contexto, alternativas y fecha. La nacionalidad deportiva usa identidad, club, liga, temporada y código de país publicados; no se infiere elegibilidad internacional.
 
-Cada jugador tiene **un único score de su posición/perfil**, desde **200 minutos inclusive**, con la misma referencia de todas las ligas cargadas en cualquier vista. Las fichas verificadas completan tarjetas, recuentos y posición; los porteros añaden xGOT recibido solo con muestras atribuibles y autogoles comprobados. La referencia ampliada puede cambiar scores previos aunque sus cifras no cambien. No hay un ajuste por dificultad o fuerza de la liga; los percentiles comparan las acciones disponibles del conjunto. Los clubes usan promedios por minutos de esos mismos scores, y las selecciones, media simple de once titulares. [Fórmulas y mínimos](SCORES.md), [selecciones](NATIONS.md).
+Cada jugador tiene **un único score de su posición/perfil**, desde **200 minutos inclusive**, con la misma referencia de todas las ligas cargadas en cualquier vista. Las fichas verificadas completan tarjetas, recuentos y posición; los porteros añaden xGOT recibido solo con muestras atribuibles y autogoles comprobados. La referencia ampliada puede cambiar scores previos aunque sus cifras no cambien. La referencia siempre son las quince primeras divisiones disponibles, incluso al elegir un subconjunto. No hay un ajuste por dificultad o fuerza de la liga; los percentiles comparan las acciones disponibles del conjunto. Los clubes usan promedios por minutos de esos mismos scores, y las selecciones, media simple de once titulares. [Fórmulas y mínimos](SCORES.md), [selecciones](NATIONS.md).
 
 ## Todas, filtros y actualización
 
-Todas concatena fichas y equipos con IDs prefijados por liga, fuentes y fechas originales; no fusiona por nombre personas de ligas distintas. La deduplicación de las selecciones usa identidad explícita sin sumar muestras. Las tablas muestran 100 filas por página, con navegación y rango; búsqueda, filtros y ordenación se aplican primero a todas las fichas. Los filtros cambian candidatos, no las referencias del score. Los rankings de KPI ordenan por su medida y los de posición por score; el score sigue en la primera columna.
+Las casillas permiten añadir/quitar ligas sin Ctrl; la búsqueda encuentra liga o país y Vaciar deja una selección vacía explícita. Los accesos Todas y 7 principales europeas seleccionan sus miembros de una vez. El segundo incluye LaLiga, Premier League, Serie A, Bundesliga, Ligue 1, Liga Portugal y Eredivisie. Selecciones abre siempre este último grupo y admite países de todo el mundo. La actualización consulta únicamente las ligas seleccionadas con captura válida.
 
-Actualizar datos consulta FotMob/ESPN con acceso del propietario, sin contraseña adicional, como máximo dos ligas simultáneas y tres trabajos de fichas por lote. Las actualizaciones válidas se conservan en el navegador; una fuente fallida conserva sus datos y fechas anteriores. Las cachés y rutas incluyen liga y temporada, también en IDs con dígitos como `laliga-2`. La actualización informa jugadores nuevos/modificados y cobertura de partidos por fuente; no atribuye una nueva fecha de consulta a un cambio de cifras. No hay botones CSV, JSON o SQLite. [Servicio y fechas](REFRESH.md), [rendimiento](PERFORMANCE.md).
+Todas, el grupo europeo y las selecciones personales concatenan fichas y equipos con IDs prefijados por liga, fuentes y fechas originales; no fusiona por nombre personas de ligas distintas. La deduplicación de las selecciones usa identidad explícita sin sumar muestras. Las tablas muestran 100 filas por página, con navegación y rango; búsqueda, filtros y ordenación se aplican primero a todas las fichas. Los filtros cambian candidatos, no las referencias del score. Los rankings de KPI ordenan por su medida y los de posición por score; el score sigue en la primera columna.
+
+Actualizar datos consulta FotMob/ESPN con acceso del propietario, sin contraseña adicional, como máximo dos ligas simultáneas y tres trabajos de fichas por lote. Las actualizaciones válidas se conservan en el navegador; una fuente fallida conserva sus datos y fechas anteriores. Las cachés y rutas incluyen liga y temporada, también en IDs con dígitos como `ligue-1`. Las ligas retiradas reciben 400 en la API y 404 en capturas, incluso con caché antigua. La actualización informa jugadores nuevos/modificados y cobertura de partidos por fuente; no atribuye una nueva fecha de consulta a un cambio de cifras. No hay botones CSV, JSON o SQLite. [Servicio y fechas](REFRESH.md), [rendimiento](PERFORMANCE.md).
 
 ## Generar y reproducir
 
@@ -89,6 +84,10 @@ python scripts/import_leagues.py --league portugal \
 
 Los generadores separados admiten `--league`; `build_combined.cjs`, `--data-dir` y `--reference-dir`. Tras importar ligas nuevas, se regeneran todos los combinados con el mismo conjunto final como referencia. No se editan cifras a mano. [Datos](DATA.md), [FotMob](FOTMOB.md), [tarea y verificación](../loop/tasks/20261124-codex-equivalent-leagues.md).
 
-## Tamaño de las capturas del 24 de noviembre
+## Retirar competiciones inactivas
 
-Las 22 bases SQLite FotMob ocupan **134.205.440 bytes sin comprimir (134,2 MB)** y **13.288.072 bytes gzip (13,3 MB)** en total. Se conservan como archivos locales; el Site usa JSON. Las 44 capturas activas FotMob/ESPN ocupan 84.326.567 bytes en JSON y **4.942.579 bytes en la transferencia gzip (4,94 MB)**. Son tamaños medidos de este conjunto, sin incluir HTML de origen, capturas archivadas, imágenes o código.
+El catálogo exige `division: 1` y un identificador ESPN de primera división. Tras revisar el catálogo, `python scripts/prune_inactive_data.py` muestra un plan sin borrar; `--apply` retira fuentes, combinados, SQLite, cachés de fichas/plantillas y escudos sin club activo. `--data-dir /ruta/staging --sources-only` permite limpiar otras salidas generadas. Conserva artefactos StatsBomb, FBref y el archivo Understat de LaLiga. Al abrir la web se eliminan del almacén local las capturas e historial de ligas inactivas; si el navegador deniega el acceso, se informa del fallo. El Worker no las sirve ni las actualiza aunque exista una caché anterior. El borrado afecta a las bases y capturas activas, no elimina versiones históricas ya publicadas.
+
+## Tamaño de las capturas del 25 de noviembre
+
+Las 15 bases SQLite FotMob ocupan **82.546.688 bytes sin comprimir (82,5 MB)** y **8.187.445 bytes gzip (8,19 MB)**. Son archivos locales; el Site usa JSON. Las 30 capturas activas FotMob/ESPN ocupan **51.700.916 bytes JSON** y **3.118.917 bytes gzip (3,12 MB)**, sin HTML de origen, archivos históricos, imágenes o código.

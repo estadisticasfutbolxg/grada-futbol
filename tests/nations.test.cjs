@@ -27,6 +27,12 @@ test('one provider ID appears once across leagues; most minutes wins rather than
  const result=nations.build(f.model),keeper=result.countries[0].slots.find(s=>s.pos==='POR').candidate;assert.equal(keeper.score,0.1);assert.equal(keeper.player.league_key,'serie-a');assert.equal(result.coverage.duplicateRecords,1);assert.equal(result.countries[0].selected,11);
  duplicate.player.sourceRecords.FotMob.nationality.code='ARG';duplicate.player.sourceRecords.FotMob.nationality.name='Argentina';duplicate.player.sourceRecords.FotMob.nationality.nationalTeamId='6706';const conflict=nations.build(f.model);assert.equal(conflict.coverage.conflicts,1);assert.equal(conflict.countries[0].score,null);
 });
+test('European seven filtering precedes country conflicts and deduplication, preserving canonical scores',()=>{
+ const f=fixture(),outside=player(1,'POR',['GK'],0.99,9000,'belgium');outside.player.sourceRecords.FotMob.nationality.code='ARG';outside.player.sourceRecords.FotMob.nationality.name='Argentina';outside.player.sourceRecords.FotMob.nationality.nationalTeamId='6706';
+ f.model.data.players.push(outside.player);f.model.players.set(outside.player,{score:outside.score});
+ const result=nations.build(f.model),country=result.countries[0];assert(country.complete);assert.equal(country.slots.find(s=>s.pos==='POR').candidate.score,0.4);assert.equal(country.slots.find(s=>s.pos==='POR').candidate.player.league_key,'laliga');assert.equal(result.coverage.conflicts,0);assert.equal(result.coverage.duplicateRecords,0);assert.equal(result.coverage.excludedRecords,1);assert.equal(result.countries.length,1);assert.equal(result.scope,'europe-top7');
+ const empty=nations.build({...f.model,data:{...f.model.data,players:[outside.player]}});assert.equal(empty.countries.length,0);assert.equal(empty.coverage.excludedRecords,1);
+});
 test('dynamic field and score-first tables show real club IDs, evidence, score profiles and seven alternatives safely',()=>{
  const {model}=fixture(),result=nations.build(model),country=result.countries[0],ranking=nations.ranking(result),html=nations.lineup(country,result);
  assert(ranking.match(/<th\b[^>]*>(.*?)<\/th>/)[1].includes('Score'));assert(html.includes('4-3-3'));assert(html.includes('suma de los once scores / 11'));assert(!html.includes('Σ(score × minutos'));assert(!html.includes('style='));assert(!html.includes('onclick='));assert(html.includes('data-national-player='));assert(nations.options(result,'ESP').includes('selected'));
