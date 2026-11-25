@@ -9,11 +9,11 @@ test('the declared midfield profile chooses the axes of its single score before 
  const data=fixture(),model=scores.build(data),attacker=data.players.at(-1),defender=data.players[0],balanced=data.players[5];
  assert.equal(model.roles.get(attacker),'MED_ATT');assert.equal(model.roles.get(defender),'MED_DEF');assert.equal(model.roles.get(balanced),'MED_BALANCED');
  const attack=model.players.get(attacker),defense=model.players.get(defender),balance=model.players.get(balanced);
- assert.deepEqual(attack.expectedAxes,['xa','chancesCreated','bigChancesCreated','shotsOnTargetPer90','dribblesPer90','goals']);
+ assert.deepEqual(attack.expectedAxes,['chancesCreated','bigChancesCreated','shotsOnTargetPer90','dribblesPer90']);
  assert.deepEqual(defense.expectedAxes,['completedPer90','accuracy','recoveries','tackles','interceptions','lineBreakingPasses']);
- assert.deepEqual(balance.expectedAxes,['completedPer90','xa','chancesCreated','recoveries','tackles','interceptions']);
+ assert.deepEqual(balance.expectedAxes,['completedPer90','chancesCreated','recoveries','tackles','interceptions']);
  for(const p of data.players){
-  const profile=model.players.get(p);assert.equal(profile.profileKey,model.roles.get(p));assert.equal(profile.score,radar.relativeArea(profile.axes.map(a=>a.percentile)));
+  const profile=model.players.get(p);assert.equal(profile.profileKey,model.roles.get(p));assert.equal(profile.area,radar.relativeArea(profile.axes.map(a=>a.percentile)));assert.equal(profile.score,profile.attack.score);
   assert.equal(radar.profile(p,data.players).profileKey,profile.profileKey);assert.equal(radar.profile(p,data.players).score,profile.score);
   for(const key of ['MED_ATT','MED_DEF','MED_BALANCED'])assert.equal(scores.value(model,p,radar.definition(key)),profile.score);
   const member=model.overall.teams.get('1').players.find(m=>m.id===p.id);assert.equal(member.area,profile.score);assert.equal(member.scoreProfile,profile.profileKey);
@@ -27,12 +27,12 @@ test('profile decisions, axis references and scores agree between a league, all 
   const joined=reference.players.find(q=>q.id==='laliga:'+p.id);assert.equal(local.roles.get(p),all.roles.get(joined));assert.equal(local.players.get(p).profileKey,all.players.get(joined).profileKey);assert.deepEqual(local.players.get(p).expectedAxes,all.players.get(joined).expectedAxes);assert.equal(local.players.get(p).score,all.players.get(joined).score);assert.equal(local.players.get(p).score,reversed.players.get(p).score);
  }
  const def=radar.definition('MED_ATT'),keys=scores.rankingAxes(local,def);assert(keys.includes('bigChancesCreated'));assert(keys.includes('recoveries'),'balanced candidates retain their own radar');assert(!keys.includes('accuracy'),'the first midfielder must not select all table axes');assert.deepEqual(keys,scores.rankingAxes(reversed,def));
- const generated=scores.withScores(a,{referencePlayers:reference.players});assert.equal(generated.metadata.derived_metrics.playerScore.method,'role_fairplay_radar_v6');assert(generated.players.every((p,i)=>p.scoreProfile===local.players.get(a.players[i]).profileKey&&p.playerScore===local.players.get(a.players[i]).score));
+ const generated=scores.withScores(a,{referencePlayers:reference.players});assert.equal(generated.metadata.derived_metrics.playerScore.method,'role_fairplay_radar_v7');assert(generated.players.every((p,i)=>p.scoreProfile===local.players.get(a.players[i]).profileKey&&p.playerScore===local.players.get(a.players[i]).score));
 });
 test('unknown profiles are explicit general scores and do not fabricate subgroup membership; zeros stay valid',()=>{
  const data=fixture(),p=data.players.at(-1);p.bigChancesCreated=null;let model=scores.build(data);
  assert.equal(model.roles.get(p),null);assert.equal(model.players.get(p).profileKey,'MED');assert.match(model.players.get(p).profileLabel,/sin clasificar/);assert(Number.isFinite(model.players.get(p).score));assert(!scores.eligible(model,p,radar.definition('MED_ATT')));assert(!scores.eligible(model,p,radar.definition('MED_DEF')));
- p.metricContexts={xa:{source:'Isolated fixture only',minutes:100,matches:2}};model=scores.build(data);assert.equal(model.players.get(p).score,null);assert(model.players.get(p).insufficientSamples.some(a=>a.key==='xa'));
+ p.metricContexts={xa:{source:'Isolated fixture only',minutes:100,matches:2}};model=scores.build(data);assert(Number.isFinite(model.players.get(p).score));assert.equal(model.players.get(p).attack.entries.find(a=>a.key==='xa').percentile,null);
  delete p.metricContexts;
  for(const key of ['xa','chancesCreated','bigChancesCreated','shotsOnTargetPer90','dribblesPer90','goals','completed','completedPer90','accuracy','recoveries','tackles','interceptions','lineBreakingPasses'])p[key]=0;
  const references=fixture().players.filter(q=>q.id!==p.id);model=scores.build(data,{referencePlayers:references});assert.equal(model.roles.get(p),'MED_BALANCED');assert.equal(model.players.get(p).score,0);assert(model.overall.teams.get('1').players.find(m=>m.id===p.id).included);
