@@ -1,12 +1,12 @@
 # 20261124-codex-top-seven-europe · Siete ligas y selecciones
 
-- Estado: `active`
+- Estado: `done`
 - Responsable: Codex
 - Revisor: autocontrol; sin revisión independiente
 - Rama: `feat/top-seven-european-scope`
 - Base Sites: `0c861e56374543b0cca27e6f117109b338352015`, sincronizada
 - Base GitHub: `0d7f8414f9e4828b8ecc090f6b8f4062e5666490`, comprobada
-- PR y publicación privada: pendientes
+- [PR #68](https://github.com/estadisticasfutbolxg/grada-futbol/pull/68): integrado; [GRADA privada](https://grada-futbol-analitica.ivanmatema2.chatgpt.site), v37 confirmada
 
 ## Objetivo
 
@@ -18,7 +18,7 @@ Añadir selección múltiple de ligas de primera división, con accesos Todas y 
 - [x] Selecciones filtra antes de deduplicar/elegir candidatos, también al entrar desde otra liga y mediante enlace directo; sin candidatos externos si faltan capturas europeas.
 - [x] Un score canónico con referencia de todas las ligas cargadas; sin cambiar estadísticas, mínimos, disciplina, medias o fórmulas.
 - [x] Pruebas significativas, auditoría de capturas intactas y verificación de navegación/privacidad.
-- [ ] Código en GitHub, PR integrado y publicación privada confirmada; sin capturas, bases o secretos en GitHub.
+- [x] Código en GitHub, PR integrado y publicación privada confirmada; sin capturas, bases o secretos en GitHub.
 
 - [x] Retirar las siete divisiones inferiores del catálogo, capturas, SQLite y cachés; regenerar scores contra las quince primeras divisiones sin consultas a proveedores.
 
@@ -32,7 +32,7 @@ Archivos compartidos: leagues/scopes, app, nations, fechas, branding/seguridad y
 
 ## Resultado y relevo
 
-Implementación completa y validada; subida, integración y publicación en curso con autorización vigente. No hay cambios ajenos en la rama. Sin nuevos datos o consultas a proveedores.
+Implementación completa, subida a ambos remotos, PR integrado y publicación privada verificados con autorización vigente. No hay cambios ajenos en la rama. Sin nuevos datos o consultas a proveedores.
 
 - Catálogo con quince `division: 1` y ESPN `.1`. Se excluyen las siete divisiones inferiores de UI, ámbitos, referencias, actualización y Worker. Casillas multi-liga, búsqueda por país/liga y accesos Todas/siete europeas, sin Ctrl. Capturas parciales y selección vacía explícitas; refresco solo de miembros disponibles. Selecciones fuerza siete europeas antes de deduplicar y comprobar países, preservando países mundiales y score canónico.
 - Borrado aplicado y comprobado: 28 archivos activos de fuentes/combinados/SQLite, catorce directorios de cachés y 150 escudos, más las copias retiradas de staging, incluidos siete SQLite. Inventario del workspace sin SQLite canónicos de las ligas retiradas. Limpieza de IndexedDB, ESPN legacy e historial de consultas; no se afectan ajustes ajenos ni archivos de primeras divisiones. API 400 y capturas 404 incluso con cachés antiguas. Versiones históricas de Sites conservadas.
@@ -51,3 +51,12 @@ Implementación completa y validada; subida, integración y publicación en curs
 Worker `4c665c9bb85026fbb4be75fd8c17b71e312054f438541183fda3c7cb6edf813d`, 328 assets/12 módulos, bundle gzip 86.569 bytes. SQLite 82.546.688 bytes / 8.187.445 gzip; treinta JSON 51.700.916 bytes / 3.118.917 gzip. Evidencia privada: `audit.json`, `score-changes.json`, `pruned-active.json`, `pruned-staging.json`, `runtime.json` y logs bajo `/workspace/scratch/grada-top7/`. No se suben estos datos a GitHub.
 
 Autocontrol: corregidos el resumen de referencia global y la limpieza de filtros al cambiar miembros de una selección personalizada; sin hallazgos funcionales pendientes. No equivale a aprobación del colaborador.
+
+
+## Entrega confirmada
+
+- Commit local y fuente Sites subida `04114cfc36854ebf24f135716978dbe90a152bd3`, verificada por `ls-remote`. GitHub head `094a7e939e9239f46b1b86ffd1c242f355f2eb4f`, 36 blobs idénticos a la fuente revisada. PR #68 fusionado por squash en `52ba627b922ece9937b90a1743df11f710158707`, main confirmado. Antes de integrar: mergeable/clean, cero check-runs y estados registrados, main sin protección y rulesets vacíos; no se inventa una aprobación o CI.
+- Sites **v37**, fuente anterior exacta, versión `appgprj_6ae0b8b2eb1881918601230d00603255~appgver_630715fb60948191823dfcfb36d8a25d`, despliegue `appgdep_6b066f5092a48191947798301641cc1e` en `succeeded`. Se conserva audiencia custom owner-only revisión 3 y runtime revisión 1; no se cambian accesos, secretos ni contraseña.
+- HTTP real confirma HTML y bundle exactos, catálogo de quince primeras divisiones y treinta fuentes con hashes exactos. Las 42 rutas de JSON/combinados/SQLite/API retiradas responden 404/400. Archivo Understat 404, actualización sin identidad 401 y login antiguo 404; flujo positivo de propietario verificado en tests, sin refrescar proveedores. `live.json` contiene evidencia sin credenciales. Dry run final del borrador: cero archivos/directorios pendientes.
+- Resultado de datos: **0 jugadores nuevos, estadísticas, nacionalidades o partidos descargados**. Retiradas 3.722 fichas y 1.060 partidos de cobertura agregada, sin afirmar encuentros individuales. Se recalculan los 3.939 scores válidos con las primeras divisiones; las fuentes/fechas conservadas permanecen idénticas. Listado privado de esos cambios y cobertura en `/workspace/entregas/primeras-divisiones-20261125/`; ningún dato o secreto se incluye en GitHub.
+- Cierre documental posterior a la publicación, sin cambios de código/datos/Worker y sin redeploy idéntico. Sin pendientes funcionales. Límite: no hubo QA visual ni JSON histórico StatsBomb local; estas limitaciones no se presentan como pruebas aprobadas.
