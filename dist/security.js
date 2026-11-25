@@ -9,7 +9,8 @@
   // Quoting CSV syntax alone does not stop spreadsheet formulas in source text.
   function csvCell(value) {
     let text = String(value ?? '');
-    if (typeof value === 'string' && /^[\s\u0000-\u001f]*[=+@\-]/u.test(text)) text = "'"+text;
+    // eslint-disable-next-line no-control-regex -- Block spreadsheet formulas prefixed by control characters.
+    if (typeof value === 'string' && /^[\s\u0000-\u001f]*[=+@-]/u.test(text)) text = "'"+text;
     return '"'+text.replace(/"/g,'""')+'"';
   }
   function sourceURL(source,leagueId='laliga') {

@@ -1,0 +1,3 @@
+# Semantic errors first; avoid rewriting legacy formatting during data fixes.
+[lint]
+select = ["E9", "F"]

@@ -189,11 +189,10 @@ def build(pages,league=DEFAULT):
  return payload
 
 def extend_core(payload,pages,league,context):
- players={p['id']:p for p in payload['players']};teams={t['id']:t for t in payload['teams']}
+ players={p['id']:p for p in payload['players']}
  for p in players.values():p.update({k:None for k in ['goals','assists','shots','xg','xa','xga','psxg','conversion','delta','keypasses','progressive','shotsPer90']})
- def assign(p,key,value,stat,reported=False,team=False):
+ def assign(p,key,value,stat,reported=False):
   p[key]=value;p['metricContexts'][key]=context(p,stat)
-  if team:p['metricContexts'][key]['minutes_captured_at']=pages['overview']['captured_at']
   if reported:p['metricContexts'][key]['reportedValue']=True
  for stat,main,sub in [('expected_goals','xg','goals'),('expected_assists','xa','assists'),('total_scoring_att','shotsPer90','conversion')]:
   for row in pages[stat]['data']['statsData']:
@@ -212,13 +211,18 @@ def extend_core(payload,pages,league,context):
    assign(p,key,number(row['statValue']['value'],True),stat)
  for p in players.values():
   if p['goals'] is not None and p['xg'] is not None:assign(p,'delta',p['goals']-p['xg'],'expected_goals')
+ extend_team_xg(payload,pages,league,context)
+ payload['metadata'].update({'profile':'full','notes':payload['metadata']['notes']+' Modelo xG/xA FotMob. Tiros totales disponibles solo mediante coincidencia validada ESPN; tiros/90 y conversión son publicados. No incluye serie de xG por partido.'})
+
+def extend_team_xg(payload,pages,league,context):
+ teams={t['id']:t for t in payload['teams']}
  for stat,key in [('expected_goals_team','xg'),('expected_goals_conceded_team','xga')]:
   if len(pages[stat]['data']['statsData'])!=league['teams']:raise ValueError('Missing team xG')
   for row in pages[stat]['data']['statsData']:
    t=teams.get(str(row['id']))
    if not t or row['statValue']['format']!='fraction':raise ValueError('Invalid team xG')
-   assign(t,key,number(row['statValue']['value']),stat,team=True)
- payload['metadata'].update({'profile':'full','notes':payload['metadata']['notes']+' Modelo xG/xA FotMob. Tiros totales disponibles solo mediante coincidencia validada ESPN; tiros/90 y conversión son publicados. No incluye serie de xG por partido.'})
+   t[key]=number(row['statValue']['value'])
+   t['metricContexts'][key]={**context(t,stat),'minutes_captured_at':pages['overview']['captured_at']}
 
 def extend_teams(payload,pages,league,context):
  teams={t['id']:t for t in payload['teams']}
