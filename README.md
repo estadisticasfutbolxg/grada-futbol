@@ -7,7 +7,7 @@ Web en español de estadísticas, perfiles y rankings por score del radar de jug
 
 ## Datos reales y fuentes
 
-Desde el 24 de noviembre, la aplicación activa usa **solo FotMob y ESPN**, incluido el catálogo de LaLiga y todos los scores. Understat queda archivado; las referencias anteriores de esta documentación son históricas. Los xG de equipo no publicados de LaLiga se muestran como desconocidos, con cobertura parcial explícita. Se conservan los enlaces antiguos mediante un mapa de IDs verificados.
+Desde el 24 de noviembre, la aplicación activa usa **solo FotMob y ESPN**, incluido el catálogo de LaLiga y todos los scores. Understat queda archivado; las referencias anteriores de esta documentación son históricas. La captura de equipos de LaLiga del 25 de noviembre recupera xG/xGA FotMob; cualquier hueco sigue desconocido y con cobertura explícita. Se conservan los enlaces antiguos mediante un mapa de IDs verificados.
 
 La columna Nacionalidad y el apartado **Selecciones** reúnen países publicados por FotMob y onces teóricos elegidos entre siete sistemas coherentes, con contención, creación y score como media simple de sus once titulares. [Cobertura, procedencia, fórmula y generadores](docs/NATIONS.md). Los candidatos proceden solo de LaLiga, Premier League, Serie A, Bundesliga, Ligue 1, Liga Portugal y Eredivisie; se agrupan países de todo el mundo. Son simulaciones, no convocatorias oficiales.
 
@@ -50,6 +50,8 @@ El panel **Datos cargados** de cada vista muestra las fechas de captura por fuen
 - Rankings de jugadores antes que equipos, con campos y fechas de origen. Los guiones explican por qué falta un valor.
 
 Actualizar datos consulta todas las fuentes aplicables y conserva cada captura que falle. Las fichas FotMob amplían pases, posiciones, tiros y xGOT del portero; su eficacia frente al xGOT participa en el score. El score de equipo y de posiciones es un promedio ponderado por minutos. Sites ejecuta el Worker de consultas; Python sigue siendo el generador externo de artefactos. Consulta [actualización y fórmulas](docs/REFRESH.md).
+
+Consulta [herramientas de calidad, CI y rendimiento medido](docs/QUALITY.md).
 
 ## Comprobaciones
 

@@ -8,7 +8,7 @@
  const method=formations.method,mean=formations.mean;
  const positions={POR:{label:'Portería'},DEF:{label:'Defensa y carriles'},MED:{label:'Centro del campo'},DEL:{label:'Delantera'}};
  function build(model){
-  const scope=leagues.group('europe-top7'),input=model.data;
+  const scope=leagues.group('all'),input=model.data;
   const leagueKey=player=>player.league_key||input.metadata?.league_key;
   const players=input.players.filter(p=>scope.leagueIds.includes(leagueKey(p))),data={...input,players},people=new Map(),countries=new Map();let known=0,conflicts=0,duplicateRecords=0;
   const available=new Set([...(input.metadata?.leagues||[]).map(l=>l.id),input.metadata?.league_key,...players.map(leagueKey)]);

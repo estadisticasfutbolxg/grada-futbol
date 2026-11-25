@@ -17,7 +17,7 @@ test('a player has one position score regardless of requested midfield ranking o
 test('team and positional scores use the exact player scores, weights and membership, with no independent defense index',()=>{
  const data=fixture(),model=scores.build(data),definition=radar.definition('TEAM_DEFENSE');
  assert.equal(definition.aggregateProfile,'DEF');
- for(const [key,summary] of [...model.units,['OVERALL',model.overall]])for(const [id,team] of summary.teams){
+ for(const [key,summary] of [...model.units,['OVERALL',model.overall]])for(const team of summary.teams.values()){
   const included=team.players.filter(p=>p.included);
   if(!included.length){assert.equal(team.area,null);continue;}
   assert(Math.abs(team.area-included.reduce((sum,p)=>sum+p.area*p.minutes,0)/included.reduce((sum,p)=>sum+p.minutes,0))<1e-12);

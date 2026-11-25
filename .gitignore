@@ -23,3 +23,7 @@ dist/server/
 
 # Escudos descargados por ID; regenerar con scripts/download_club_badges.py
 dist/assets/clubs/
+
+# Herramientas de calidad locales
+node_modules/
+.ruff_cache/

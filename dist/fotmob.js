@@ -62,6 +62,17 @@
     }
     return data;
   }
-  const api={validate,fields,counts,publishedRates,percentages,labels,descriptions};
+  function restoreTeams(data,previous){
+    if(!previous||data.metadata.league_key!==previous.metadata.league_key||data.metadata.season_id!==previous.metadata.season_id)return data;
+    const ids=new Set(data.teams.map(t=>String(t.id)));
+    if(previous.teams.length!==ids.size||previous.teams.some(t=>!ids.has(String(t.id))))return data;
+    const captured=d=>Math.min(...d.teams.map(t=>Date.parse(t.metricContexts?.matches?.captured_at)));
+    if(!Number.isFinite(captured(previous))||captured(previous)<=captured(data)||previous.metadata.imported_matches<data.metadata.imported_matches)return data;
+    const pageEntries=Object.entries(previous.metadata.pages||{}).filter(([,p])=>p.url?.includes('/teams/')||p.url?.includes('/overview/'));
+    return {...data,teams:previous.teams.map(t=>({...t,metricContexts:{...t.metricContexts}})),metadata:{...data.metadata,imported_matches:previous.metadata.imported_matches,
+      pages:{...data.metadata.pages,...Object.fromEntries(pageEntries)},coverage:{...data.metadata.coverage,...Object.fromEntries(pageEntries.map(([key])=>[key,previous.metadata.coverage?.[key]]))},
+      team_capture_recovery:{captured_at:new Date(captured(previous)).toISOString(),definition:'Equipos de una captura posterior con igual o mayor cobertura; se conservan sus muestras y las fichas de jugadores por separado.'}}};
+  }
+  const api={validate,restoreTeams,fields,counts,publishedRates,percentages,labels,descriptions};
   if(typeof module==='object'&&module.exports)module.exports=api;else root.GradaFotmob=api;
 })(typeof window==='object'?window:globalThis);

@@ -1,6 +1,6 @@
 # Actualización general y scores
 
-> Desde el 25 de noviembre: solo [15 primeras divisiones](LEAGUES.md), selección múltiple y acceso a siete ligas europeas. Selecciones usa únicamente candidatos de esas siete, manteniendo su score con referencia común de todas las primeras divisiones cargadas. No se incorporan estadísticas nuevas para este cambio.
+> Desde el 25 de noviembre: solo [15 primeras divisiones](LEAGUES.md), selección múltiple y acceso a siete ligas europeas. Selecciones usa candidatos de todas las ligas disponibles (petición posterior del 25 de noviembre), manteniendo su score con referencia común de todas las primeras divisiones cargadas. No se incorporan estadísticas nuevas para este cambio.
 
 > Política activa desde el 24 de noviembre de 2026: catálogo **FotMob → ESPN** en todas las ligas. Understat no se carga ni se sirve y no interviene en valores, posiciones, referencias o scores de jugadores, equipos y selecciones. Se conserva solo en archivo (código, pruebas y capturas locales) para una reactivación explícita. Las prioridades anteriores que siguen abajo son históricas. LaLiga declara únicamente los huecos de xG/xGA de equipo como opcionales y mantiene las demás comprobaciones. Las cifras ausentes siguen desconocidas; nunca se oculta la fuente de una cifra usada.
 

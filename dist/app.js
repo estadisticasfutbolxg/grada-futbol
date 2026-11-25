@@ -7,7 +7,7 @@ const datasets=new Map();
 let selectedClubs=new Set(),teamCompareChoices=[];
 let customLeagueIds=[];
 const leagueConfig=()=>GradaLeagues.get(currentLeague,customLeagueIds);
-let liveData = null, understatData = null, fotmobData = null, combinedData = null, view = 'overview', pos = 'Todos', unit = 'total', sort = 'radarArea', direction = -1, choices = [], refreshing = false, interaction = 0;
+let combinedData = null, view = 'overview', pos = 'Todos', unit = 'total', sort = 'radarArea', direction = -1, choices = [], refreshing = false, interaction = 0;
 let radarProfiles = new Map(),rankingAxisKeys=new Set(),squadAreas={teams:new Map(),unassignedPlayerIds:[]},unitAreas=new Map();
 let scoreModel=null,scoreCache={inputs:[],reference:null,models:new WeakMap(),groups:new Map()};
 let activeLeaderKey=null;
@@ -143,7 +143,6 @@ function indexPending(record){return GradaRadar.explain(radarProfiles.get(record
 function usesUnderstatModels() { return data?.metadata?.primary_source==='Understat' || isUnderstat(); }
 function primarySource(){return data?.metadata?.primary_source || leagueConfig().primary;}
 function isSeason() { return isLive() || isUnderstat() || isCombined(); }
-function selectedSource() { return currentLeague; }
 function source() { return loaded ? data.metadata.source : 'Sin datos'; }
 function metric(p,k) { if(squadMetricKeys.has(k))return squadMetric(p,k);if(k==='radarArea')return radarProfiles.get(p)?.score??null;if(view==='rankings'&&rankingAxisKeys.has(k))return GradaMetrics.metric(p,k,GradaRadar.axis(k).unit);return GradaMetrics.metric(p,k,view==='rankings'?'total':unit); }
 function columnLabel(k,isTeam = isTeamView()) {
@@ -478,12 +477,12 @@ function renderNations(){
   $('#nation-select').innerHTML=GradaNations.options(model,selectedNation);$('#nation-select').value=selectedNation;$('#nation-select').disabled=!model.countries.length;
   $('#nation-ranking').innerHTML=GradaNations.ranking(model,{onlyComplete:$('#nation-complete').checked!==false,selected:selectedNation});
   $('#nation-lineup').innerHTML=GradaNations.lineup(model.countries.find(c=>c.code===selectedNation),model);
-  const c=model.coverage;$('#nation-coverage').textContent='Candidatos: 7 principales ligas europeas · '+c.availableLeagues+'/'+c.expectedLeagues+' disponibles · '+c.known+'/'+c.records+' fichas con país · '+c.complete+' onces completos. Siete sistemas con contención y creación. Media simple: cada titular pesa igual. Mismo score individual y mínimo '+GradaRadar.minimumScoreMinutes+' min. '+(c.duplicateRecords?c.duplicateRecords+' fichas repetidas por ID: se usa la de más minutos, sin sumar ligas. ':'')+(c.conflicts?c.conflicts+' identidades con países en conflicto, excluidas.':'');
+  const c=model.coverage;$('#nation-coverage').textContent='Candidatos: todas las ligas · '+c.availableLeagues+'/'+c.expectedLeagues+' disponibles · '+c.known+'/'+c.records+' fichas con país · '+c.complete+' onces completos. Siete sistemas con contención y creación. Media simple: cada titular pesa igual. Mismo score individual y mínimo '+GradaRadar.minimumScoreMinutes+' min. '+(c.duplicateRecords?c.duplicateRecords+' fichas repetidas por ID: se usa la de más minutos, sin sumar ligas. ':'')+(c.conflicts?c.conflicts+' identidades con países en conflicto, excluidas.':'');
   $$('[data-nation]').forEach(b=>b.onclick=()=>{selectedNation=b.dataset.nation;renderNations();$('#nation-select').focus();$('#nation-lineup').scrollIntoView({behavior:'smooth',block:'start'});});
   $$('[data-national-player]').forEach(b=>b.onclick=()=>detail(b.dataset.nationalPlayer,false));
 }
 function navigate(v,scroll=true,preserveSort=false){
-  if(v==='nations'&&currentLeague!=='europe-top7'){view=v;activateLeague('europe-top7');if(scroll)window.scrollTo({top:0,behavior:'smooth'});return;}
+  if(v==='nations'&&currentLeague!=='all'){view=v;activateLeague('all');if(scroll)window.scrollTo({top:0,behavior:'smooth'});return;}
   if(['players','overview'].includes(v)&&view!==v&&!activeLeaderKey&&!preserveSort){sort='radarArea';direction=-1;}
   if(v!=='players')activeLeaderKey=null;
   const previous=view;view=v;
@@ -501,7 +500,8 @@ function navigate(v,scroll=true,preserveSort=false){
   $('#tabletitle').textContent=v==='rankings'?GradaRadar.definition(rankingProfile).label:isTeamView()?'Ranking de equipos':'Ranking de jugadores';$('#tablesub').textContent=isTeamView()?'Scores de equipo ponderados por minutos, entre 0 y 1. Consulta pesos y contribuciones en la ficha.':activeLeaderKey?'Ranking de '+labels[activeLeaderKey]+(activeLeaderKey==='savesPer90'?' · porteros':' · jugadores de campo')+'. Misma selección que en portada.':'Selecciona un nombre para ver su radar. Score entre 0 y 1; — = no disponible.';
   if(v==='overview'){dashboard();renderLeaders();}
   if(v==='nations'){renderNations();$('#team-comparison').hidden=true;if(scroll)window.scrollTo({top:0,behavior:'smooth'});return;}
-  syncPositions();renderClubOptions();renderTable();renderCompare();renderTeamComparison();if(v==='glossary')renderTerms();if(scroll)window.scrollTo({top:0,behavior:'smooth'});
+  if(v==='glossary'){renderTerms();if(scroll)window.scrollTo({top:0,behavior:'smooth'});return;}
+  syncPositions();renderClubOptions();if(v==='compare')renderCompare();else renderTable();renderTeamComparison();if(scroll)window.scrollTo({top:0,behavior:'smooth'});
 }
 function syncPositions() { $$('[data-pos]').forEach(b=>b.classList.toggle('on',b.dataset.pos === pos));refreshRoleOptions(); }
 function refreshRoleOptions(){
@@ -559,9 +559,9 @@ function updateLeagueOptions(){
 
 function activateLeague(id){
   if(GradaLeagues.group(id)){
-    if(!datasets.size&&id==='all')return;currentLeague=id;understatData=null;fotmobData=null;liveData=null;combinedData=groupData(id);
+    if(!datasets.size&&id==='all')return;currentLeague=id;combinedData=groupData(id);
   }else{
-    const state=datasets.get(id);if(!state)return;currentLeague=id;understatData=state.understat;fotmobData=state.fotmob;liveData=state.espn;combinedData=state.combined;
+    const state=datasets.get(id);if(!state)return;currentLeague=id;combinedData=state.combined;
   }
   applyData(combinedData);
 }
@@ -622,7 +622,7 @@ async function refreshData(){
   }finally{refreshing=false;updateLeagueOptions();updateRefreshButton();renderDataDates();}
 }
 const terms = [
-  ['Nacionalidad y selecciones','Se muestra el país deportivo publicado por FotMob, con ID de jugador, club, liga, temporada y fecha verificados. No se deduce de nacimiento, nombre o liga, ni confirma doble ciudadanía o elegibilidad FIFA. Se comparan 4-3-3, 4-2-3-1, 4-4-2, 4-3-1-2, 3-5-2, 3-4-2-1 y 4-2-2-2. Todos exigen portero, centrales, bandas o carriles compatibles, un jugador de contención, otro de creación y al menos un delantero centro DEL con ST publicado. La contención admite CDM o CM con perfil defensivo; la creación, CAM o CM con perfil ofensivo/equilibrado según el puesto. Los perfiles no inventan una banda. Se asigna una sola plaza a cada persona y se maximiza la suma de scores de cada sistema. Entre esos siete onces se elige la mayor media simple de sus once scores. Cada titular pesa 1/11, sin ponderación ni desempate por minutos. Las líneas usan la media simple de sus integrantes; el global no es la media de los cuatro bloques. El detalle indica evidencia del encaje y los sistemas alternativos. El puesto teórico puede diferir de la posición amplia del score solo con un puesto publicado compatible; el score nunca cambia. Se conserva el score de su posición y perfil, sin recalcularlo para la selección. Entre fichas del mismo ID FotMob se conserva la de más minutos; no se suman competiciones ni se elige el score mayor. El score teórico del once completo es suma de los once scores / 11, de 0 a 1. Un once incompleto conserva —; no se rellenan huecos con cero. Los candidatos se limitan a las primeras divisiones de España, Inglaterra, Italia, Alemania, Francia, Portugal y Países Bajos. Países de todo el mundo, sin lesiones, convocatorias o rendimiento internacional.'],
+  ['Nacionalidad y selecciones','Se muestra el país deportivo publicado por FotMob, con ID de jugador, club, liga, temporada y fecha verificados. No se deduce de nacimiento, nombre o liga, ni confirma doble ciudadanía o elegibilidad FIFA. Se comparan 4-3-3, 4-2-3-1, 4-4-2, 4-3-1-2, 3-5-2, 3-4-2-1 y 4-2-2-2. Todos exigen portero, centrales, bandas o carriles compatibles, un jugador de contención, otro de creación y al menos un delantero centro DEL con ST publicado. La contención admite CDM o CM con perfil defensivo; la creación, CAM o CM con perfil ofensivo/equilibrado según el puesto. Los perfiles no inventan una banda. Se asigna una sola plaza a cada persona y se maximiza la suma de scores de cada sistema. Entre esos siete onces se elige la mayor media simple de sus once scores. Cada titular pesa 1/11, sin ponderación ni desempate por minutos. Las líneas usan la media simple de sus integrantes; el global no es la media de los cuatro bloques. El detalle indica evidencia del encaje y los sistemas alternativos. El puesto teórico puede diferir de la posición amplia del score solo con un puesto publicado compatible; el score nunca cambia. Se conserva el score de su posición y perfil, sin recalcularlo para la selección. Entre fichas del mismo ID FotMob se conserva la de más minutos; no se suman competiciones ni se elige el score mayor. El score teórico del once completo es suma de los once scores / 11, de 0 a 1. Un once incompleto conserva —; no se rellenan huecos con cero. Los candidatos proceden de todas las primeras divisiones disponibles. Países de todo el mundo, sin lesiones, convocatorias o rendimiento internacional.'],
   ['Juego limpio','Amarillas y rojas verificadas usan sus minutos propios. Descuento relativo = mínimo(1; 0,10 × (amarillas + 10 × rojas) × 90 / minutos). Cada tarjeta añade la misma penalización hasta un score mínimo de 0; una roja pesa diez amarillas. Ejemplo: 5 amarillas y 1 roja en 900 minutos descuentan el 15 %. Los pesos son manuales de GRADA, pendientes de calibración estadística. Las amarillas reflejan disciplina y riesgo de sanción, pero no se infieren partidos perdidos cada cinco tarjetas, ciclos por competición, dobles amarillas ni minutos en inferioridad. Sin tarjetas emparejadas o muestra suficiente se conserva la base con aviso de sin ajuste; no se imputan ceros.'],
   ['Laterales y carrileros','Un único radar mixto: entradas, intercepciones y recuperaciones junto con goles, xG y xA, todo por 90 minutos. Referencia común de laterales/carrileros con puesto publicado; no se crean perfiles ofensivo y defensivo separados.'],
   ['Puestos publicados y perfiles estadísticos',descriptions.tacticalRole+' El perfil ofensivo/defensivo/equilibrado compara percentiles de dos índices MED; una diferencia de hasta 10 puntos se considera equilibrada. Selecciona los ejes del único score MED.'],

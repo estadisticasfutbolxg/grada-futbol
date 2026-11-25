@@ -12,6 +12,7 @@
  function valid(player,value=player?.nationality,leagueKey=null){
   const c=value?.context;
   if(!/^\d{1,12}$/.test(id(player?.id))||!/^\d{1,12}$/.test(id(player?.team_id)))return false;
+  // eslint-disable-next-line no-control-regex -- Reject control characters in provider names.
   if(!value||!/^[A-Z]{3}$/.test(value.code)||!/^\d{1,12}$/.test(id(value.nationalTeamId))||Number(value.nationalTeamId)<=0||typeof value.name!=='string'||!value.name.trim()||value.name.length>100||/[<>\x00-\x1f]/.test(value.name))return false;
   if(c?.source!=='FotMob'||c.identityVerified!==true||id(c.player_id)!==id(player?.id)||id(c.team_id)!==id(player?.team_id)||c.season!=='2026/27'||!Number.isFinite(Date.parse(c.captured_at))||Date.parse(c.captured_at)>Date.now()+300000)return false;
   try{if(leagues.get(c.league_key).season!==c.season||leagueKey&&c.league_key!==leagueKey)return false;}catch(_){return false;}
