@@ -1,5 +1,11 @@
 # Calidad y rendimiento
 
+## Verificación de ligas y torneos
+
+`competition-totals.test.cjs` cubre identidad, transferencias, ceros/ausencias, minutos propios, muestras incompatibles, tarjetas emparejadas, un score y posición entre vistas, fechas y regeneración idempotente. Selección de 18 competiciones, ámbito de quince ligas en selecciones y mínimo /90 de 200 para torneos cortos tienen pruebas propias; la elección explícita de mínimo del usuario se conserva.
+
+Auditoría con datos reales: 8.302 equivalencias de score, 6.766 perfiles, 2.645 medias de equipo y 13.974 contribuciones. Auditoría de métricas: 1.156.528 lecturas de 82 medidas. Treinta fuentes previas intactas y dieciocho SQLite contrastados. La medición del 48,2 % descrita abajo corresponde al primer incremento con entradas idénticas, no a una comparación de carga de 15 frente a 18 competiciones. No hay medición visual de navegador disponible; VM/DOM y HTTP no sustituyen esa comprobación.
+
 Requiere Node 24 y Python 3.11+. Las herramientas son solo de desarrollo; el Site no carga dependencias npm.
 
 ```sh

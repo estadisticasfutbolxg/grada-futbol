@@ -1,6 +1,24 @@
 # Ligas combinadas, ámbito conjunto y rankings
 
-El selector ofrece **15 primeras divisiones combinadas**, con casillas para seleccionar varias ligas, **Todas las ligas** y **7 principales ligas europeas**, temporada **2026/27**. Se habilitan únicamente después de validar sus fuentes y las mismas familias de métricas de ataque, pase, defensa, disciplina, portería y equipos. Esta disponibilidad no significa que cada jugador tenga todos los campos.
+## Ámbito vigente · 25 de noviembre de 2026
+
+Quince primeras divisiones y tres torneos UEFA verificados. **Todas las ligas** mantiene las quince; **Ligas y torneos** incorpora las dieciocho. La selección múltiple admite ambos tipos; siete europeas sigue disponible. Selecciones toma candidatos de las quince ligas, nunca queda limitada a siete.
+
+| Torneo · fase de liga 2026/27 | Clubes / máximo PJ por club | FotMob liga / temporada | ESPN | Fichas FotMob | Cobertura agregada |
+| --- | ---: | --- | --- | ---: | ---: |
+| Champions League | 36 / 8 | 42 / 47760 | uefa.champions | 774 | 81 |
+| Europa League | 36 / 8 | 73 / 47759 | uefa.europa | 781 | 72 |
+| Conference League | 36 / 6 | 10216 / 47761 | uefa.europa.conf | 703 | 54 |
+
+Se incorporan 2.258 fichas de competición, **798 IDs FotMob nuevos respecto a las ligas** y 207 partidos de cobertura agregada por proveedor. No son archivos de encuentros individuales. Los calendarios completos de esta fase son 144/144/108 encuentros; no se incluyen previas ni eliminatorias. Nombres/temporada, 36 clubes por torneo y 24 alias explícitos se contrastaron con ESPN. No se cruzan clubes por parecido de nombre. Los perfiles individuales FotMob de torneos no se consultan: su página puede representar la liga doméstica, incompatible con esta muestra.
+
+LaLiga ya tiene xG/xGA en veinte equipos: 129 encuentros cubiertos, +19 respecto a la captura anterior. Real Madrid: 13 PJ, 33 goles, 33,6 xG y 12,9 xGA. Las otras catorce ligas y ESPN conservan sus capturas. Las ligas cubren 1.365 encuentros; ligas y torneos, 1.572 por proveedor. Los treinta JSON previos son idénticos a v38.
+
+Hay 8.302 filas jugador/competición, **6.766 identidades FotMob distintas** y 286 clubes. Cuando se incluyen torneos, `competitions.js` suma recuentos conocidos por ID, pondera tasas por sus minutos propios y etiqueta la cobertura parcial. No suma porcentajes; las medias sin denominadores originales son medias por minutos, declaradas como tales. Cocientes y diferencias requieren las mismas contribuciones. Un traspaso no asigna toda la temporada a un solo club. Conflictos portero/jugador de campo quedan separados y sin score.
+
+La referencia de score usa toda la temporada, incluso al consultar una liga: una posición/perfil, nunca el mejor score entre fuentes. Prevalece una posición publicada inequívoca doméstica y, después, mayor muestra publicada. La procedencia y posición original se conservan para evitar realimentar una inferencia al regenerar. [Contrato de score](SCORES.md). Los apartados de cobertura anteriores a esta ampliación se identifican como históricos abajo.
+
+La base doméstica ofrece **15 primeras divisiones combinadas**, además de los tres torneos descritos arriba, temporada **2026/27**. Se habilitan únicamente después de validar sus fuentes y las mismas familias de métricas de ataque, pase, defensa, disciplina, portería y equipos. Esta disponibilidad no significa que cada jugador tenga todos los campos.
 
 Todas usan catálogo e IDs **FotMob**, prioridad **FotMob → ESPN**, con fuente, captura y muestra por campo. **Understat no se carga, sirve ni usa en valores, posiciones, referencias o scores de jugadores/equipos/selecciones**. Sus importadores, pruebas y capturas originales permanecen archivados; los enlaces antiguos de LaLiga se traducen mediante un mapa de IDs verificados sin estadísticas archivadas.
 
@@ -10,7 +28,7 @@ Los identificadores se verificaron con páginas oficiales que confirman competic
 
 | Liga y país de competición | Clubes / calendario publicado | FotMob liga / temporada | ESPN | Fichas | PJ agregados FotMob |
 | --- | ---: | --- | --- | ---: | ---: |
-| LaLiga · España | 20 / 380 | 87 / 38843 | esp.1 | 488 | 110 |
+| LaLiga · España | 20 / 380 | 87 / 38843 | esp.1 | 488 | 129 |
 | Premier League · Inglaterra | 20 / 380 | 47 / 36781 | eng.1 | 454 | 91 |
 | Serie A · Italia | 20 / 380 | 55 / 36072 | ita.1 | 496 | 101 |
 | Bundesliga · Alemania | 18 / 306 | 54 / 40040 | ger.1 | 417 | 73 |
@@ -26,11 +44,11 @@ Los identificadores se verificaron con páginas oficiales que confirman competic
 | Super League 1 · Grecia | 14 / 182 · regular | 135 / 44734 | gre.1 | 352 | 76 |
 | A-League · Australia | 12 / 156 · regular | 113 / 1000000464 | aus.1 | 230 | 28 |
 
-**6.044 fichas jugador/liga y 248 clubes**, con cobertura agregada de **1.346 partidos por fuente**. El 25 de noviembre se retiraron siete divisiones inferiores: 3.722 fichas, 150 clubes y 1.060 partidos de cobertura agregada. Los 30 JSON fuente, 15 SQLite y el archivo Understat conservados permanecen idénticos; no se consultaron proveedores. Los 3.939 scores válidos se recalculan contra las quince primeras divisiones y cambian 38 perfiles estadísticos MED, sin alterar posiciones publicadas, estadísticas ni fórmulas. No son archivos de encuentros individuales ni se identifican cambios por encuentro desde estos endpoints. Nacionalidad y puestos corresponden a identidades publicadas, no a inferencias por nombre o país de liga. Los escudos se resuelven por ID FotMob del club.
+**6.044 fichas jugador/liga y 248 clubes**, con cobertura agregada actual de **1.365 partidos por fuente**. Histórico de la retirada de divisiones inferiores: El 25 de noviembre se retiraron siete divisiones inferiores: 3.722 fichas, 150 clubes y 1.060 partidos de cobertura agregada. Los 30 JSON fuente, 15 SQLite y el archivo Understat conservados permanecen idénticos; no se consultaron proveedores. Los 3.939 scores válidos se recalculan contra las quince primeras divisiones y cambian 38 perfiles estadísticos MED, sin alterar posiciones publicadas, estadísticas ni fórmulas. No son archivos de encuentros individuales ni se identifican cambios por encuentro desde estos endpoints. Nacionalidad y puestos corresponden a identidades publicadas, no a inferencias por nombre o país de liga. Los escudos se resuelven por ID FotMob del club.
 
 En Escocia se confirma la fase regular de 33 PJ por club / 198 encuentros; Australia, 26 / 156; Dinamarca y Austria, 22 / 132; Grecia, 26 / 182. Se declara solo esa fase publicada: no se inventan ni añaden las posteriores. Los límites por equipo están en `maxTeamMatches`; un formato futuro incompatible se rechaza conservando la captura válida. Las demás candidatas cargadas confirman calendario de ida/vuelta. Australia solo se habilita tras completar desde fichas verificadas los recuentos ausentes del ranking vacío de penaltis parados: ese ranking conserva valores desconocidos, sin inferir ceros. Una temporada en curso siempre sigue siendo parcial.
 
-LaLiga conserva únicamente los huecos de xG/xGA de equipo declarados como opcionales. No se relajan las otras familias ni se infiere xG del equipo para sus porteros. Las demás ligas requieren también esas métricas de equipo. Las ausencias son `null`/«—»; un cero necesita evidencia publicada o la derivación documentada de cero tiros y cero goles de la misma muestra.
+LaLiga recuperó xG/xGA en los veinte equipos el 25 de noviembre; el validador conserva la opcionalidad para capturas históricas incompletas. No se relajan las otras familias ni se infiere xG del equipo para sus porteros. Las demás ligas requieren también esas métricas de equipo. Las ausencias son `null`/«—»; un cero necesita evidencia publicada o la derivación documentada de cero tiros y cero goles de la misma muestra.
 
 ## Candidatas que no pasan el mismo contrato
 

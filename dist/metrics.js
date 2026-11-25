@@ -26,7 +26,7 @@
       if(!number(left)||!number(right)||!sameSample(first,second)||!sameSample(first,goal))return null;
       fromRecord=true;
     }
-    const c={...first,reportedValue:false,derived,components:[a,b],componentCaptures:{[a]:first.captured_at||null,[b]:second.captured_at||null}};delete c.reportedPer90;
+    const c={...first,reportedValue:false,derived,components:[a,b],componentCaptures:{[a]:first.captured_at||null,[b]:second.captured_at||null}};delete c.reportedPer90;delete c.rateContext;
     if(fromRecord){c.fromSourceRecord=true;c.componentValues={[a]:left,[b]:right};}
     return {first:left,second:right,context:c};
   }
@@ -42,7 +42,11 @@
     if(!number(value)||!number(minutes)||minutes<=0)return null;
     const result=value/minutes*90;return number(result)?result:null;
   }
-  function context(record,key) {
+  function context(record,key,unit='total') {
+    const direct=record.metricContexts?.[key];
+    if(unit==='90'&&direct?.rateContext)return direct.rateContext;
+    if(Object.hasOwn(fixedRates,key)&&!direct?.aggregation&&record.metricContexts?.[fixedRates[key]]?.rateContext)return record.metricContexts[fixedRates[key]].rateContext;
+    if(record.metricContexts?.[key]?.aggregation)return record.metricContexts[key];
     if(key==='savesPer90'&&record.metricContexts?.savesPer90)return record.metricContexts.savesPer90;
     if(key==='psxgEfficiency')return record.metricContexts?.psxg||null;
     if(key==='shotsPer90'&&!number(record.shotsPer90))return record.metricContexts?.shots||null;
@@ -64,10 +68,11 @@
   }
   function normalized(record,key){
     if(Object.hasOwn(sums,key)&&record.metricContexts&&!context(record,key))return null;
-    const reported=context(record,key)?.reportedPer90;
-    return number(reported)?reported:per90(Object.hasOwn(sums,key)?metric(record,key):record[key],denominator(record,key,'minutes'));
+    const sample=context(record,key,'90'),reported=sample?.reportedPer90;
+    return number(reported)?reported:per90(Object.hasOwn(sums,key)?metric(record,key):record[key],sample&&Object.hasOwn(sample,'minutes')?sample.minutes:record.minutes);
   }
   function metric(record, key, unit = 'total') {
+    if(Object.hasOwn(fixedRates,key)&&record.metricContexts?.[key]?.aggregation&&number(record[key]))return record[key];
     if(key==='savesPer90'&&number(record.savesPer90))return record.savesPer90;
     if(key==='psxgEfficiency'){const c=context(record,key),expected=record.psxg,conceded=c?.pairedConceded;if(!number(expected)||expected<=0||!number(conceded)||conceded<0)return null;const value=(1-conceded/expected)*100;return number(value)?value:null;}
     if(key==='shotsPer90')return number(record.shotsPer90)?record.shotsPer90:normalized(record,'shots');
@@ -95,7 +100,7 @@
   }
   function total(records,key){
     const known=records.filter(record=>number(record[key]));
-    return {value:known.length?known.reduce((sum,record)=>sum+record[key],0):null,known:known.length,total:records.length,complete:records.length>0&&known.length===records.length};
+    return {value:known.length?known.reduce((sum,record)=>sum+record[key],0):null,known:known.length,total:records.length,complete:records.length>0&&known.length===records.length&&known.every(record=>{const coverage=record.metricContexts?.[key]?.coverage;return !coverage||coverage.known===coverage.total;})};
   }
   const api = {metric,per90,ratio,rates,fixedRates,ratios,sums,differences,perMatch,number,context,total,sameSample,pair};
   if (typeof module === 'object' && module.exports) module.exports = api;

@@ -1,5 +1,11 @@
 # Contrato de datos y métricas
 
+## Competiciones actuales y agregación de temporada
+
+El registro activo tiene quince primeras divisiones y tres torneos UEFA expresamente autorizados en `leagues.js`: Champions, Europa y Conference, 36 clubes, fase de liga 8/8/6 PJ. No se admiten otras divisiones ni fases implícitas. Fuentes activas FotMob/ESPN; Understat sigue archivado y fuera de todas las estadísticas y scores.
+
+Cada competición conserva JSON y SQLite originales. La unión de temporada se calcula por ID FotMob en `competitions.js`, con muestras propias, cobertura por campo y posición publicada única; no se genera una base agregada ficticia. Dieciocho SQLite: 108.032.000 bytes lógicos y 9.994.286 gzip; 8.658 filas de jugadores/equipos contrastadas con sus JSON. Capturas y bases permanecen fuera de GitHub, con sus generadores versionados. [Cobertura y límites](LEAGUES.md), [score de temporada](SCORES.md).
+
 > Desde el 25 de noviembre: solo [15 primeras divisiones](LEAGUES.md), selección múltiple y acceso a siete ligas europeas. Selecciones usa candidatos de todas las ligas disponibles (petición posterior del 25 de noviembre), manteniendo su score con referencia común de todas las primeras divisiones cargadas. No se incorporan estadísticas nuevas para este cambio.
 
 > Política activa desde el 24 de noviembre de 2026: catálogo **FotMob → ESPN** en todas las ligas. Understat no se carga ni se sirve y no interviene en valores, posiciones, referencias o scores de jugadores, equipos y selecciones. Se conserva solo en archivo (código, pruebas y capturas locales) para una reactivación explícita. Las prioridades anteriores que siguen abajo son históricas. LaLiga declara únicamente los huecos de xG/xGA de equipo como opcionales y mantiene las demás comprobaciones. Las cifras ausentes siguen desconocidas; nunca se oculta la fuente de una cifra usada.

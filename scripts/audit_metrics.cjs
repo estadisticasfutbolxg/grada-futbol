@@ -27,7 +27,7 @@ function audit(directory){
      if(key==='conversion')assert.equal(total,raw[b]>0?raw[a]/raw[b]*100:null,key+' conversion differs from original components');originalPairs++;
     }
     if(M.ratios[key]){const [a,b]=M.ratios[key];if(!context?.fromSourceRecord&&row.metricContexts&&Number.isFinite(row[a])&&Number.isFinite(row[b])&&!M.sameSample(row.metricContexts[a],row.metricContexts[b])){assert.equal(total,null,key+' mixed sample');counts.incompatibleComponents++;}assert.equal(rate,total,key+' ratio changed in /90');}
-    if(M.rates.has(key)&&rate!==null){const context=M.context(row,key);assert(Number.isFinite(context?.reportedPer90)||Number.isFinite(context?.minutes??row.minutes)&&(context?.minutes??row.minutes)>0,key+' rate lacks own minutes');}
+    if(M.rates.has(key)&&rate!==null){const context=M.context(row,key,'90');assert(Number.isFinite(context?.reportedPer90)||Number.isFinite(context?.minutes??row.minutes)&&(context?.minutes??row.minutes)>0,key+' rate lacks own minutes');}
    }
    coverage[kind][key]=counts;
   }

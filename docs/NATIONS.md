@@ -1,5 +1,7 @@
 # Nacionalidad publicada y selecciones teóricas
 
+El score y sus minutos elegibles corresponden a toda la temporada disponible (ligas y torneos), pero los candidatos proceden de **todas las quince ligas**. El XI sigue siendo media simple, sin ponderar por minutos. La ampliación UEFA no incorpora candidatos exclusivos de esos torneos al ámbito de selecciones.
+
 La vista **Selecciones** propone un once con jugadores de todas las primeras divisiones cargadas. Abre Todas las ligas y conserva el score canónico de cada jugador, el mínimo de 200 minutos y siete sistemas coherentes con media simple del once. Los países son mundiales. Admite `?vista=selecciones&pais=ESP`. No es una convocatoria ni confirma elegibilidad FIFA.
 
 Por petición del 25 de noviembre se sustituye la restricción de siete europeas. Con las quince ligas actuales hay 6.044 fichas, 5.715 con país verificado, 135 países y 37 onces completos. El selector de siete europeas sigue disponible para otras vistas. Duplicados y conflictos se verifican entre todas las ligas, sin sumar muestras ni escoger el mejor score de una persona.

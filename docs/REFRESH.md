@@ -1,5 +1,11 @@
 # Actualización general y scores
 
+## Torneos y caché de lectura
+
+Champions, Europa y Conference usan rankings de su competición y fase de liga verificada; se omite enriquecimiento individual cuyo endpoint representa la liga doméstica. Se validan identidad, temporada y clubes antes de sustituir una captura. Las fechas por campo y por contribución preservan la competición real, sin atribuir una fecha agregada a la liga principal.
+
+Las capturas publicadas usan `cache: no-cache`: el navegador revalida por ETag y puede reutilizar un cuerpo sin cambios. No implica omitir comprobaciones de actualidad. La actualización de proveedores conserva `no-store`, autenticación de propietario y capturas válidas ante fallos. La recuperación de equipos preserva una captura de mayor cobertura aunque los jugadores tengan otra fecha propia.
+
 > Desde el 25 de noviembre: solo [15 primeras divisiones](LEAGUES.md), selección múltiple y acceso a siete ligas europeas. Selecciones usa candidatos de todas las ligas disponibles (petición posterior del 25 de noviembre), manteniendo su score con referencia común de todas las primeras divisiones cargadas. No se incorporan estadísticas nuevas para este cambio.
 
 > Política activa desde el 24 de noviembre de 2026: catálogo **FotMob → ESPN** en todas las ligas. Understat no se carga ni se sirve y no interviene en valores, posiciones, referencias o scores de jugadores, equipos y selecciones. Se conserva solo en archivo (código, pruebas y capturas locales) para una reactivación explícita. Las prioridades anteriores que siguen abajo son históricas. LaLiga declara únicamente los huecos de xG/xGA de equipo como opcionales y mantiene las demás comprobaciones. Las cifras ausentes siguen desconocidas; nunca se oculta la fuente de una cifra usada.

@@ -43,6 +43,12 @@
     function visit(item,league,fallback){
       for(const [field,context]of Object.entries(item.metricContexts||{})){
         if(!context||(!numeric(item[field])&&!numeric(context.reportedPer90)))continue;
+        for(const contribution of context.contributions||[]){
+          const component=index.get(contribution.competition+':'+contribution.source);if(!component)continue;
+          add(component.statistics,contribution.captured_at);add(component.statistics,contribution.minutes_captured_at);
+          for(const at of Object.values(contribution.componentCaptures||{}))add(component.statistics,at);
+        }
+        if(context.contributions?.length)continue;
         const row=index.get(league+':'+(context.source||fallback));if(!row)continue;
         add(row.statistics,context.captured_at);
         add(row.statistics,context.minutes_captured_at);

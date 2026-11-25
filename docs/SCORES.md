@@ -1,5 +1,13 @@
 # Score único por jugador y perfil; promedios de equipo
 
+## Score de temporada entre ligas y torneos
+
+Desde el 25 de noviembre la referencia canónica contiene las quince ligas y los tres torneos UEFA cargados. `competitions.js` une exclusivamente el ID FotMob verificado, conserva posición original y elige una única posición publicada; `scores.js` usa esa misma ficha de temporada en todas las vistas. La tabla muestra las estadísticas del ámbito seleccionado y el score de temporada, con sus minutos y desglose en la ficha. Los clubes ponderan ese score por los minutos del jugador en el ámbito consultado. Selecciones conserva media simple del XI y candidatos de todas las ligas.
+
+Recuentos: suma de valores conocidos, sin convertir ausencias en ceros. Tasas: minutos propios de cada contribución, con cobertura parcial visible. Porcentajes sin recuentos base: media ponderada por minutos, nunca cociente agregado presentado como exacto. Cocientes y diferencias requieren el mismo conjunto de contribuciones. El contexto `rateContext` permite conservar un total conocido de otra fuente sin prestarle minutos ajenos para /90. El mínimo sigue siendo 200 minutos propios, tanto del jugador de temporada como de cada eje.
+
+Juego limpio mantiene la fórmula vigente. Solo usa contribuciones con ambas tarjetas y muestra compatible; si a un torneo le falta una, conserva el ajuste de la muestra emparejada de las otras competiciones y declara su cobertura. No supone cero ni elimina una penalización ya verificada. La regeneración debe preservar score, posición y perfil; las posiciones derivadas no se reutilizan como evidencia original.
+
 Definición actualizada el 20 de noviembre de 2026, modelo `role_fairplay_radar_v6`. Unifica el mínimo en 200 minutos inclusive para todas las posiciones; conserva la penalización lineal de v5, los perfiles MED y el radar mixto de lateral. El modelo común es `dist/scores.js`; tablas, tarjetas, fichas, comparador, filtros y generador consumen sus resultados.
 
 ## Jugadores

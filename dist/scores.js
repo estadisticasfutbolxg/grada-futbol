@@ -2,11 +2,15 @@
  'use strict';
  const node=typeof module==='object'&&module.exports,radar=node?require('./radar.js'):root.GradaRadar,squads=node?require('./squads.js'):root.GradaSquads;
  const tactical=node?require('./roles.js'):root.GradaRoles;
+ const competitions=node?require('./competitions.js'):root.GradaCompetitions;
  const positionLabels={POR:'Portería',DEF:'Defensa',MED:'Centro del campo',DEL:'Delantera'};
- function build(data,{referencePlayers=data.players,referenceLabel='ligas disponibles'}={}){
-  const indices=radar.midfieldIndices(data.players,{referencePlayers});
-  const roles=new Map(data.players.map(p=>[p,radar.midfieldRole(p,indices)]));
-  const players=radar.profiles(data.players,{referencePlayers,midfieldRoles:roles});
+ function build(data,{referencePlayers=data.players,referenceLabel='competiciones disponibles'}={}){
+  const scoring=competitions.scoringRows(data.players,referencePlayers),rawIndices=radar.midfieldIndices(scoring,{referencePlayers});
+  const rawRoles=new Map(scoring.map(p=>[p,radar.midfieldRole(p,rawIndices)]));
+  const rawProfiles=radar.profiles(scoring,{referencePlayers,midfieldRoles:rawRoles});
+  const indices=new Map([...rawIndices].map(([key,values])=>[key,new Map(data.players.map((p,i)=>[p,values.get(scoring[i])]))]));
+  const roles=new Map(data.players.map((p,i)=>[p,rawRoles.get(scoring[i])]));
+  const players=new Map(data.players.map((p,i)=>[p,{...rawProfiles.get(scoring[i]),...(scoring[i].identityConflict?{identityConflict:true,score:null,comparableArea:null}:{}),...(scoring[i].competitionAggregate?{scoreRecord:scoring[i],scoreSample:{minutes:scoring[i].minutes,competitions:scoring[i].competitionBreakdown}}:{})}]));
   const overall=squads.summarize(data,players),units=squads.unitSummaries(data,{profiles:players,indices,roles}),teams=new Map();
   for(const profile of players.values())profile.referenceRule+=' · referencia común: '+referenceLabel;
   for(const team of data.teams){
@@ -28,7 +32,7 @@
   if(definition.kind==='team')return Number.isFinite(record.matches)&&record.matches>=minimum&&(includePending||value(model,record,definition)!==null);
   if(value(model,record,definition)===null)return false;
   if(record.pos!==definition.position||!radar.rankingEligible(record,model.players.get(record),minimum))return false;
-  if(definition.roleKey&&!tactical.matches(record,definition.roleKey))return false;
+  if(definition.roleKey&&!tactical.matches(model.players.get(record)?.scoreRecord||record,definition.roleKey))return false;
   if(definition.key.startsWith('MED_'))return model.roles.get(record)===definition.key||model.roles.get(record)==='MED_BALANCED';
   return true;
  }
@@ -38,8 +42,10 @@
   return [...new Set(profiles.flatMap(p=>p.expectedAxes))];
  }
  function withScores(data,options={}){
+  data=competitions.alignPositions(data,options.referencePlayers||data.players);
+  const seasonal=(options.referencePlayers||data.players).some(p=>p.competitionAggregate);
   const model=build(data,options),result=squads.withTeamAreas(data,model.overall,model.units,{reference:model.referenceLabel});
-  return {...result,metadata:{...result.metadata,derived_metrics:{...result.metadata.derived_metrics,playerScore:{method:'role_fairplay_radar_v6',reference:model.referenceLabel,minimum_minutes:Object.fromEntries(Object.keys(positionLabels).map(pos=>[pos,radar.minimumScoreMinutes])),definition:'Un score por jugador desde '+radar.minimumScoreMinutes+' minutos verificados. El perfil MED y el puesto publicado de lateral eligen los ejes; los laterales combinan ataque y defensa con referencia de laterales. El área base se multiplica por el ajuste de juego limpio verificado, con descuento relativo lineal 0,10 × (amarillas + 10 × rojas) × 90 / minutos propios, limitado solo por el score mínimo 0. Son pesos manuales, no una estimación de sanciones cumplidas o minutos en inferioridad. Sin tarjetas emparejadas/suficientes se conserva base y se declara sin ajuste. Cambiar de ranking no recalcula el score.'}}},players:data.players.map(p=>{const profile=model.players.get(p);return {...p,playerScore:profile.score,playerBaseScore:profile.baseScore,scorePosition:p.pos,scoreProfile:profile.profileKey,scoreProfileLabel:profile.profileLabel,fairPlay:profile.fairPlay,midfieldProfile:model.roles.get(p)};})};
+  return {...result,metadata:{...result.metadata,derived_metrics:{...result.metadata.derived_metrics,playerScore:{method:'role_fairplay_radar_v6',scope:seasonal?'season_all_competitions':'selected_competition',reference:model.referenceLabel,minimum_minutes:Object.fromEntries(Object.keys(positionLabels).map(pos=>[pos,radar.minimumScoreMinutes])),definition:(seasonal?'Score de temporada por ID FotMob entre las competiciones disponibles, con muestras propias, posición publicada y desglose. ':'')+'Un score por jugador desde '+radar.minimumScoreMinutes+' minutos verificados. El perfil MED y el puesto publicado de lateral eligen los ejes; los laterales combinan ataque y defensa con referencia de laterales. El área base se multiplica por el ajuste de juego limpio verificado, con descuento relativo lineal 0,10 × (amarillas + 10 × rojas) × 90 / minutos propios, limitado solo por el score mínimo 0. Son pesos manuales, no una estimación de sanciones cumplidas o minutos en inferioridad. Sin tarjetas emparejadas/suficientes se conserva base y se declara sin ajuste. Cambiar de ranking no recalcula el score.'}}},players:data.players.map(p=>{const profile=model.players.get(p);return {...p,playerScore:profile.score,scoreMinutes:profile.scoreSample?.minutes??p.minutes,scoreCompetitions:profile.scoreSample?.competitions.map(c=>c.competition)||[data.metadata.league_key],playerBaseScore:profile.baseScore,scorePosition:p.pos,scoreProfile:profile.profileKey,scoreProfileLabel:profile.profileLabel,fairPlay:profile.fairPlay,midfieldProfile:model.roles.get(p)};})};
  }
  const api={build,value,eligible,rankingAxes,withScores,positionLabels};if(node)module.exports=api;else root.GradaScores=api;
 })(typeof window==='object'?window:globalThis);

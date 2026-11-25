@@ -1,5 +1,11 @@
 # Arquitectura actual
 
+## Capa de temporada y posición canónica
+
+`competitions.js` agrega muestras verificadas de ligas/torneos por ID FotMob. `scopes.js` construye el ámbito seleccionado; `scores.js` proyecta el modelo de la referencia de temporada sobre sus filas, conservando IDs de presentación. Las posiciones originales se recuperan antes de agregar y `seasonPosition` documenta la decisión común. No hay unión por nombres ni selección del mejor score. Los contextos conservan contribuciones por proveedor y sus minutos; `rateContext` separa cobertura de recuentos y tasas.
+
+Los modelos y alineaciones se memorizan por identidad de datos con WeakMap, se invalidan al cargar fuentes y se renderiza la vista visible. Las capturas publicadas se revalidan por ETag; la actualización autenticada mantiene no-store. [Calidad y medición](QUALITY.md).
+
 ## Recorrido de los datos
 
 ```text

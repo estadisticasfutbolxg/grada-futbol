@@ -337,5 +337,98 @@
       "perthgloryfc": "perthglory"
     },
     "division": 1
+  },
+  {
+    "id": "champions-league",
+    "name": "Champions League",
+    "season": "2026/27",
+    "year": 2026,
+    "teams": 36,
+    "matches": 144,
+    "maxTeamMatches": 8,
+    "calendarPhase": "regular",
+    "fotmobId": 42,
+    "fotmobSeason": 47760,
+    "fotmobSlug": "champions-league",
+    "primary": "FotMob",
+    "metricPriority": [
+      "FotMob",
+      "ESPN"
+    ],
+    "espn": "uefa.champions",
+    "espnFile": "espn-champions-league-2026-27.json",
+    "kind": "tournament",
+    "teamAliases": {
+      "bodoglimt": "bodglimt",
+      "feyenoordrotterdam": "feyenoord",
+      "lasklinz": "lask",
+      "vikingfk": "viking"
+    }
+  },
+  {
+    "id": "europa-league",
+    "name": "Europa League",
+    "season": "2026/27",
+    "year": 2026,
+    "teams": 36,
+    "matches": 144,
+    "maxTeamMatches": 8,
+    "calendarPhase": "regular",
+    "fotmobId": 73,
+    "fotmobSeason": 47759,
+    "fotmobSlug": "europa-league",
+    "primary": "FotMob",
+    "metricPriority": [
+      "FotMob",
+      "ESPN"
+    ],
+    "espn": "uefa.europa",
+    "espnFile": "espn-europa-league-2026-27.json",
+    "kind": "tournament",
+    "teamAliases": {
+      "hapoelbeer": "hapoelbeersheva",
+      "lillestrom": "lillestrm",
+      "rbsalzburg": "salzburg",
+      "jagielloniabialystok": "jagielloniabiaystok",
+      "sksturmgraz": "sturmgraz"
+    }
+  },
+  {
+    "id": "conference-league",
+    "name": "Conference League",
+    "season": "2026/27",
+    "year": 2026,
+    "teams": 36,
+    "matches": 108,
+    "maxTeamMatches": 6,
+    "calendarPhase": "regular",
+    "fotmobId": 10216,
+    "fotmobSeason": 47761,
+    "fotmobSlug": "conference-league",
+    "primary": "FotMob",
+    "metricPriority": [
+      "FotMob",
+      "ESPN"
+    ],
+    "espn": "uefa.europa.conf",
+    "espnFile": "espn-conference-league-2026-27.json",
+    "kind": "tournament",
+    "teamAliases": {
+      "ajaxamsterdam": "ajax",
+      "skbrann": "brann",
+      "redstarbelgrade": "fkcrvenazvezda",
+      "kaagent": "gent",
+      "interdescaldes": "interclubdescaldes",
+      "sinttruidense": "sttruiden",
+      "fcnordsjlland": "nordsjlland",
+      "fclugano": "lugano",
+      "kupskuopio": "kups",
+      "mjallbyaif": "mjallby",
+      "csucraiova": "universitateacraiova",
+      "pafos": "pafosfc",
+      "kaunozalgiris": "fkkaunozalgiris",
+      "fcthun": "thun",
+      "lincolnredimps": "lincolnredimpsfc"
+    }
   }
 ]

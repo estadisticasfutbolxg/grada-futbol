@@ -52,11 +52,11 @@ def main():
                     fm+=['--input-dir',str(cached/'raw' if (cached/'raw').is_dir() else cached)]
                     espn+=['--input-dir',str(args.input_root/league['id']/'espn')]
                 run(fm);run(espn)
-                if args.squads or args.squads_root:
+                if league.get('kind') != 'tournament' and (args.squads or args.squads_root):
                     squads=[sys.executable,'scripts/enrich_squads.py','--league',league['id'],'--output-dir',str(stage)]
                     if args.squads_root:squads+=['--input-dir',str(args.squads_root/league['id'])]
                     run(squads)
-                if args.profiles or args.profiles_root or args.keeper_profiles:
+                if league.get('kind') != 'tournament' and (args.profiles or args.profiles_root or args.keeper_profiles):
                     enrich=[sys.executable,'scripts/enrich_fotmob.py','--league',league['id'],'--output-dir',str(stage)]
                     if args.keeper_profiles and not args.profiles:enrich+=['--keepers-only']
                     if args.profiles_root:enrich+=['--input-dir',str(args.profiles_root/league['id'])]
