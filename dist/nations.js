@@ -2,12 +2,16 @@
  'use strict';
  const node=typeof module==='object'&&module.exports,nationality=node?require('./nationality.js'):root.GradaNationality,formations=node?require('./formations.js'):root.GradaFormations,branding=node?require('./branding.js'):root.GradaBranding;
  const minimumScoreMinutes=node?require('./sampling.js').minimumScoreMinutes:root.GradaSampling.minimumScoreMinutes;
+ const leagues=node?require('./leagues.js'):root.GradaLeagues;
  const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const fmt=value=>Number.isFinite(value)?new Intl.NumberFormat('es-ES',{minimumFractionDigits:3,maximumFractionDigits:3}).format(value):'—';
  const method=formations.method,mean=formations.mean;
  const positions={POR:{label:'Portería'},DEF:{label:'Defensa y carriles'},MED:{label:'Centro del campo'},DEL:{label:'Delantera'}};
  function build(model){
-  const data=model.data,people=new Map(),countries=new Map();let known=0,conflicts=0,duplicateRecords=0;
+  const scope=leagues.group('europe-top7'),input=model.data;
+  const leagueKey=player=>player.league_key||input.metadata?.league_key;
+  const players=input.players.filter(p=>scope.leagueIds.includes(leagueKey(p))),data={...input,players},people=new Map(),countries=new Map();let known=0,conflicts=0,duplicateRecords=0;
+  const available=new Set([...(input.metadata?.leagues||[]).map(l=>l.id),input.metadata?.league_key,...players.map(leagueKey)]);
   for(const player of data.players){
    const country=nationality.info(player);if(!country)continue;known++;const person=String(country.context.player_id),profile=model.players.get(player),score=profile?.score;
    const row={person,player,country,score:Number.isFinite(score)&&score>=0&&score<=1?score:null,midfieldProfile:model.roles?.get(player)||null,profileLabel:profile?.profileLabel||player.pos};
@@ -29,7 +33,7 @@
    }));
   }
   const rows=[...countries.values()].sort((a,b)=>(b.score??-1)-(a.score??-1)||a.name.localeCompare(b.name,'es'));
-  return {method,countries:rows,data,coverage:{records:data.players.length,known,people:people.size-conflicts,duplicateRecords,conflicts,countries:rows.length,complete:rows.filter(c=>c.complete).length}};
+  return {method,scope:scope.id,countries:rows,data,coverage:{records:data.players.length,excludedRecords:input.players.length-data.players.length,availableLeagues:scope.leagueIds.filter(id=>available.has(id)).length,expectedLeagues:scope.leagueIds.length,known,people:people.size-conflicts,duplicateRecords,conflicts,countries:rows.length,complete:rows.filter(c=>c.complete).length}};
  }
  function label(value){
   if(!value)return '<span class="unavailable" title="Sin país deportivo publicado para esta identidad y club.">—</span>';

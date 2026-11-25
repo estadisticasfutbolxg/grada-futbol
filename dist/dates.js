@@ -23,7 +23,7 @@
   function snapshot(data,record=null){
     if(!data?.metadata)return [];
     if(!record&&cache.has(data))return cache.get(data);
-    const meta=data.metadata,leagues=meta.scope==='all'?meta.leagues:[{id:meta.league_key,name:meta.competition,sources:meta.sources||{[meta.source]:meta}}];
+    const meta=data.metadata,leagues=Array.isArray(meta.leagues)?meta.leagues:[{id:meta.league_key,name:meta.competition,sources:meta.sources||{[meta.source]:meta}}];
     const rows=[],index=new Map(),parsed=new Map();
     const recordSources=record?new Set([...Object.keys(record.sourceRecords||{}),...Object.values(record.fieldSources||{}),...Object.values(record.metricContexts||{}).map(context=>context?.source)]):null;
     if(recordSources&&!recordSources.size)recordSources.add(meta.primary_source||meta.source);
@@ -85,16 +85,18 @@
     function valid(id,source,value){return allowed.has(id)&&sourceNames.has(source)&&value&&['accepted','retained'].includes(value.status)&&timestamp(value.at)!==null;}
     try{
       const saved=JSON.parse(storage?.getItem(key)||'[]');
-      if(Array.isArray(saved))for(const item of saved.slice(0,allowed.size*sourceNames.size)){
+      if(Array.isArray(saved))for(const item of saved.slice(0,32*sourceNames.size)){
         if(Array.isArray(item)&&item.length===4){const [id,source,at,status]=item;if(valid(id,source,{at,status}))entries.set(id+':'+source,{at:timestamp(at),status});}
       }
     }catch(_){}
+    function persist(){try{storage?.setItem(key,JSON.stringify([...entries].map(([entry,value])=>{const split=entry.lastIndexOf(':');return [entry.slice(0,split),entry.slice(split+1),new Date(value.at).toISOString(),value.status];})));}catch(_){}}
+    persist();
     return {
       get:(id,source)=>entries.get(id+':'+source)||null,
       record(id,source,status,at=new Date().toISOString()){
         if(!valid(id,source,{status,at}))return false;
         entries.set(id+':'+source,{at:timestamp(at),status});
-        try{storage?.setItem(key,JSON.stringify([...entries].map(([entry,value])=>{const split=entry.lastIndexOf(':');return [entry.slice(0,split),entry.slice(split+1),new Date(value.at).toISOString(),value.status];})));}catch(_){}
+        persist();
         return true;
       }
     };

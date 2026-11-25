@@ -12,8 +12,8 @@ function harness(){
    const el=new Element();el.textContent=m[2].replace(/<[^>]*>/g,'');for(const attr of m[1].matchAll(/data-([\w-]+)="([^"]*)"/g))el.dataset[attr[1].replace(/-([a-z])/g,(_,c)=>c.toUpperCase())]=attr[2];
    const classes=/class="([^"]*)"/.exec(m[1])?.[1].split(' ')||[];el.classList.contains=c=>classes.includes(c);return el;
   });}
-  get labels(){return this.labelCache??=[...this.html.matchAll(/<label><input type="checkbox" value="([^"]*)"( checked)?><span>(.*?)<\/span><\/label>/g)].map(m=>{
-   const label=new Element(),input=new Element();input.value=m[1];input.checked=!!m[2];input.closest=s=>s==='input[type="checkbox"]'?input:null;label.textContent=m[3];label.input=input;return label;
+  get labels(){return this.labelCache??=[...this.html.matchAll(/<label><input type="checkbox" value="([^"]*)"( checked)?( disabled)?><span>(.*?)<\/span><\/label>/g)].map(m=>{
+   const label=new Element(),input=new Element();input.value=m[1];input.checked=!!m[2];input.disabled=!!m[3];input.closest=s=>s==='input[type="checkbox"]'?input:null;label.textContent=m[4].replace(/<[^>]*>/g,'');label.input=input;return label;
   });}
   get details(){return this.detailCache??=[...this.html.matchAll(/<details[^>]*id="([^"]*)"([^>]*)>/g)].map(m=>{const el=new Element();el.id=m[1];el.open=m[2].includes('open');return el;});}
   getBoundingClientRect(){return {left:100,top:100,bottom:130};}
@@ -25,8 +25,8 @@ function harness(){
  }
  const node=selector=>{if(!nodes.has(selector))nodes.set(selector,new Element());return nodes.get(selector);};
  const queryAll=selector=>{
-  if(selector==='#club-options label')return node('#club-options').labels;
-  if(selector==='#club-options input')return node('#club-options').labels.map(l=>l.input);
+  if(/^#(?:club|league)-options label$/.test(selector))return node(selector.split(' ')[0]).labels;
+  if(/^#(?:club|league)-options input$/.test(selector))return node(selector.split(' ')[0]).labels.map(l=>l.input);
   if(selector==='#team-comparison-body details')return node('#team-comparison-body').details;
   const match=/^\[data-([\w-]+)\]$/.exec(selector);
   return match?[...nodes.values()].flatMap(el=>el.buttons).filter(el=>Object.hasOwn(el.dataset,match[1].replace(/-([a-z])/g,(_,c)=>c.toUpperCase()))):[];

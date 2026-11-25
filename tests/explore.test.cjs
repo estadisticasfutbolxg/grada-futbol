@@ -17,8 +17,8 @@ test('multi-club filter uses OR over canonical IDs, preserves all on empty and n
  assert(explore.matchesTeams(data.teams[1],new Set(['2']),data.teams,{team:true}));assert(!explore.matchesTeams(data.teams[0],new Set(['2']),data.teams,{team:true}));
  assert(explore.matchesTeams(data.teams[0],new Set([clubs.multiKey]),data.teams,{team:true}));
  assert.deepEqual([...explore.selection(clubs.options(data),new Set(['1','stale']))],['1']);
- const all=scopes.aggregate([data,{...data,metadata:{...data.metadata,league_key:'b'}}]);
- assert(!explore.matchesTeams(all.players.find(p=>p.id==='b:POR0'),new Set(['a:1']),all.teams));
+ const all=scopes.aggregate([data,{...data,metadata:{...data.metadata,league_key:'premier-league'}}]);
+ assert(!explore.matchesTeams(all.players.find(p=>p.id==='premier-league:POR0'),new Set(['laliga:1']),all.teams));
 });
 test('comparison resolves distinct valid teams without mutating choices, including empty/single-team states',()=>{
  const data=fixture(),choices=['stale','1','1'];assert.deepEqual(explore.pair(data.teams,choices),['1','2']);assert.deepEqual(choices,['stale','1','1']);

@@ -13,8 +13,8 @@
     return '"'+text.replace(/"/g,'""')+'"';
   }
   function sourceURL(source,leagueId='laliga') {
-    if(leagueId==='all'&&source==='FotMob')return 'https://www.fotmob.com/';
-    if(leagueId==='all'&&source==='ESPN')return 'https://www.espn.com/soccer/';
+    if(leagues.group(leagueId)&&source==='FotMob')return 'https://www.fotmob.com/';
+    if(leagues.group(leagueId)&&source==='ESPN')return 'https://www.espn.com/soccer/';
     if(source==='FotMob'){const l=leagues.get(leagueId);return 'https://www.fotmob.com/leagues/'+l.fotmobId+'/stats/season/'+l.fotmobSeason+'/players/accurate_pass/'+l.fotmobSlug;}
     if(source==='ESPN'){const l=leagues.get(leagueId);return 'https://www.espn.com/soccer/standings/_/league/'+l.espn+'/season/2026';}
     return SOURCE_URLS[source] || '#';

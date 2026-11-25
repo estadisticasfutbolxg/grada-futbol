@@ -3,7 +3,7 @@ const test=require('node:test'),assert=require('node:assert/strict'),fs=require(
 const fairplay=require('../dist/fairplay.js'),radar=require('../dist/radar.js'),scores=require('../dist/scores.js'),metrics=require('../dist/metrics.js'),scopes=require('../dist/scopes.js');
 const date='2026-11-18T08:00:00Z',context=(minutes=900)=>({source:'FotMob',minutes,matches:10,captured_at:date});
 function cardRecord(yellow=0,red=0){return {pos:'DEF',minutes:9000,yellowCards:yellow,redCards:red,metricContexts:{yellowCards:context(),redCards:context()}};}
-function fixture(league='a'){
+function fixture(league='laliga'){
  const players=Array.from({length:12},(_,i)=>{
   const raw={id:String(i+1),team_id:'1',pos:'DEF',tacticalPositions:['LB'],tacticalContext:{source:'FotMob',identityVerified:true,player_id:String(i+1),team_id:'1',captured_at:date}},v=i+1;
   return {...cardRecord(),id:'combined:'+i,name:'Isolated fullback '+i,team_id:'t',team:'Isolated team',pos:'DEF',minutes:900,matches:10,tackles:v,interceptions:13-v,recoveries:2*v,goals:v,xg:v/2,xa:v/3,clearances:v,blocks:v,completed:300+v,sourceRecords:{FotMob:raw}};
@@ -51,8 +51,8 @@ test('a fullback has one mixed radar, its own peer group and measurable offensiv
  p.sourceRecords.FotMob.tacticalPositions=['CB','RB'];const mixed=scores.build(data);for(const key of ['DEF','DEF_CB','DEF_FB']){assert(scores.eligible(mixed,p,radar.definition(key)));assert.equal(scores.value(mixed,p,radar.definition(key)),mixed.players.get(p).score);}
 });
 test('discipline does not change midfield classification, and all scopes/teams use the same adjusted score',()=>{
- const a=fixture('a'),b=fixture('b'),p=a.players[0];p.yellowCards=2;p.redCards=1;
- const reference=scopes.aggregate([a,b]),all=scores.build(reference),local=scores.build(a,{referencePlayers:reference.players}),joined=reference.players.find(q=>q.id==='a:'+p.id),profile=local.players.get(p);
+ const a=fixture('laliga'),b=fixture('premier-league'),p=a.players[0];p.yellowCards=2;p.redCards=1;
+ const reference=scopes.aggregate([a,b]),all=scores.build(reference),local=scores.build(a,{referencePlayers:reference.players}),joined=reference.players.find(q=>q.id==='laliga:'+p.id),profile=local.players.get(p);
  assert.equal(profile.score,all.players.get(joined).score);assert(profile.score<profile.baseScore);assert.equal(radar.profile(p,reference.players).score,profile.score);
  const member=local.overall.teams.get('t').players.find(m=>m.id===p.id);assert.equal(member.area,profile.score);assert.equal(member.baseScore,profile.baseScore);assert.equal(member.fairPlayStatus,'verified');
  const before=JSON.stringify(a),generated=scores.withScores(a,{referencePlayers:reference.players});assert.equal(JSON.stringify(a),before);assert.equal(generated.players[0].playerBaseScore,profile.baseScore);assert.equal(generated.players[0].playerScore,profile.score);assert.equal(generated.players[0].fairPlay.factor,profile.fairPlay.factor);assert.equal(generated.metadata.derived_metrics.playerScore.method,'role_fairplay_radar_v6');

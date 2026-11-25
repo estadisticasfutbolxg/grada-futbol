@@ -3,17 +3,17 @@
 > Definición vigente desde el 19 de noviembre: [score único por jugador con ejes de su perfil, referencia común, promedios de equipo y totales con cobertura](docs/SCORES.md). El perfil MED y el puesto de lateral seleccionan los ejes; juego limpio aplica una penalización lineal con tarjetas verificadas y mayor peso de las rojas. Cambiar de ranking no recalcula el score.
 
 
-Web en español de estadísticas, perfiles y rankings por score del radar de jugadores y equipos. El selector ofrece **22 ligas combinadas de 15 países**, más **Todas las ligas** (incluidas primeras y segundas divisiones verificadas), temporada 2026/27. HTML/CSS/JavaScript en `dist/`, Python estándar para descargar datos reales y generar SQLite gratuitos.
+Web en español de estadísticas, perfiles y rankings por score del radar de jugadores y equipos. El selector ofrece **15 primeras divisiones combinadas**, con selección múltiple, **Todas las ligas** y **7 principales ligas europeas**, temporada 2026/27. HTML/CSS/JavaScript en `dist/`, Python estándar para descargar datos reales y generar SQLite gratuitos.
 
 ## Datos reales y fuentes
 
 Desde el 24 de noviembre, la aplicación activa usa **solo FotMob y ESPN**, incluido el catálogo de LaLiga y todos los scores. Understat queda archivado; las referencias anteriores de esta documentación son históricas. Los xG de equipo no publicados de LaLiga se muestran como desconocidos, con cobertura parcial explícita. Se conservan los enlaces antiguos mediante un mapa de IDs verificados.
 
-La columna Nacionalidad y el apartado **Selecciones** reúnen países publicados por FotMob y onces teóricos elegidos entre siete sistemas coherentes, con contención, creación y score como media simple de sus once titulares. [Cobertura, procedencia, fórmula y generadores](docs/NATIONS.md). Son simulaciones con las ligas disponibles; no convocatorias oficiales.
+La columna Nacionalidad y el apartado **Selecciones** reúnen países publicados por FotMob y onces teóricos elegidos entre siete sistemas coherentes, con contención, creación y score como media simple de sus once titulares. [Cobertura, procedencia, fórmula y generadores](docs/NATIONS.md). Los candidatos proceden solo de LaLiga, Premier League, Serie A, Bundesliga, Ligue 1, Liga Portugal y Eredivisie; se agrupan países de todo el mundo. Son simulaciones, no convocatorias oficiales.
 
 Todas las ligas usan catálogo y prioridad FotMob → ESPN, incluidos xG/xA FotMob, tras comprobar las mismas familias de métricas de pase, ataque, defensa y portería. Los goles admiten un recuento distinto de mayor cobertura o, con iguales PJ, captura posterior, con fuente y fecha explícitas. Understat conserva su código e importador archivados para una reactivación futura. Los modelos, capturas, PJ y minutos de cada campo se conservan. No hay datos de demostración; las ausencias siguen `null`.
 
-Las capturas verificadas reúnen 9.766 fichas jugador/liga y 398 equipos. Los percentiles usan una referencia común de las ligas cargadas. Hay rankings de delanteros, porteros, defensas, centrales, laterales y perfiles MED ofensivo/defensivo/equilibrado; los equipos usan promedios ponderados de esos mismos scores. Los scores individuales requieren todos los ejes de su posición/perfil. Consulta [ligas y rankings](docs/LEAGUES.md), [combinación](docs/COMBINED.md) y [estado publicado](docs/STATUS.md).
+Las capturas verificadas reúnen 6.044 fichas jugador/liga y 248 equipos. Los percentiles usan una referencia común de las ligas cargadas. Hay rankings de delanteros, porteros, defensas, centrales, laterales y perfiles MED ofensivo/defensivo/equilibrado; los equipos usan promedios ponderados de esos mismos scores. Los scores individuales requieren todos los ejes de su posición/perfil. Consulta [ligas y rankings](docs/LEAGUES.md), [combinación](docs/COMBINED.md) y [estado publicado](docs/STATUS.md).
 
 ## Generar la web y las bases
 
@@ -46,7 +46,7 @@ El panel **Datos cargados** de cada vista muestra las fechas de captura por fuen
 - Rankings de equipos por ataque, defensa, rendimiento global y centros del campo ofensivos/defensivos.
 - Filtros por minutos, goles y otras métricas, búsqueda, ordenación, perfiles y comparador.
 - Scores individuales e índices de perfil entre 0 y 1; promedios de plantilla/posiciones ponderados por minutos con cobertura y contribuciones en ficha y JSON generado.
-- Inicio con bloques de defensas individuales, equipos ofensivos/defensivos y centrocampistas/centros del campo ofensivos/defensivos. Racing de Santander aparece también con su nombre completo de búsqueda.
+- Inicio con bloques de defensas individuales, equipos ofensivos/defensivos y centrocampistas/centros del campo ofensivos/defensivos.
 - Rankings de jugadores antes que equipos, con campos y fechas de origen. Los guiones explican por qué falta un valor.
 
 Actualizar datos consulta todas las fuentes aplicables y conserva cada captura que falle. Las fichas FotMob amplían pases, posiciones, tiros y xGOT del portero; su eficacia frente al xGOT participa en el score. El score de equipo y de posiciones es un promedio ponderado por minutos. Sites ejecuta el Worker de consultas; Python sigue siendo el generador externo de artefactos. Consulta [actualización y fórmulas](docs/REFRESH.md).

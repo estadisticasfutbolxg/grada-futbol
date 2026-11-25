@@ -26,7 +26,8 @@
     "optionalMetrics": [
       "equipos: xg",
       "equipos: xga"
-    ]
+    ],
+    "division": 1
   },
   {
     "id": "premier-league",
@@ -41,7 +42,8 @@
     "fotmobSlug": "premier-league",
     "primary": "FotMob",
     "espnFile": "espn-premier-league-2026-27.json",
-    "espnName": "English Premier League"
+    "espnName": "English Premier League",
+    "division": 1
   },
   {
     "id": "serie-a",
@@ -56,7 +58,8 @@
     "fotmobSlug": "serie-a",
     "primary": "FotMob",
     "espnFile": "espn-serie-a-2026-27.json",
-    "espnName": "Italian Serie A"
+    "espnName": "Italian Serie A",
+    "division": 1
   },
   {
     "id": "bundesliga",
@@ -71,7 +74,8 @@
     "fotmobSlug": "bundesliga",
     "primary": "FotMob",
     "espnFile": "espn-bundesliga-2026-27.json",
-    "espnName": "German Bundesliga"
+    "espnName": "German Bundesliga",
+    "division": 1
   },
   {
     "id": "ligue-1",
@@ -86,7 +90,8 @@
     "fotmobSlug": "ligue-1",
     "primary": "FotMob",
     "espnFile": "espn-ligue-1-2026-27.json",
-    "espnName": "French Ligue 1"
+    "espnName": "French Ligue 1",
+    "division": 1
   },
   {
     "id": "portugal",
@@ -108,7 +113,8 @@
       "cdnacional": "nacional",
       "academicodeviseu": "academicoviseu",
       "casapia": "casapiaac"
-    }
+    },
+    "division": 1
   },
   {
     "id": "eredivisie",
@@ -129,116 +135,8 @@
       "feyenoordrotterdam": "feyenoord",
       "heerenveen": "scheerenveen",
       "sccambuur": "cambuur"
-    }
-  },
-  {
-    "id": "championship",
-    "name": "Championship",
-    "season": "2026/27",
-    "year": 2026,
-    "teams": 24,
-    "matches": 552,
-    "maxTeamMatches": 46,
-    "espn": "eng.2",
-    "fotmobId": 48,
-    "fotmobSeason": 1000000498,
-    "fotmobSlug": "championship",
-    "primary": "FotMob",
-    "espnFile": "espn-championship-2026-27.json",
-    "espnName": "English League Championship"
-  },
-  {
-    "id": "bundesliga-2",
-    "name": "2. Bundesliga",
-    "season": "2026/27",
-    "year": 2026,
-    "teams": 18,
-    "matches": 306,
-    "maxTeamMatches": 34,
-    "espn": "ger.2",
-    "fotmobId": 146,
-    "fotmobSeason": 40044,
-    "fotmobSlug": "2-bundesliga",
-    "primary": "FotMob",
-    "espnFile": "espn-bundesliga-2-2026-27.json",
-    "espnName": "German 2. Bundesliga",
-    "teamAliases": {
-      "vflwolfsburg": "wolfsburg",
-      "1fcmagdeburg": "magdeburg",
-      "vflbochum": "bochum",
-      "spvgggreutherfurth": "greutherfurth",
-      "herthaberlin": "herthabsc",
-      "tsveintrachtbraunschweig": "eintrachtbraunschweig",
-      "svdarmstadt98": "darmstadt",
-      "1fcheidenheim1846": "fcheidenheim"
-    }
-  },
-  {
-    "id": "ligue-2",
-    "name": "Ligue 2",
-    "season": "2026/27",
-    "year": 2026,
-    "teams": 18,
-    "matches": 306,
-    "maxTeamMatches": 34,
-    "espn": "fra.2",
-    "fotmobId": 110,
-    "fotmobSeason": 37299,
-    "fotmobSlug": "ligue-2",
-    "primary": "FotMob",
-    "espnFile": "espn-ligue-2-2026-27.json",
-    "espnName": "French Ligue 2",
-    "teamAliases": {
-      "dijonfco": "dijon",
-      "stadelaval": "laval",
-      "stadedereims": "reims",
-      "redstarfc93": "redstar",
-      "asnancylorraine": "nancy",
-      "annecy": "annecyfc",
-      "rodezaveyron": "rodez"
-    }
-  },
-  {
-    "id": "serie-b",
-    "name": "Serie B",
-    "season": "2026/27",
-    "year": 2026,
-    "teams": 20,
-    "matches": 380,
-    "maxTeamMatches": 38,
-    "espn": "ita.2",
-    "fotmobId": 86,
-    "fotmobSeason": 1000000670,
-    "fotmobSlug": "serie-b",
-    "primary": "FotMob",
-    "espnFile": "espn-serie-b-2026-27.json",
-    "espnName": "Italian Serie B",
-    "teamAliases": {
-      "usavellino": "avellino"
-    }
-  },
-  {
-    "id": "laliga-2",
-    "name": "LaLiga2",
-    "season": "2026/27",
-    "year": 2026,
-    "teams": 22,
-    "matches": 462,
-    "maxTeamMatches": 42,
-    "espn": "esp.2",
-    "fotmobId": 140,
-    "fotmobSeason": 1000002232,
-    "fotmobSlug": "laliga2",
-    "primary": "FotMob",
-    "espnFile": "espn-laliga-2-2026-27.json",
-    "espnName": "Spanish LALIGA 2",
-    "teamAliases": {
-      "rcceltafortuna": "celtafortuna",
-      "ceuta": "adceutafc",
-      "burgos": "burgoscf",
-      "realsociedadii": "realsociedadb",
-      "cdsabadell": "sabadell"
-    }
+    },
+    "division": 1
   },
   {
     "id": "belgium",
@@ -267,7 +165,8 @@
       "oudheverleeleuven": "ohleuven",
       "kvkortrijk": "kortrijk",
       "cerclebruggeksv": "cerclebrugge"
-    }
+    },
+    "division": 1
   },
   {
     "id": "scotland",
@@ -287,7 +186,8 @@
     "calendarPhase": "regular",
     "teamAliases": {
       "dundee": "dundeefc"
-    }
+    },
+    "division": 1
   },
   {
     "id": "turkey",
@@ -310,7 +210,8 @@
       "amedsfk": "amedsportif",
       "erzurumbb": "erzurumsporfk",
       "kasimpasa": "kasmpasa"
-    }
+    },
+    "division": 1
   },
   {
     "id": "saudi-arabia",
@@ -330,7 +231,8 @@
     "teamAliases": {
       "alnassr": "alnassrfc",
       "alfateh": "alfatehfc"
-    }
+    },
+    "division": 1
   },
   {
     "id": "denmark",
@@ -355,7 +257,8 @@
       "viborgff": "viborg",
       "lyngbyboldklub": "lyngby",
       "snderjyskefodbold": "snderjyske"
-    }
+    },
+    "division": 1
   },
   {
     "id": "austria",
@@ -384,7 +287,8 @@
       "tsvhartberg": "hartberg",
       "sksturmgraz": "sturmgraz",
       "wolfsberger": "wolfsbergerac"
-    }
+    },
+    "division": 1
   },
   {
     "id": "greece",
@@ -408,39 +312,8 @@
       "paok": "paokthessaloniki",
       "asterastripoli": "asterastripolis",
       "volosnfc": "nfcvolos"
-    }
-  },
-  {
-    "id": "league-one",
-    "name": "League One",
-    "season": "2026/27",
-    "year": 2026,
-    "teams": 24,
-    "matches": 552,
-    "maxTeamMatches": 46,
-    "espn": "eng.3",
-    "fotmobId": 108,
-    "fotmobSeason": 1000000503,
-    "fotmobSlug": "league-one",
-    "primary": "FotMob",
-    "espnFile": "espn-league-one-2026-27.json",
-    "espnName": "English League One"
-  },
-  {
-    "id": "league-two",
-    "name": "League Two",
-    "season": "2026/27",
-    "year": 2026,
-    "teams": 24,
-    "matches": 552,
-    "maxTeamMatches": 46,
-    "espn": "eng.4",
-    "fotmobId": 109,
-    "fotmobSeason": 1000000505,
-    "fotmobSlug": "league-two",
-    "primary": "FotMob",
-    "espnFile": "espn-league-two-2026-27.json",
-    "espnName": "English League Two"
+    },
+    "division": 1
   },
   {
     "id": "a-league",
@@ -462,6 +335,7 @@
       "adelaideunitedfc": "adelaideunited",
       "centralcoastmarinersfc": "centralcoastmariners",
       "perthgloryfc": "perthglory"
-    }
+    },
+    "division": 1
   }
 ]

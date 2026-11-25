@@ -11,11 +11,6 @@
     'ligue-1':{code:'fr',name:'Francia'},
     portugal:{code:'pt',name:'Portugal'},
     eredivisie:{code:'nl',name:'Países Bajos'},
-    championship:{code:'gb-eng',name:'Inglaterra'},
-    'bundesliga-2':{code:'de',name:'Alemania'},
-    'ligue-2':{code:'fr',name:'Francia'},
-    'serie-b':{code:'it',name:'Italia'},
-    'laliga-2':{code:'es',name:'España'},
     belgium:{code:'be',name:'Bélgica'},
     scotland:{code:'gb-sct',name:'Escocia'},
     turkey:{code:'tr',name:'Turquía'},
@@ -23,8 +18,6 @@
     denmark:{code:'dk',name:'Dinamarca'},
     austria:{code:'at',name:'Austria'},
     greece:{code:'gr',name:'Grecia'},
-    'league-one':{code:'gb-eng',name:'Inglaterra'},
-    'league-two':{code:'gb-eng',name:'Inglaterra'},
     'a-league':{code:'au',name:'Australia'}
   };
   const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -34,12 +27,13 @@
     const item=country(league);
     return item?'<img class="country-flag" data-country-flag src="/assets/flags/'+item.code+'.svg" width="20" height="15" alt="" aria-hidden="true">':'';
   }
-  function countryLabel(league){
+  function countryLabel(league,leagueIds=[]){
     const item=country(league);
     if(item)return '<span class="country-identity" title="País de la competición: '+item.name+'">'+flag(league)+'<span>'+item.name+'</span></span>';
-    if(league==='all'){
-      const unique=leagues.list().map(l=>l.id).filter(key=>Object.hasOwn(countries,key)).filter((key,i,keys)=>keys.findIndex(k=>countries[k].code===countries[key].code)===i);
-      return '<span class="country-identity" title="'+unique.map(key=>countries[key].name).join(', ')+'"><span class="league-flags" aria-hidden="true">'+unique.slice(0,5).map(flag).join('')+'</span><span>'+unique.length+' países</span></span>';
+    if(leagues.group(league)){
+      const unique=leagues.members(league,leagueIds).map(l=>l.id).filter(key=>Object.hasOwn(countries,key)).filter((key,i,keys)=>keys.findIndex(k=>countries[k].code===countries[key].code)===i);
+      if(!unique.length)return '';
+      return '<span class="country-identity" title="'+unique.map(key=>countries[key].name).join(', ')+'"><span class="league-flags" aria-hidden="true">'+unique.slice(0,5).map(flag).join('')+'</span><span>'+unique.length+(unique.length===1?' país':' países')+'</span></span>';
     }
     return '';
   }
