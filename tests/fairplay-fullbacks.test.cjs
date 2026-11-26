@@ -55,7 +55,7 @@ test('discipline does not change midfield classification, and all scopes/teams u
  const reference=scopes.aggregate([a,b]),all=scores.build(reference),local=scores.build(a,{referencePlayers:reference.players}),joined=reference.players.find(q=>q.id==='laliga:'+p.id),profile=local.players.get(p);
  assert.equal(profile.score,all.players.get(joined).score);assert(profile.score<profile.baseScore);assert.equal(radar.profile(p,reference.players).score,profile.score);
  const member=local.overall.teams.get('t').players.find(m=>m.id===p.id);assert.equal(member.area,profile.score);assert.equal(member.baseScore,profile.baseScore);assert.equal(member.fairPlayStatus,'verified');
- const before=JSON.stringify(a),generated=scores.withScores(a,{referencePlayers:reference.players});assert.equal(JSON.stringify(a),before);assert.equal(generated.players[0].playerBaseScore,profile.baseScore);assert.equal(generated.players[0].playerScore,profile.score);assert.equal(generated.players[0].fairPlay.factor,profile.fairPlay.factor);assert.equal(generated.metadata.derived_metrics.playerScore.method,'role_fairplay_radar_v10');
+ const before=JSON.stringify(a),generated=scores.withScores(a,{referencePlayers:reference.players});assert.equal(JSON.stringify(a),before);assert.equal(generated.players[0].playerBaseScore,profile.baseScore);assert.equal(generated.players[0].playerScore,profile.score);assert.equal(generated.players[0].fairPlay.factor,profile.fairPlay.factor);assert.equal(generated.metadata.derived_metrics.playerScore.method,'role_fairplay_radar_v11');
  const repeated=scores.withScores(generated,{referencePlayers:reference.players});assert.equal(repeated.players[0].playerScore,profile.score,'Reopening a generated capture must not apply discipline twice');
  const cleaned=scopes.aggregate([generated]);assert(!Object.hasOwn(cleaned.players[0],'fairPlay'));assert(!Object.hasOwn(cleaned.players[0],'playerBaseScore'));
  const mids=fixture();for(const q of mids.players){q.pos='MED';q.chancesCreated=q.goals;q.bigChancesCreated=q.goals;q.shotsOnTargetPer90=q.goals;q.dribblesPer90=q.goals;q.accuracy=80;q.lineBreakingPasses=q.recoveries;}
@@ -67,11 +67,11 @@ test('rendered radar distinguishes polygon base, fair play adjustment and unknow
  const html=root.GradaComponents.radar(p,data.players,data.metadata,profile);assert(html.includes('Lateral / carrilero · ataque y defensa'));assert(html.includes('Base del score'));assert(html.includes('Aporte ofensivo'));assert(html.includes('Asistencias /90 · sin dato'));assert(html.includes('2 amarillas y 1 roja'));assert(html.includes('× factor'));assert(html.includes('10 amarillas'));assert(html.includes('penalización lineal'));assert(html.includes('Descuento por amarillas: 2 %; por rojas: 10 %'));assert(html.includes('No estima sanciones cumplidas ni minutos en inferioridad'));assert(!html.includes('ajuste limitado al 10'));
  p.redCards=null;const unknown=scores.build(data).players.get(p),note=root.GradaComponents.fairPlayNote(p,data.metadata,unknown);assert(note.includes('sin ajuste'));assert(note.includes('faltan tarjetas verificadas'));assert(!note.includes('0 rojas'));
 });
-test('old cached derived scores are rebuilt with v10 and never used as another penalty base',()=>{
+test('old cached derived scores are rebuilt with v11 and never used as another penalty base',()=>{
  const data=fixture(),p=data.players[0];p.yellowCards=5;p.redCards=1;
  const fresh=scores.withScores(data),stale=structuredClone(data);
  stale.metadata.derived_metrics={playerScore:{method:'role_fairplay_radar_v4'}};
  for(const q of stale.players){q.playerScore=0.99;q.playerBaseScore=0.99;q.fairPlay={method:'old',factor:0.99};}
- const rebuilt=scores.withScores(stale);assert.equal(rebuilt.metadata.derived_metrics.playerScore.method,'role_fairplay_radar_v10');
+ const rebuilt=scores.withScores(stale);assert.equal(rebuilt.metadata.derived_metrics.playerScore.method,'role_fairplay_radar_v11');
  for(let i=0;i<data.players.length;i++){assert.equal(rebuilt.players[i].playerScore,fresh.players[i].playerScore);assert.equal(rebuilt.players[i].playerBaseScore,fresh.players[i].playerBaseScore);}
 });

@@ -17,7 +17,7 @@ test('report rendering labels insufficient samples, escapes names and never impl
  assert.throws(()=>V.validate({metadata:{competition:'Other'}}));assert.equal(csvCell('=HYPERLINK(1)'), '"\'=HYPERLINK(1)"');assert.equal(csvCell(-2),'"-2"');
 });
 
-test('grouped reports distinguish proposed axis weights, group allocation and the unchanged score',()=>{
+test('grouped reports distinguish proposed axis weights, group allocation and the approved score policy',()=>{
  const m={key:'DEF',label:'Defensas',n:25,matched:25,status:'fitted',clubs:10,alpha:1,validation:{mae:5,r2:0.5},minutes_only:{mae:7},constant_features:[],ols_status:'insufficient_sample',exclusion_counts:{},excluded:[],players:[{name:'A',team:'B',points:5,predicted_oof:4}],feature_labels:{goals:'Goles <90>',assists:'Asistencias'},correlation:{features:['goals','assists'],matrix:[[1,0.9],[0.9,1]],threshold:0.8},groups:[{id:'G1',members:['goals','assists'],signs:[1,1],size:2,min_abs_correlation:0.9,ridge:10}],coefficients:['goals','assists'].map(key=>({key,label:key,kind:'axis',group:'G1',group_size:2,ridge_standardized:5,ridge_raw:2,sign_stability:1,suggested_axis_share:0.5}))};
- const html=V.model({models:[m]},'DEF');assert.match(html,/Matriz de correlaciones/);assert.match(html,/Pesos orientativos/);assert.match(html,/50 %/);assert.match(html,/no cambian/);assert.match(html,/no son efectos individuales/);assert(!html.includes('Goles <90>'));assert(html.includes('Goles &lt;90&gt;'));
+ const html=V.model({models:[m]},'DEF');assert.match(html,/Matriz de correlaciones/);assert.match(html,/Pesos orientativos/);assert.match(html,/50 %/);assert.match(html,/Pesos ofensivos aplicados al score/);assert.match(html,/Este reparto alternativo no se utiliza/);assert.match(html,/no son efectos individuales/);assert(!html.includes('Goles <90>'));assert(html.includes('Goles &lt;90&gt;'));
 });

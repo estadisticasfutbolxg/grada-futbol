@@ -11,18 +11,19 @@ function fieldPlayers(pos){
 }
 
 test('each attack metric affects the score in its own position and respects the defensive weight cap',()=>{
- for(const [pos,weight] of [['DEF',0.05],['DEL',0.35]]){
+ for(const pos of ['DEF','DEL']){
   const peers=fieldPlayers(pos);
   const other=fieldPlayers(pos==='DEF'?'DEL':'DEF').map(p=>({...p,goals:99,assists:99,xg:99,xa:99}));
   const baseline=peers[0],initial=radar.profile(baseline,peers);
-  assert.equal(initial.attack.maxWeight,weight);
+  assert.equal(initial.attack.maxWeight,radar.attackWeights[pos]);
   for(const key of ['goals','assists','xg','xa']){
    const player={...baseline,[key]:10},alone=radar.profile(player,peers),mixed=radar.profile(player,[...peers,...other]);
    assert.equal(mixed.score,alone.score);
    assert.equal(mixed.area,initial.area);
+   const weight=radar.weightCalibration.byProfile[pos].weights[key];
    const result=mixed.attack.entries.find(entry=>entry.key===key);
-   assert.deepEqual(result,{key,value:1,percentile:100,referenceCount:6,weight:weight/4});
-   assert(Math.abs(mixed.score-initial.score-weight/4*(1-(1/12)**2))<1e-12);
+   assert.deepEqual(result,{key,value:1,percentile:100,referenceCount:6,weight});
+   assert(Math.abs(mixed.score-initial.score-weight*(1-(1/12)**2))<1e-12);
   }
  }
 });
@@ -35,8 +36,8 @@ test('verified sample minutes govern offensive ranks, retain real zeros and retu
  assert.equal(goals.value,1.8);assert.equal(goals.percentile,100);
  assert.equal(assists.value,0);assert(assists.percentile>0);
  assert.equal(xg.percentile,null);assert.equal(xa.percentile,null);
- assert.equal(profile.attack.usedWeight,0.025);
- const expected=profile.area*0.975+0.0125*(1+(assists.percentile/100)**2);
+ const w=radar.weightCalibration.byProfile.DEF.weights;assert.equal(profile.attack.usedWeight,w.goals+w.assists);
+ const expected=profile.area*(1-w.goals-w.assists)+w.goals+w.assists*(assists.percentile/100)**2;
  assert(Math.abs(profile.baseScore-expected)<1e-12);
  const noAttack=radar.profile(player,peers.map((p,i)=>i<2?{...p,minutes:199}:p));
  assert.equal(noAttack.attack.usedWeight,0);
@@ -67,10 +68,10 @@ test('fullbacks retain defensive and attacking vision, optional attack does not 
  const peers=fieldPlayers('DEF').map(p=>({...p,sourceRecords:{FotMob:{id:p.id,team_id:p.team_id,pos:'DEF',tacticalPositions:['LB'],tacticalContext:{source:'FotMob',identityVerified:true,player_id:p.id,team_id:p.team_id,captured_at:'2026-11-25T10:00:00Z'}}}}));
  const player=peers[2],profile=radar.profile(player,peers);
  assert.deepEqual(profile.displayAxes.map(a=>a.key),['tackles','interceptions','recoveries','goals','xg','xa','assists']);
- assert.equal(profile.attack.maxWeight,0.15);
+ assert.equal(profile.attack.maxWeight,radar.attackWeights.DEF_FB);
  const missing=radar.profile({...player,assists:null,xg:null},peers);
  assert(Number.isFinite(missing.score));assert.deepEqual(missing.displayMissingAxes,['xg','assists']);
- assert.equal(missing.attack.usedWeight,0.075);
+ const w=radar.weightCalibration.byProfile.DEF_FB.weights;assert.equal(missing.attack.usedWeight,w.goals+w.xa);
  assert(!missing.displayAxes.some(a=>['xg','assists'].includes(a.key)));
  const zeros=radar.profile({...player,goals:0,assists:0,xg:0,xa:0},peers);
  assert.equal(zeros.displayAxes.filter(a=>radar.attackKeys.includes(a.key)&&a.value===0).length,4);
@@ -92,4 +93,14 @@ test('every outfield profile shows goals and assists while goalkeepers retain th
  const keeper=radar.profile(keepers[0],keepers);
  assert.deepEqual(keeper.displayAxes,keeper.axes);
  assert(!keeper.displayAxes.some(a=>radar.attackKeys.includes(a.key)));
+});
+
+test('approved Fantasy weights preserve distinct positive magnitudes for each metric and position',()=>{
+ const w=radar.weightCalibration.byProfile;
+ assert(Math.abs(w.DEF.weights.goals-0.17368364711912673)<1e-12);
+ assert(Math.abs(w.DEF.weights.assists-0.05048474909765729)<1e-12);
+ assert.equal(w.DEF.directions.assists,-1);assert(w.DEF.weights.assists>0);
+ assert.notEqual(w.DEF.weights.goals,w.DEL.weights.goals);
+ assert(Object.isFrozen(w.DEF.weights));
+ for(const p of Object.values(w)){assert(Object.values(p.weights).every(v=>v>=0));assert(Object.values(p.weights).reduce((s,v)=>s+v,0)<1);}
 });
