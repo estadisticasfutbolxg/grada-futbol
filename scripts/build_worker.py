@@ -86,7 +86,7 @@ def build():
 
     entry = include(ROOT / 'worker/app.cjs')
     assets = {}
-    client_files = ['index.html','style.css','leagues.json','leagues.js','metrics.js','sampling.js','fairplay.js','security.js','understat.js','laliga.js','roles.js','nationality.js','fotmob.js','identity.js','positions.js','combined.js','competitions.js','scopes.js','clubs.js','branding.js','filters.js','radar.js','squads.js','scores.js','formations.js','nations.js','explore.js','components.js','profiles.js','refresh.js','owner.js','dates.js','app.js']
+    client_files = ['index.html','style.css','leagues.json','leagues.js','metrics.js','sampling.js','fairplay.js','security.js','understat.js','laliga.js','roles.js','nationality.js','fotmob.js','identity.js','positions.js','combined.js','competitions.js','scopes.js','clubs.js','branding.js','filters.js','radar.js','squads.js','scores.js','formations.js','nations.js','explore.js','components.js','profiles.js','refresh.js','owner.js','dates.js','fantasy-analysis.js','app.js']
     files = [ROOT / 'dist' / filename for filename in client_files]
     client_bodies = {filename: (ROOT / 'dist' / filename).read_bytes() for filename in client_files}
     # Preserve the source script order in one immutable browser request. Individual
@@ -118,6 +118,15 @@ def build():
             if not path.is_file():
                 raise ValueError('Missing real source capture: ' + filename)
             files.append(path)
+    for extension in ['json', 'html', 'csv']:
+        report = ROOT / 'dist/downloads' / ('fantasy-regression-laliga-2026-27.' + extension)
+        if not report.is_file():
+            raise ValueError('Missing generated LaLiga Fantasy report')
+        files.append(report)
+    analysis_input = ROOT / 'dist/downloads/fantasy-regression-input-laliga-2026-27.json'
+    if not analysis_input.is_file():
+        raise ValueError('Missing auditable Fantasy regression input')
+    files.append(analysis_input)
     # Only bounded local PNG crests and reviewed vector flags are deployable images.
     asset_root = (ROOT / 'dist/assets').resolve()
     for path in sorted((asset_root / 'clubs').glob('*.png')):
@@ -133,7 +142,7 @@ def build():
     files.append(asset_root / 'flags/LICENSE.txt')
     for path in files:
         body = client_bodies.get(path.name) if path.parent == ROOT / 'dist' else path.read_bytes()
-        mime = {'.html': 'text/html', '.css': 'text/css', '.js': 'text/javascript', '.json': 'application/json', '.png': 'image/png', '.svg': 'image/svg+xml', '.txt': 'text/plain'}[path.suffix]
+        mime = {'.html': 'text/html', '.css': 'text/css', '.js': 'text/javascript', '.json': 'application/json', '.png': 'image/png', '.svg': 'image/svg+xml', '.txt': 'text/plain', '.csv': 'text/csv; charset=utf-8'}[path.suffix]
         content_type = mime if path.suffix == '.png' else mime + '; charset=utf-8'
         assets['/' + path.relative_to(ROOT / 'dist').as_posix()] = {'type': content_type, 'sha': hashlib.sha256(body).hexdigest(), 'gzip': base64.b64encode(gzip.compress(body, mtime=0)).decode()}
     # ID aliases preserve bookmarks without serving the archived provider data.
