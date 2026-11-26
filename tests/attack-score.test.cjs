@@ -48,3 +48,48 @@ test('verified sample minutes govern offensive ranks, retain real zeros and retu
  const model=scores.build(data);
  assert(['goals','assists','xg','xa'].every(key=>scores.rankingAxes(model,radar.definition('DEF')).includes(key)));
 });
+
+test('the original attacking axes remain visible without promoting fallback shots to a requirement',()=>{
+ const peers=fieldPlayers('DEL'),player={...peers[2],shots:null};
+ const profile=radar.profile(player,peers);
+ assert(Number.isFinite(profile.score));
+ assert.deepEqual(profile.expectedAxes,['shotsOnTargetPer90','dribblesPer90','conversion']);
+ assert.deepEqual(profile.displayAxes.map(a=>a.key),['goals','xg','shotsOnTargetPer90','xa','dribblesPer90','conversion','assists']);
+ assert(!profile.missingAxes.includes('shots'));
+ const changed=radar.profile({...player,goals:10},peers);
+ assert.equal(changed.area,profile.area,'attack cannot enter the non-attack area');
+ const goal=changed.attack.entries.find(a=>a.key==='goals'),oldGoal=profile.attack.entries.find(a=>a.key==='goals');
+ assert(Math.abs(changed.score-profile.score-goal.weight*((goal.percentile/100)**2-(oldGoal.percentile/100)**2))<1e-12);
+ assert.notEqual(changed.displayArea,profile.displayArea,'the restored visible axis still changes shape');
+});
+
+test('fullbacks retain defensive and attacking vision, optional attack does not invalidate their score',()=>{
+ const peers=fieldPlayers('DEF').map(p=>({...p,sourceRecords:{FotMob:{id:p.id,team_id:p.team_id,pos:'DEF',tacticalPositions:['LB'],tacticalContext:{source:'FotMob',identityVerified:true,player_id:p.id,team_id:p.team_id,captured_at:'2026-11-25T10:00:00Z'}}}}));
+ const player=peers[2],profile=radar.profile(player,peers);
+ assert.deepEqual(profile.displayAxes.map(a=>a.key),['tackles','interceptions','recoveries','goals','xg','xa','assists']);
+ assert.equal(profile.attack.maxWeight,0.15);
+ const missing=radar.profile({...player,assists:null,xg:null},peers);
+ assert(Number.isFinite(missing.score));assert.deepEqual(missing.displayMissingAxes,['xg','assists']);
+ assert.equal(missing.attack.usedWeight,0.075);
+ assert(!missing.displayAxes.some(a=>['xg','assists'].includes(a.key)));
+ const zeros=radar.profile({...player,goals:0,assists:0,xg:0,xa:0},peers);
+ assert.equal(zeros.displayAxes.filter(a=>radar.attackKeys.includes(a.key)&&a.value===0).length,4);
+});
+
+test('every outfield profile shows goals and assists while goalkeepers retain their original axes',()=>{
+ for(const key of ['DEF','MED','MED_DEF','MED_ATT','MED_BALANCED','DEL']){
+  const pos=key.startsWith('MED')?'MED':key;
+  const peers=fieldPlayers(pos).map((p,i)=>({...p,accuracy:80+i,lineBreakingPasses:i,chancesCreated:i,bigChancesCreated:i}));
+  const roles=new Map(peers.map(p=>[p,key])),profiles=radar.profiles(peers,{midfieldRoles:roles});
+  for(const profile of profiles.values()){
+   assert(Number.isFinite(profile.score),key);
+   assert(profile.displayAxes.some(a=>a.key==='goals'),key+' goals');
+   assert(profile.displayAxes.some(a=>a.key==='assists'),key+' assists');
+   assert(!profile.axes.some(a=>radar.attackKeys.includes(a.key)),key+' attack counted twice');
+  }
+ }
+ const keepers=fieldPlayers('POR').map(p=>({...p,savepct:80,saves:20,conceded:5}));
+ const keeper=radar.profile(keepers[0],keepers);
+ assert.deepEqual(keeper.displayAxes,keeper.axes);
+ assert(!keeper.displayAxes.some(a=>radar.attackKeys.includes(a.key)));
+});
