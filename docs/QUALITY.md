@@ -10,7 +10,7 @@ Requiere Node 24 y Python 3.11+. Las herramientas son solo de desarrollo; el Sit
 
 ```sh
 npm ci
-python -m pip install -r requirements-dev.txt
+python -m pip install -r requirements-dev.txt -r requirements-analysis.txt
 npm run lint
 ruff check scripts tests
 npm test
@@ -24,3 +24,5 @@ El 25 de noviembre se retiraron variables y una función sin uso y se extrajo el
 La selección de capturas conserva también los equipos de una captura posterior con igual o mayor cobertura, independientemente de la fecha de los agregados de jugadores. Esta regla se aplica en navegador y Worker para evitar que una caché oculte xG recién publicados.
 
 La navegación deja de renderizar tablas y radares ocultos: secuencia Glosario → Jugadores con capturas reales, mediana local 168,85 → 87,44 ms (48,2 % menos), con HTML de tabla y cabecera idéntico. Cinco rondas, primera descartada; VM/DOM local, sin medir red ni layout. No se atribuye esa mejora a toda la carga o descarga de proveedores.
+
+Los análisis Fantasy usan numpy/scipy, scikit-learn y statsmodels versionados en requirements-analysis.txt. Las pruebas comprueban cruces ambiguos, no reutilización de fichas, extracción de recuentos, ceros frente a ausencias, captura/muestra, regresión conocida, exclusiones, validación por clubes y render seguro. Estas herramientas no se instalan en el Worker: la web consume informes fechados precomputados.

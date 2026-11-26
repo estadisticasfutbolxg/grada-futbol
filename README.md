@@ -15,6 +15,10 @@ Todas las ligas usan catálogo y prioridad FotMob → ESPN, incluidos xG/xA FotM
 
 Las ligas reúnen 6.044 fichas jugador/liga; Champions, Europa League y Conference añaden 2.258 fichas de competición. Ligas y torneos une por ID FotMob verificado: 6.766 jugadores distintos y 286 clubes. El score canónico usa toda la temporada disponible, conserva un único perfil/posición y no cambia al abrir otra competición. Los totales y tasas visibles corresponden al ámbito elegido, con cobertura y minutos propios de cada fuente. Hay rankings de delanteros, porteros, defensas, centrales, laterales y perfiles MED ofensivo/defensivo/equilibrado; los equipos usan promedios ponderados de esos mismos scores. Los scores individuales requieren todos los ejes del radar de su perfil. La ficha muestra qué métricas ofensivas tienen muestra suficiente para contribuir. Consulta [ligas y rankings](docs/LEAGUES.md), [combinación](docs/COMBINED.md) y [estado publicado](docs/STATUS.md).
 
+## Análisis Fantasy de LaLiga
+
+Regresiones por perfil del score para relacionar puntos acumulados con sus ejes, amarillas, expulsiones y penaltis provocados. Sección independiente con validación por equipos, coeficientes, incertidumbre cuando hay muestra, exclusiones e informe descargable. [Método y reproducción](docs/FANTASY_REGRESSION.md). No modifica los scores.
+
 ## Generar la web y las bases
 
 Requiere Python 3.11+, Node 22+ e Internet, sin instalar paquetes ni contratar una base:
