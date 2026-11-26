@@ -77,7 +77,9 @@
       return Number.isFinite(minutes) ? minutes >= minimum : position === 'POR' && Number.isFinite(matches) && matches >= 2;
     }
     const attackWeight=withAttack?attackWeights[key]:undefined;
-    const candidates=(priorities[key]||[]).filter(metric=>!attackWeight||!attackKeys.includes(metric)),samples=new Map();
+    // Preserve the original six-axis selection before separating attack. Removing
+    // attack first promoted fallback metrics into new mandatory requirements.
+    const candidates=priorities[key]||[],samples=new Map();
     for(const key of candidates){
       const values=samePosition.filter(p=>eligible(p,key)).map(p=>metrics.metric(p,key,axes[key][1])).filter(Number.isFinite);
       if(values.length>=5)samples.set(key,values);
@@ -88,7 +90,8 @@
       const values=attackPeers.filter(p=>eligible(p,metric)).map(p=>metrics.metric(p,metric,'90')).filter(Number.isFinite);
       if(values.length>=5)attackSamples.set(metric,values.sort((a,b)=>a-b));
     }
-    return {definition:def,minimum,samples,attackWeight,attackSamples,ranked:new Map([...samples].map(([key,values])=>[key,[...values].sort((a,b)=>a-b)])),keys:[...samples.keys()].filter(k=>!(position==='POR'&&samples.has('psxgEfficiency')&&k==='prevented')).slice(0,6),peerCount:samePosition.filter(p=>candidates.some(key=>eligible(p,key)&&Number.isFinite(metrics.metric(p,key,axes[key][1])))).length};
+    const originalKeys=[...samples.keys()].filter(k=>!(position==='POR'&&samples.has('psxgEfficiency')&&k==='prevented')).slice(0,6);
+    return {definition:def,minimum,samples,attackWeight,attackSamples,ranked:new Map([...samples].map(([key,values])=>[key,[...values].sort((a,b)=>a-b)])),keys:attackWeight?originalKeys.filter(k=>!attackKeys.includes(k)):originalKeys,displayKeys:attackWeight?[...new Set([...originalKeys,...attackKeys])]:originalKeys,peerCount:samePosition.filter(p=>candidates.some(key=>eligible(p,key)&&Number.isFinite(metrics.metric(p,key,axes[key][1])))).length};
   }
   function baseEligible(record,minimum){return !record.identityConflict&&Number.isFinite(record.minutes)&&record.minutes>=minimum;}
   function attackingContribution(player,plan,radarScore){
@@ -123,7 +126,15 @@
     const radarScore=values.length===plan.keys.length&&sampleEnough?area:null;
     const attack=plan.attackWeight?attackingContribution(player,plan,radarScore):null;
     const score=attack?attack.score:radarScore;
-    return {axes:visible,area,score,comparableArea:score,attack,expectedAxes:plan.keys,missingAxes:plan.keys.filter(k=>!values.some(a=>a.key===k)),sampleEnough,baseSampleEnough,insufficientSamples,minimumMinutes:plan.minimum,minimumMatches:null,kind:'player',profileKey:plan.definition.key,profileLabel:plan.definition.label,peerCount:plan.peerCount,availableAxes:values.length,
+    // The complete visual radar is descriptive. Only the non-attack polygon and
+    // the separately weighted attack block enter the score, once each.
+    const displayByKey=new Map(values.map(a=>[a.key,a]));
+    if(attack)for(const entry of attack.entries)if(entry.percentile!==null){
+      const [label,unit]=axes[entry.key];
+      displayByKey.set(entry.key,{key:entry.key,label,value:entry.value,percentile:entry.percentile,referenceCount:entry.referenceCount,lowerBetter:false,source:metrics.context(player,entry.key,unit)?.source||null});
+    }
+    const displayValues=plan.displayKeys.map(key=>displayByKey.get(key)).filter(Boolean),displayAxes=displayValues.length>=3?displayValues:[];
+    return {axes:visible,displayAxes,displayMissingAxes:plan.displayKeys.filter(key=>!displayByKey.has(key)),displayArea:relativeArea(displayAxes.map(a=>a.percentile)),area,score,comparableArea:score,attack,expectedAxes:plan.keys,missingAxes:plan.keys.filter(k=>!values.some(a=>a.key===k)),sampleEnough,baseSampleEnough,insufficientSamples,minimumMinutes:plan.minimum,minimumMatches:null,kind:'player',profileKey:plan.definition.key,profileLabel:plan.definition.label,peerCount:plan.peerCount,availableAxes:values.length,
       referenceRule:(plan.definition.key==='DEF_FB'?'laterales y carrileros con puesto publicado':'misma posición')+', mínimo '+plan.minimum+' min del jugador y de cada eje'+(player.pos==='POR'?' (2 PJ por eje si su proveedor no publica minutos)':'')};
   }
   function profiles(all,{referencePlayers=all,kind='player',midfieldRoles=null}={}){

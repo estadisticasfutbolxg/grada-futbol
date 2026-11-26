@@ -8,6 +8,7 @@ test('the player radar renders a valid zero score and preserves unknown metrics 
  const player={id:'zero',pos:'DEL',minutes:600,matches:10,goals:0,xg:0,xa:0,shotsOnTargetPer90:0,dribblesPer90:0,conversion:0,shots:0},metadata={source:'Isolated <source>',imported_at:'2026-11-10T12:00:00Z'};
  const profile=radar.profile(player,peers);assert.equal(profile.score,0);
  const html=root.GradaComponents.radar(player,peers,metadata,profile);assert.match(html,/<strong>0,000<\/strong>/);assert.match(html,/Los ceros publicados se incluyen/);assert(!html.includes('<source>'));
+ assert.match(html,/Goles \/90/);assert.match(html,/xG \/90/);assert.match(html,/perfil completo/);assert.match(html,/contado una sola vez/);
  player.dribblesPer90=null;const pending=radar.profile(player,peers);assert.equal(pending.score,null);
  const missing=root.GradaComponents.radar(player,peers,metadata,pending);assert.match(missing,/<strong>—<\/strong>/);assert.match(missing,/Faltan métricas publicadas: Regates logrados/);
 });
