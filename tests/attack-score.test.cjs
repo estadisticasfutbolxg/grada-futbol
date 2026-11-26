@@ -77,7 +77,7 @@ test('fullbacks retain defensive and attacking vision, optional attack does not 
 });
 
 test('every outfield profile shows goals and assists while goalkeepers retain their original axes',()=>{
- for(const key of ['DEF','MED','MED_DEF','MED_ATT','MED_BALANCED','DEL']){
+ for(const key of ['DEF','MED','MED_DEF','MED_ATT','DEL']){
   const pos=key.startsWith('MED')?'MED':key;
   const peers=fieldPlayers(pos).map((p,i)=>({...p,accuracy:80+i,lineBreakingPasses:i,chancesCreated:i,bigChancesCreated:i}));
   const roles=new Map(peers.map(p=>[p,key])),profiles=radar.profiles(peers,{midfieldRoles:roles});

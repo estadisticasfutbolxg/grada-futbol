@@ -42,14 +42,14 @@
   if(role==='HOLD')return published(['CDM'])||(has('CM')&&candidate.midfieldProfile==='MED_DEF'?'CM publicado · perfil defensivo; encaje teórico':null);
   if(role==='LINK')return published(['CM','CDM']);
   if(role==='CM')return published(['CM']);
-  if(role==='CREATE'&&has('CM'))return published(['CAM'])||(['MED_ATT','MED_BALANCED'].includes(candidate.midfieldProfile)?'CM publicado · perfil '+(candidate.midfieldProfile==='MED_ATT'?'ofensivo':'equilibrado')+'; encaje teórico':null);
+  if(role==='CREATE'&&has('CM'))return published(['CAM'])||(candidate.midfieldProfile==='MED_ATT'?'CM publicado · perfil ofensivo; encaje teórico':null);
   return null;
  }
  function affinity(candidate,slot){
   const has=code=>candidate.codes.includes(code),profile=candidate.midfieldProfile;
-  if(slot.role==='HOLD')return (has('CDM')?4:1)+(profile==='MED_DEF'?2:profile==='MED_BALANCED'?1:0);
-  if(['AM','CREATE'].includes(slot.role))return (has('CAM')?4:1)+(profile==='MED_ATT'?2:profile==='MED_BALANCED'?1:0);
-  if(['CM','LINK'].includes(slot.role))return (has('CM')?4:2)+(profile==='MED_BALANCED'?2:profile==='MED_ATT'?1:0);
+  if(slot.role==='HOLD')return (has('CDM')?4:1)+(profile==='MED_DEF'?2:0);
+  if(['AM','CREATE'].includes(slot.role))return (has('CAM')?4:1)+(profile==='MED_ATT'?2:0);
+  if(['CM','LINK'].includes(slot.role))return has('CM')?4:2;
   const preferred={LWB:'LWB',RWB:'RWB',LB:'LB',RB:'RB',LM:'LM',RM:'RM'}[slot.role];
   return preferred&&has(preferred)?4:2;
  }

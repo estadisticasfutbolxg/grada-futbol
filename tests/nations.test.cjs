@@ -6,7 +6,7 @@ function player(id,pos,codes,score=0.5,minutes=300,league='laliga',profile=null)
  return {person:String(id),score,midfieldProfile:profile,player:{id:league+':'+id,name:'Isolated player '+id,team_id:'1',team:'Isolated club',league_key:league,pos,minutes,sourceRecords:{FotMob:raw}}};
 }
 function fixture(){
- const rows=[player(1,'POR',['GK'],0.4,900),player(2,'DEF',['LB']),player(3,'DEF',['CB']),player(4,'DEF',['CB']),player(5,'DEF',['RB']),player(6,'MED',['CDM'],0.5,300,'laliga','MED_DEF'),player(7,'MED',['CM','CAM'],0.5,300,'laliga','MED_ATT'),player(8,'MED',['CM'],0.5,300,'laliga','MED_BALANCED'),player(9,'DEL',['LW']),player(10,'DEL',['RW']),player(11,'DEL',['ST'],0.9,200)];
+ const rows=[player(1,'POR',['GK'],0.4,900),player(2,'DEF',['LB']),player(3,'DEF',['CB']),player(4,'DEF',['CB']),player(5,'DEF',['RB']),player(6,'MED',['CDM'],0.5,300,'laliga','MED_DEF'),player(7,'MED',['CM','CAM'],0.5,300,'laliga','MED_ATT'),player(8,'MED',['CM'],0.5,300,'laliga','MED_DEF'),player(9,'DEL',['LW']),player(10,'DEL',['RW']),player(11,'DEL',['ST'],0.9,200)];
  return {rows,model:{data:{players:rows.map(r=>r.player),teams:[{id:'1',name:'Isolated club',sourceRecords:{FotMob:{id:'101'}}}]},players:new Map(rows.map(r=>[r.player,{score:r.score,profileLabel:r.midfieldProfile||r.player.pos}])),roles:new Map(rows.map(r=>[r.player,r.midfieldProfile]))}};
 }
 test('complete coherent XI preserves player scores, data and the exact arithmetic mean, including zero',()=>{
