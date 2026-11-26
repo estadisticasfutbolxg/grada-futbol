@@ -1,5 +1,13 @@
 # Estado comprobado de GRADA
 
+## Pesos Fantasy aprobados aplicados · publicación privada verificada · 26 de noviembre de 2026
+
+Modelo `role_fairplay_radar_v11`: goles, asistencias, xG y xA tienen pesos propios por perfil, derivados de magnitudes de coeficientes estandarizados sobre todos los predictores Fantasy (incluidos minutos/extras). Se aplica la tabla aprobada por el usuario; el resto conserva el radar no ofensivo y el juego limpio, sin cambios en porteros. Calibración LaLiga aplicada por perfil a todas las competiciones, sin afirmar validación fuera de LaLiga. Configuración con fecha/hash, generador determinista y rechazo de modelos parciales. Refrescar estadísticas no reentrena ni cambia pesos; se revisan cuando el usuario lo solicita. [Fórmula y porcentajes](SCORES.md).
+
+Cambian 3.945 scores de 6.766 identidades; cero pérdidas/ganancias de score, cambios de puesto/perfil o cambios en porteros. Se conservan 4.224 scores y 393 pendientes reales. Dieciocho combinados con misma calibración; 4.224 sectores suman el score exacto. 38 archivos Node y 28 pruebas Python, ESLint/Ruff, documentación y auditoría de 8.302 scores entre competiciones y 2.626 promedios correctos. Cuatro arranques VM/DOM, sin QA visual ni revisión independiente. Ningún jugador ni partido descargado, sin cambios de capturas ni ajuste de la regresión congelada.
+
+[PR #84](https://github.com/estadisticasfutbolxg/grada-futbol/pull/84) integrado con CI correcto. **v45**, fuente `bcbdb8329656494ff337426f6b89e9df634c5f5a`, despliegue `appgdep_6b082d0f44dc8191bc1d3ec2f8b19aed` succeeded; Worker SHA256 `3c1b09e34153307c180ae5fd814f7a2f11cc63a818de26bea5d11fed1f2b682e`. HTTP: bundle exacto gzip 102.801 bytes, cuatro informes y 36 fuentes verificadas por hash, 42 rutas retiradas 400/404 y actualización sin identidad 401. Sitio solo propietario, política revisión 3 y runtime revisión 1 conservados. [Tarea y evidencia](../loop/tasks/20261126-codex-apply-fantasy-weights.md).
+
 ## Perfiles MED, pesos orientativos y gráfico ponderado · publicación privada verificada · 26 de noviembre de 2026
 
 Se retira MED equilibrado: 95 jugadores pasan a defensivos sin perder score; ningún otro score cambia. Se mantienen 4.224 scores válidos. Rankings, promedios de equipo, selecciones y análisis comparten perfiles excluyentes. Gráfico principal con sectores de ancho proporcional al peso vigente y área coloreada cuya suma coincide exactamente con el score final; radar regular descriptivo desplegable. 4.224 descomposiciones auditadas.

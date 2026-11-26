@@ -1,6 +1,6 @@
 # Aplicar pesos Fantasy aprobados al bloque ofensivo
 
-- Estado: `review`
+- Estado: `done`
 - Responsable: Codex
 - Revisor: autocontrol, sin revisión independiente
 - Rama: `feat/apply-fantasy-attack-weights`
@@ -29,4 +29,8 @@ Generador reproducible desde informe congelado, con fecha, hash y método. Nueva
 - Informe descargable actualizado para distinguir política aplicada (magnitudes sobre todos los predictores) de propuesta alternativa (solo ejes positivos, no aplicada). No se modifica el ajuste de la regresión congelada ni se descarga ninguna captura.
 - Pruebas con Worker compilado/VM/DOM; navegador no disponible, sin QA visual ni revisión independiente.
 
-Integración y publicación privada pendientes de confirmar. No hay jugadores ni partidos nuevos descargados: solo scores y agregados derivados.
+[PR #84](https://github.com/estadisticasfutbolxg/grada-futbol/pull/84) integrado con CI quality correcto, merge `5eef67e9c1fa8c17226f1c4b9a1519a007318013`. Se verifican por blob los 18 archivos contra su base y contenido enviado. Fuente nativa `bcbdb8329656494ff337426f6b89e9df634c5f5a` subida y comprobada en remoto.
+
+**Sites v45**, despliegue `appgdep_6b082d0f44dc8191bc1d3ec2f8b19aed` succeeded; Worker SHA256 `3c1b09e34153307c180ae5fd814f7a2f11cc63a818de26bea5d11fed1f2b682e`, 378 assets/12 módulos y 9.816.009 bytes. [GRADA privada](https://grada-futbol-analitica.ivanmatema2.chatgpt.site). Acceso custom revisión 3, propietario 1 y editores/grupos/visitantes 0; runtime revisión 1.
+
+HTTP confirma HTML y bundle exactos (gzip 102.801 bytes), cuatro informes analíticos correctos, las 36 capturas iguales por hash a v44, 42 rutas retiradas 400/404 y actualización sin identidad 401. Informe JSON congelado conserva exactamente el hash de la calibración. Cuatro arranques del Worker exacto correctos en VM/DOM (incluido fallo de fuente), sin QA visual. Auditoría: 8.302 comprobaciones entre competiciones, 6.766 perfiles, 3.871 ajustes de disciplina, 2.626 promedios y 13.756 contribuciones coherentes. Cierre documental posterior sin nuevo despliegue idéntico. No hay jugadores ni partidos nuevos descargados: solo scores y agregados derivados.
