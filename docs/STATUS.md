@@ -1,5 +1,13 @@
 # Estado comprobado de GRADA
 
+## Perfiles MED, pesos orientativos y gráfico ponderado · publicación privada verificada · 26 de noviembre de 2026
+
+Se retira MED equilibrado: 95 jugadores pasan a defensivos sin perder score; ningún otro score cambia. Se mantienen 4.224 scores válidos. Rankings, promedios de equipo, selecciones y análisis comparten perfiles excluyentes. Gráfico principal con sectores de ancho proporcional al peso vigente y área coloreada cuya suma coincide exactamente con el score final; radar regular descriptivo desplegable. 4.224 descomposiciones auditadas.
+
+Siete regresiones Fantasy con 304 casos completos: solo minutos, ejes, amarillas/expulsiones y penaltis provocados. Grupos complete-link |Pearson r| ≥ 0,80 aprendidos dentro de cada entrenamiento y control de minutos separado. Coeficientes repartidos conservan predicción, sin identificar efectos individuales. Se proponen pesos positivos normalizados de ejes por perfil, sin aplicarlos al score actual. [Método](FANTASY_REGRESSION.md).
+
+[PR #82](https://github.com/estadisticasfutbolxg/grada-futbol/pull/82) integrado, CI quality correcto. 37 archivos Node y 28 pruebas Python, ESLint/Ruff y auditorías correctos; cuatro arranques VM/DOM con capturas reales, sin QA visual ni revisión independiente. **v44**, fuente `4ff3fdc68309e6ca5b810a61c6615c33aa47dd87`, despliegue `appgdep_6b0823c67bac8191ad7045b0278cacd9` succeeded; Worker SHA256 `697ab8b66f7c5efb3c1651c42b30053153a3f934f5d7191ae4fbca9aeef3cb35`. HTTP verifica cuatro artefactos analíticos y 36 capturas idénticas a v43, 42 rutas retiradas 400/404 y actualización sin identidad 401. Solo propietario, política revisión 3 y runtime revisión 1 conservados. Sin jugadores ni partidos descargados; 95 perfiles/scores derivados recalculados. [Tarea y evidencia](../loop/tasks/20261126-codex-midfield-correlations.md).
+
 ## Regresiones Fantasy de LaLiga · publicación privada verificada · 26 de noviembre de 2026
 
 Sección **Análisis Fantasy**, enlace `?vista=fantasy`, informe HTML completo y descargas CSV/JSON. 474 cruces únicos entre 488 jugadores GRADA y 618 filas Fantasy; 14 cruces apartados y siete sin perfil utilizable. Siete regresiones por perfil con 299 casos completos; MED equilibrado con cinco casos se declara insuficiente. Ejes reales, amarillas, expulsiones y penaltis provocados; control de minutos y validación anidada por equipos. OLS con incertidumbre agrupada por club solo con muestra/rango suficientes. Asociaciones, no causalidad; los scores no se recalibran. [Método y fuentes](FANTASY_REGRESSION.md).
