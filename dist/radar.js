@@ -28,7 +28,113 @@
     MED_ATT:['xa','chancesCreated','bigChancesCreated','shotsOnTargetPer90','dribblesPer90','goals'],
   };
   const attackKeys = ['goals','assists','xg','xa'];
-  const attackWeights = Object.freeze({DEF:0.05,DEF_FB:0.15,MED_DEF:0.05,MED:0.10,MED_ATT:0.25,DEL:0.35});
+  // BEGIN APPROVED FANTASY WEIGHTS
+  const weightCalibration = {
+    "method": "fantasy_absolute_standardized_all_predictors_v1",
+    "competition": "LaLiga",
+    "season": "2026/27",
+    "modelMethod": "ridge_correlated_group_cv_v2",
+    "modelGeneratedAt": "2026-11-26T12:15:24.804466+00:00",
+    "reportSha256": "d695c41b689a53eb0d2b587961fd1f3b21df5a56571efab4d12f72b572b2af0a",
+    "scope": "All loaded competitions; calibration from LaLiga only",
+    "policy": "Absolute distributed standardized coefficient / sum of absolute coefficients including minutes and extras. Four attack metrics only; remaining weight retains original non-attack radar. No causal interpretation or automatic refitting.",
+    "byProfile": {
+      "DEF": {
+        "n": 41,
+        "weights": {
+          "goals": 0.17368364711912673,
+          "assists": 0.050484749097657294,
+          "xg": 0.01676480403844614,
+          "xa": 0.014955497509674448
+        },
+        "directions": {
+          "goals": 1,
+          "assists": -1,
+          "xg": 1,
+          "xa": -1
+        }
+      },
+      "DEF_FB": {
+        "n": 59,
+        "weights": {
+          "goals": 0.20412316165133323,
+          "assists": 0.076991561491567,
+          "xg": 0.08887788707180255,
+          "xa": 0.004490525633042362
+        },
+        "directions": {
+          "goals": 1,
+          "assists": 1,
+          "xg": 1,
+          "xa": -1
+        }
+      },
+      "MED": {
+        "n": 44,
+        "weights": {
+          "goals": 0.09839099970026272,
+          "assists": 0.0390085820460448,
+          "xg": 0.07878535711378348,
+          "xa": 0.08116401189591214
+        },
+        "directions": {
+          "goals": 1,
+          "assists": 1,
+          "xg": 1,
+          "xa": 1
+        }
+      },
+      "MED_DEF": {
+        "n": 34,
+        "weights": {
+          "goals": 0.046290080856682944,
+          "assists": 0.10821259882166019,
+          "xg": 0.000023843900396396936,
+          "xa": 0.10818705414624248
+        },
+        "directions": {
+          "goals": 1,
+          "assists": 1,
+          "xg": -1,
+          "xa": 1
+        }
+      },
+      "MED_ATT": {
+        "n": 22,
+        "weights": {
+          "goals": 0.10674778079592429,
+          "assists": 0.03497516580673511,
+          "xg": 0.043399080719854925,
+          "xa": 0.007585668757268029
+        },
+        "directions": {
+          "goals": 1,
+          "assists": 1,
+          "xg": 1,
+          "xa": -1
+        }
+      },
+      "DEL": {
+        "n": 83,
+        "weights": {
+          "goals": 0.07618674105084933,
+          "assists": 0.07526357493362132,
+          "xg": 0.0641839534738484,
+          "xa": 0.08542912359511581
+        },
+        "directions": {
+          "goals": 1,
+          "assists": 1,
+          "xg": 1,
+          "xa": 1
+        }
+      }
+    }
+  };
+  for(const profile of Object.values(weightCalibration.byProfile)){Object.freeze(profile.weights);Object.freeze(profile.directions);Object.freeze(profile);}
+  Object.freeze(weightCalibration.byProfile);Object.freeze(weightCalibration);
+  // END APPROVED FANTASY WEIGHTS
+  const attackWeights = Object.freeze(Object.fromEntries(Object.entries(weightCalibration.byProfile).map(([key,p])=>[key,Object.values(p.weights).reduce((sum,w)=>sum+w,0)])));
   const rankingDefinitions=[
     {key:'DEL',label:'Delanteros',position:'DEL',kind:'player',minimum:minimumScoreMinutes},
     {key:'POR',label:'Porteros',position:'POR',kind:'player',minimum:minimumScoreMinutes},
@@ -89,17 +195,16 @@
       if(values.length>=5)attackSamples.set(metric,values.sort((a,b)=>a-b));
     }
     const originalKeys=[...samples.keys()].filter(k=>!(position==='POR'&&samples.has('psxgEfficiency')&&k==='prevented')).slice(0,6);
-    return {definition:def,minimum,samples,attackWeight,attackSamples,ranked:new Map([...samples].map(([key,values])=>[key,[...values].sort((a,b)=>a-b)])),keys:attackWeight?originalKeys.filter(k=>!attackKeys.includes(k)):originalKeys,displayKeys:attackWeight?[...new Set([...originalKeys,...attackKeys])]:originalKeys,peerCount:samePosition.filter(p=>candidates.some(key=>eligible(p,key)&&Number.isFinite(metrics.metric(p,key,axes[key][1])))).length};
+    return {definition:def,minimum,samples,attackWeight,attackMetricWeights:withAttack?weightCalibration.byProfile[key]?.weights:null,attackSamples,ranked:new Map([...samples].map(([key,values])=>[key,[...values].sort((a,b)=>a-b)])),keys:attackWeight?originalKeys.filter(k=>!attackKeys.includes(k)):originalKeys,displayKeys:attackWeight?[...new Set([...originalKeys,...attackKeys])]:originalKeys,peerCount:samePosition.filter(p=>candidates.some(key=>eligible(p,key)&&Number.isFinite(metrics.metric(p,key,axes[key][1])))).length};
   }
   function baseEligible(record,minimum){return !record.identityConflict&&Number.isFinite(record.minutes)&&record.minutes>=minimum;}
   function attackingContribution(player,plan,radarScore){
-    const weight=plan.attackWeight/attackKeys.length;
     const entries=attackKeys.map(key=>{
       const sample=plan.attackSamples.get(key),context=metrics.context(player,key,'90');
       const minutes=context&&Object.hasOwn(context,'minutes')?context.minutes:player.minutes;
       const value=metrics.metric(player,key,'90');
       const percentile=baseEligible(player,plan.minimum)&&Number.isFinite(minutes)&&minutes>=plan.minimum&&sample?rankedPercentile(value,sample):null;
-      return {key,value,percentile,referenceCount:sample?.length??0,weight:percentile===null?0:weight};
+      return {key,value,percentile,referenceCount:sample?.length??0,weight:percentile===null?0:plan.attackMetricWeights[key]};
     });
     const usedWeight=entries.reduce((sum,metric)=>sum+metric.weight,0);
     const contribution=entries.reduce((sum,metric)=>sum+(metric.percentile===null?0:metric.weight*(metric.percentile/100)**2),0);
@@ -199,6 +304,6 @@
     if((profile.expectedAxes?.length||0)<3)parts.push('No hay al menos tres ejes con cinco referencias suficientes');
     return (parts.join('. ')||'Faltan métricas o muestra suficiente de su posición')+'. Los ceros reales sí se incluyen; un dato ausente no se sustituye por cero.';
   }
-  const api = {scoreSectors,attackKeys,attackWeights,profile,profiles,midfieldIndices,midfieldRole,percentile,relativeArea,rankingDefinitions,definition,rankingEligible,axis,explain,minimumScoreMinutes};
+  const api = {weightCalibration,scoreSectors,attackKeys,attackWeights,profile,profiles,midfieldIndices,midfieldRole,percentile,relativeArea,rankingDefinitions,definition,rankingEligible,axis,explain,minimumScoreMinutes};
   if (typeof module === 'object' && module.exports) module.exports = api; else root.GradaRadar = api;
 })(typeof window === 'object' ? window : globalThis);

@@ -8,7 +8,7 @@ Recuentos: suma de valores conocidos, sin convertir ausencias en ceros. Tasas: m
 
 Juego limpio mantiene la fórmula vigente. Solo usa contribuciones con ambas tarjetas y muestra compatible; si a un torneo le falta una, conserva el ajuste de la muestra emparejada de las otras competiciones y declara su cobertura. No supone cero ni elimina una penalización ya verificada. La regeneración debe preservar score, posición y perfil; las posiciones derivadas no se reutilizan como evidencia original.
 
-Modelo vigente `role_fairplay_radar_v10`. El score de temporada incorpora un bloque de aporte ofensivo para los jugadores de campo. El modelo común es `dist/scores.js`; tablas, tarjetas, fichas, comparador, filtros y generador consumen sus resultados.
+Modelo vigente `role_fairplay_radar_v11`. El score de temporada incorpora un bloque de aporte ofensivo para los jugadores de campo. El modelo común es `dist/scores.js`; tablas, tarjetas, fichas, comparador, filtros y generador consumen sus resultados.
 
 ## Jugadores
 
@@ -24,16 +24,21 @@ Los ejes mantienen la definición y cobertura de `metrics.js`. Un xG ausente sol
 
 Goles, asistencias, xG y xA por 90 usan cada uno los minutos propios de su fuente y temporada. El percentil de cada métrica se calcula por separado con al menos cinco referencias de 200 minutos propios o más. Los delanteros se comparan con delanteros, los MED con otros MED y los defensas se dividen en laterales verificados y el resto de DEF. Entre los MED, el perfil determina el peso y mantiene la referencia de su posición. Los porteros tienen peso cero.
 
-| Perfil | Peso máximo de las cuatro métricas |
-| --- | ---: |
-| Centrales y demás DEF generales | 5 % |
-| MED defensivo | 5 % |
-| MED general, sin clasificar | 10 % |
-| Laterales y carrileros | 15 % |
-| MED ofensivo | 25 % |
-| Delanteros | 35 % |
+| Perfil | Goles | Asistencias | xG | xA | Resto no ofensivo |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Centrales y DEF generales | 17,37 % | 5,05 % | 1,68 % | 1,50 % | 74,41 % |
+| Laterales y carrileros | 20,41 % | 7,70 % | 8,89 % | 0,45 % | 62,55 % |
+| MED sin perfil verificable | 9,84 % | 3,90 % | 7,88 % | 8,12 % | 70,27 % |
+| MED defensivo | 4,63 % | 10,82 % | 0,0024 % | 10,82 % | 73,73 % |
+| MED ofensivo | 10,67 % | 3,50 % | 4,34 % | 0,76 % | 80,73 % |
+| Delanteros | 7,62 % | 7,53 % | 6,42 % | 8,54 % | 69,89 % |
+| Porteros | — | — | — | — | 100 % |
 
-Cada métrica tiene una cuarta parte del peso máximo de su perfil. Aporta su percentil dividido entre 100 y elevado al cuadrado, en la misma escala cuadrática que el área del radar. Si falta una tasa válida o su muestra, ese peso lo conserva el radar y la ficha muestra el peso utilizado. El cero publicado participa en la comparación. Los pesos son decisiones de diseño de GRADA.
+Pesos Fantasy aprobados por el usuario el 26 de noviembre de 2026, derivados del modelo LaLiga `ridge_correlated_group_cv_v2` calculado a las 12:15:24 UTC. Cada peso es la magnitud del coeficiente estandarizado repartido de esa métrica dividida por la suma de magnitudes de todos los predictores, incluidos minutos y extras. No se normalizan solo entre ejes positivos. Los signos negativos originales se conservan en procedencia, pero el peso aprobado es positivo: marcar o asistir no penaliza. Se usan los valores completos de `radar.weightCalibration`, no los porcentajes redondeados de esta tabla. No son fracciones de varianza explicada ni efectos causales.
+
+Solo se sustituyen los cuatro pesos del bloque ofensivo. El resto conserva el área no ofensiva original; el ajuste de tarjetas y penaltis cometidos permanece. La calibración procede solo de LaLiga y se aplica por perfil a todas las competiciones cargadas; no se afirma validación propia de otras ligas.
+
+Cada métrica aporta su percentil dividido entre 100 y elevado al cuadrado, en la misma escala cuadrática que el área del radar. Si falta una tasa válida o su muestra, ese peso lo conserva el radar y la ficha muestra el peso utilizado. El cero publicado participa en la comparación.
 
 `base = área no ofensiva × (1 − suma de los pesos válidos) + Σ(peso válido × (percentil / 100)²)`
 
@@ -124,7 +129,7 @@ Con las capturas publicadas al preparar este cambio hay 1.029 asistencias conoci
 
 ## Artefactos y reproducción
 
-`scores.build` calcula índices MED, perfil, área del radar, aporte ofensivo y ajuste de juego limpio en ese orden; `scores.value`, `scores.eligible` y `scores.rankingAxes` resuelven rankings y columnas. `fairplay.js` conserva fuente/muestra de ambas tarjetas. `squads.js` produce promedios y contribuciones con el score final y el perfil utilizado. `withScores` añade `playerScore`, `playerBaseScore`, `fairPlay`, `scorePosition`, `scoreProfile`, `scoreProfileLabel`, `midfieldProfile` y scores/ledgers de equipo al combinado. El modelo se identifica como `role_fairplay_radar_v10` en `metadata.derived_metrics.playerScore`. Todas las ligas descarta derivados previos antes de recalcular.
+`scores.build` calcula índices MED, perfil, área del radar, aporte ofensivo y ajuste de juego limpio en ese orden; `scores.value`, `scores.eligible` y `scores.rankingAxes` resuelven rankings y columnas. `fairplay.js` conserva fuente/muestra de ambas tarjetas. `squads.js` produce promedios y contribuciones con el score final y el perfil utilizado. `withScores` añade `playerScore`, `playerBaseScore`, `fairPlay`, `scorePosition`, `scoreProfile`, `scoreProfileLabel`, `midfieldProfile` y scores/ledgers de equipo al combinado. El modelo se identifica como `role_fairplay_radar_v11` en `metadata.derived_metrics.playerScore`. Todas las ligas descarta derivados previos antes de recalcular.
 
 El generador lee las capturas verificadas de las ligas disponibles para compartir referencia. En una importación por etapas, `--reference-dir` aporta las otras ligas, y `import_leagues.py` recalcula todos los derivados tras completar las fuentes. No actualiza las fechas originales por recalcular scores. Todas las ligas descarta derivados anteriores y usa el modelo común. En el navegador, el modelo se invalida al cambiar una captura, no al cambiar de vista.
 
@@ -153,4 +158,8 @@ El gráfico principal de jugador usa sectores: ángulo `2π × peso`, radio `R �
 
 Para descomponer la fórmula vigente sin cambiarla, cada producto de percentiles vecinos del área no ofensiva se reparte a medias entre sus dos ejes. Cada eje pesa `(1 − peso ofensivo utilizado) / número de ejes` y su rendimiento efectivo es `r_i × (r_anterior + r_siguiente) / 2`. Los ejes ofensivos conservan su peso explícito y `r_i²`. El factor verificado de juego limpio multiplica todas las contribuciones; sin ajuste permanece 1, sin afirmar limpieza. No son efectos independientes y el radio no es un percentil individual. Los ceros tienen sector sin relleno; scores pendientes conservan radar descriptivo y motivo.
 
-Los pesos orientativos de [las regresiones Fantasy](FANTASY_REGRESSION.md) se muestran separados y no alteran estos pesos ni rankings automáticamente.
+Los pesos aplicados de [las regresiones Fantasy](FANTASY_REGRESSION.md) se muestran separados de la propuesta alternativa basada solo en ejes positivos. Las nuevas capturas no cambian la calibración automáticamente. El usuario solicitará nuevas regresiones y pesos cuando desee revisarlos.
+
+## Renovación de pesos
+
+`node scripts/calibrate_score_weights.cjs --report <informe.json>` calcula una vista previa. Con `--apply` sustituye únicamente el bloque de configuración aprobado en `dist/radar.js`, de forma atómica y determinista; exige los seis perfiles completos y los cuatro coeficientes finitos por perfil. Conserva fecha del modelo, SHA256 del informe, muestra por perfil, método y signos originales. Una calibración incompleta falla antes de escribir; no retiene en silencio una mezcla de versiones. Después ejecutar pruebas, regenerar todos los combinados, auditar y publicar dentro del loop. El refresco normal de datos no ejecuta este generador ni reentrena los modelos.
