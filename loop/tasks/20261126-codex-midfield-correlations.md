@@ -1,6 +1,6 @@
 # Perfil MED defensivo y regresión con variables correlacionadas
 
-- Estado: `review`
+- Estado: `done`
 - Responsable: Codex
 - Revisor: autocontrol, sin revisión independiente
 - Rama: `feat/midfield-defensive-correlated-regressions`
@@ -36,4 +36,8 @@ Se usan skills de datos, revisión, loop y Sites ya leídas. Sin cambios previos
 - Browser QA no disponible en este entorno; comprobación de Worker compilado con VM/DOM y HTTP, sin afirmar revisión visual.
 - No se descargan jugadores ni partidos nuevos. Cambian perfiles/scores derivados, gráficos y modelos; las cifras/capturas originales permanecen.
 
-Integración GitHub y despliegue privado pendientes de confirmar.
+Integración y publicación confirmadas: [PR #82](https://github.com/estadisticasfutbolxg/grada-futbol/pull/82), CI quality correcto, squash `549c3fa567f534c8305223caa2428cbdb34b7745`. Los 25 blobs enviados fueron contrastados con la base y verificados por hash. Fuente nativa `4ff3fdc68309e6ca5b810a61c6615c33aa47dd87`, push remoto confirmado.
+
+**Sites v44**, despliegue `appgdep_6b0823c67bac8191ad7045b0278cacd9` succeeded; Worker SHA256 `697ab8b66f7c5efb3c1651c42b30053153a3f934f5d7191ae4fbca9aeef3cb35`, 378 assets/12 módulos y 9.808.137 bytes. [GRADA privada](https://grada-futbol-analitica.ivanmatema2.chatgpt.site). Política custom revisión 3, un propietario y cero editores/grupos/visitantes, runtime revisión 1, sin cambios.
+
+HTTP publicado: HTML y bundle exactos (gzip 100.705 bytes), cuatro artefactos Fantasy correctos, siete modelos/304 casos, 36 capturas iguales por hash a v43, 42 rutas retiradas 400/404, actualización sin identidad 401. Cuatro arranques VM/DOM del Worker exacto correctos; no QA visual. Sin jugadores ni partidos descargados; solo 95 scores/perfiles derivados cambiados y recálculo de modelos/gráficos. Cierre documental posterior, sin necesidad de otro despliegue idéntico.
