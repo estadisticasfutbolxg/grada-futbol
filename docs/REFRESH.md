@@ -125,3 +125,7 @@ El servidor estático de Python permite revisar las capturas y la interfaz; las 
 ### Penaltis cometidos
 
 El refresco FotMob incluye `penalty_conceded`, con las temporadas por ranking documentadas en DATA.md. La copia de penaltis puede ser posterior al resto: su recuperación por ID/club conserva esa fecha, incluye desconocidos de la captura posterior y evita recuperar valores anteriores de jugadores que ya no aparecen. El dato penaliza como cinco amarillas con muestra propia suficiente; no deja al jugador sin score cuando falta la métrica. La descarga de Analítica Fantasy es independiente, mediante su generador local; no añade un proveedor al botón de actualización ni mezcla puntos fantasy con estadísticas del Site.
+
+### Informe Fantasy de LaLiga
+
+Análisis Fantasy sirve modelos precomputados y fechados, más su cruce auditable. Sus capturas son independientes de los rankings; el botón de actualización general no reentrena modelos ni sustituye los puntos de la captura Fantasy. Para regenerar, usar los generadores y requisitos de [FANTASY_REGRESSION.md](FANTASY_REGRESSION.md), comprobar cohortes/validación y publicar los cuatro archivos coherentes.

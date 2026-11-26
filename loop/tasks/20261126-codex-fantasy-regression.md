@@ -1,6 +1,6 @@
 # Regresiones Fantasy para LaLiga
 
-- Estado: `review`
+- Estado: `done`
 - Responsable: Codex
 - Revisor: autocontrol, sin revisión independiente
 - Rama: `feat/laliga-fantasy-regression`
@@ -35,4 +35,13 @@ La web incorpora Análisis Fantasy, fijado a LaLiga, con gráficos de coeficient
 
 37 archivos Node y 25 casos Python correctos; ESLint/Ruff, enlaces y diff correctos. Pruebas de identidad/club, cruces ambiguos, recuentos frente a puntos, casos completos, fechas/minutos, ceros, recuperación de relación estadística conocida, validación por clubes y muestras insuficientes. Requisitos de análisis fijados y añadidos al CI; no se incorporan dependencias científicas al Worker. Cuatro arranques VM/DOM del Worker exacto, incluido enlace `?vista=fantasy`, perfil ajustado/insuficiente, navegación y fallo de una fuente. Sin QA visual disponible ni revisión independiente. Auditoría de 299 predicciones, clubes de prueba disjuntos y hashes de 36 fuentes intactos.
 
-Evidencias privadas `/workspace/scratch/grada-fantasy-regression/`: cruce, captura analítica, fichas, modelos, auditoría y pruebas/runtime. Entregas `/workspace/entregas/fantasy-regression-laliga-2026-27.*` y `fantasy-regression-input-laliga-2026-27.json`. Cero jugadores/partidos actualizados en los rankings principales. La captura analítica tiene cobertura de 129 partidos agregados; no se descargaron encuentros individuales. Pendientes PR, merge y publicación privada.
+Evidencias privadas `/workspace/scratch/grada-fantasy-regression/`: cruce, captura analítica, fichas, modelos, auditoría y pruebas/runtime. Entregas `/workspace/entregas/fantasy-regression-laliga-2026-27.*` y `fantasy-regression-input-laliga-2026-27.json`. Cero jugadores/partidos actualizados en los rankings principales. La captura analítica tiene cobertura de 129 partidos agregados; no se descargaron encuentros individuales. PR, merge y publicación privada verificados abajo.
+
+
+## Publicación verificada
+
+[PR #80](https://github.com/estadisticasfutbolxg/grada-futbol/pull/80) integrado en `96f266b161f4a97d8ea416faab2a8534e1c8f275`; quality success en head `81b1087068630473629c097b1851946aeeb8f9ba`, job 139755470818, con requisitos científicos instalados. Dieciocho archivos subidos por SHA de blob comprobado. 37 archivos Node y 25 casos Python correctos. El conjunto de entrada descargable coincide con `joined_sha256` del informe.
+
+[GRADA privada](https://grada-futbol-analitica.ivanmatema2.chatgpt.site), **v43**, fuente nativa `e60e0a0679665e40929f774bcda3aa608efd842e`, despliegue `appgdep_6b07de9f74388191bd948196c6b55cf3` succeeded. Worker SHA256 `32028a1394f856e36e19dcb3dd51165f4f9c090631738a9921b1c104ca397e65`, 378 assets, 12 módulos. HTTP verifica HTML/bundle (98.454 bytes gzip), cuatro archivos analíticos exactos por hash, 36 fuentes principales intactas, 42 rutas retiradas 400/404 y actualización sin identidad 401. Política custom revisión 3 con solo propietario, cero editores/grupos/visitantes; runtime revisión 1. Cuatro arranques VM/DOM incluyen enlace directo `?vista=fantasy`. Sin QA visual ni revisión independiente.
+
+MAE/R² de validación: POR 8,99/0,770; DEF 9,16/0,593; laterales 9,87/0,469; MED general 5,99/0,663; MED defensivo 5,64/0,848; MED ofensivo 14,68/0,546; DEL 8,77/0,839. Son resultados fuera de muestra por equipo, no ajuste de entrenamiento ni causalidad. Solo tres perfiles cumplen la regla de muestra para intervalos OLS; se declaran los otros. Ningún cambio en datos, partidos, scores o rankings principales. Captura analítica independiente de 492 fichas, 29 fichas de porteros y 129 partidos de cobertura agregada, sin archivos de encuentros individuales.

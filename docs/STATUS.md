@@ -1,5 +1,11 @@
 # Estado comprobado de GRADA
 
+## Regresiones Fantasy de LaLiga · publicación privada verificada · 26 de noviembre de 2026
+
+Sección **Análisis Fantasy**, enlace `?vista=fantasy`, informe HTML completo y descargas CSV/JSON. 474 cruces únicos entre 488 jugadores GRADA y 618 filas Fantasy; 14 cruces apartados y siete sin perfil utilizable. Siete regresiones por perfil con 299 casos completos; MED equilibrado con cinco casos se declara insuficiente. Ejes reales, amarillas, expulsiones y penaltis provocados; control de minutos y validación anidada por equipos. OLS con incertidumbre agrupada por club solo con muestra/rango suficientes. Asociaciones, no causalidad; los scores no se recalibran. [Método y fuentes](FANTASY_REGRESSION.md).
+
+Captura analítica independiente reciente de LaLiga; 36 fuentes principales intactas, ningún cambio en rankings ni partidos principales. 37 archivos Node, 25 casos Python, ESLint/Ruff correctos. Cuatro arranques VM/DOM, sin QA visual ni revisión independiente. [PR #80](https://github.com/estadisticasfutbolxg/grada-futbol/pull/80) integrado y CI correcto. **v43**, fuente `e60e0a0679665e40929f774bcda3aa608efd842e`, despliegue `appgdep_6b07de9f74388191bd948196c6b55cf3` succeeded. Worker SHA256 `32028a1394f856e36e19dcb3dd51165f4f9c090631738a9921b1c104ca397e65`. HTTP verifica cuatro archivos analíticos, 36 capturas y control de acceso. Solo propietario, política revisión 3 y runtime revisión 1 conservados. [Tarea y evidencia](../loop/tasks/20261126-codex-fantasy-regression.md).
+
 ## Ligas, torneos y score de temporada · publicación privada verificada · 25 de noviembre de 2026
 
 Incremento 1 publicado en v38: LaLiga con xG/xGA de veinte equipos y Real Madrid 33,6/12,9; +19 partidos agregados y una ficha Rüdiger revisada, sin inventar sus intercepciones. ESLint/Ruff/CI activos; selecciones con quince ligas, 135 países y 37 XI. [PR #70](https://github.com/estadisticasfutbolxg/grada-futbol/pull/70) integrado, CI correcto. Navegación local con mismas entradas 168,85 → 87,44 ms; sin QA visual.
