@@ -5,7 +5,7 @@ const positionsAPI=require('../dist/positions.js');
 const LIMIT=8*1024*1024;
 const extra={
  lbp_total:[['lineBreakingPasses','substatValue','number']],effective_clearance:[['clearances','substatValue','number']],outfielder_block:[['blocks','substatValue','number']],total_high_claim:[['highClaims','substatValue','number']],total_keeper_sweeper:[['sweeperActions','substatValue','number']],saves:[['saves','substatValue','number']],goals_conceded:[['conceded','substatValue','number']],
- ontarget_scoring_att:[['shotsOnTargetPer90','statValue','fraction',false,true],['shotsOnTargetPct','substatValue','percent']],accurate_long_balls:[['longBallsPer90','statValue','fraction',false,true],['longBallAccuracy','substatValue','percent']],won_contest:[['dribblesPer90','statValue','fraction',false,true],['dribbleSuccess','substatValue','percent']],poss_won_att_3rd:[['finalThirdRecoveriesPer90','statValue','fraction',false,true],['midfieldRecoveriesPer90','substatValue','fraction',false,true]],fouls:[['foulsPer90','statValue','fraction',false,true]],total_att_assist:[['chancesCreated','statValue','number']],big_chance_created:[['bigChancesCreated','statValue','number']],big_chance_missed:[['bigChancesMissed','statValue','number']],yellow_card:[['yellowCards','statValue','number']],red_card:[['redCards','statValue','number']],penalty_save:[['penaltiesSaved','statValue','number'],['penaltiesFaced','substatValue','number']],clean_sheet:[['clean','statValue','number']],_save_percentage:[['savepct','statValue','percent']],_goals_prevented:[['prevented','statValue','fraction',true]],expected_goalsontarget:[['xgot','statValue','fraction']]
+ ontarget_scoring_att:[['shotsOnTargetPer90','statValue','fraction',false,true],['shotsOnTargetPct','substatValue','percent']],accurate_long_balls:[['longBallsPer90','statValue','fraction',false,true],['longBallAccuracy','substatValue','percent']],won_contest:[['dribblesPer90','statValue','fraction',false,true],['dribbleSuccess','substatValue','percent']],poss_won_att_3rd:[['finalThirdRecoveriesPer90','statValue','fraction',false,true],['midfieldRecoveriesPer90','substatValue','fraction',false,true]],fouls:[['foulsPer90','statValue','fraction',false,true]],total_att_assist:[['chancesCreated','statValue','number']],big_chance_created:[['bigChancesCreated','statValue','number']],big_chance_missed:[['bigChancesMissed','statValue','number']],yellow_card:[['yellowCards','statValue','number']],red_card:[['redCards','statValue','number']],penalty_conceded:[['penaltiesCommitted','statValue','number']],penalty_save:[['penaltiesSaved','statValue','number'],['penaltiesFaced','substatValue','number']],clean_sheet:[['clean','statValue','number']],_save_percentage:[['savepct','statValue','percent']],_goals_prevented:[['prevented','statValue','fraction',true]],expected_goalsontarget:[['xgot','statValue','fraction']]
 };
 const defensive={total_tackle:'tackles',interception:'interceptions',ball_recovery:'recoveries'};
 const rateCount=new Set(['lbp_total','effective_clearance','outfielder_block','total_high_claim','total_keeper_sweeper','saves','goals_conceded']);
@@ -44,9 +44,9 @@ function parseFotmob(html,stat,league){
   const tables=(page.table||[]).filter(t=>t.data?.leagueId===league.fotmobId).map(t=>t.data.table?.all);
   if(tables.length!==1||tables[0]?.length!==league.teams)throw new Error('Clasificación incompleta.');return {statsData:tables[0]};
  }
- const d=page?.data;
- if(String(d?.currentSeasonId)!==String(league.fotmobSeason)||d.currentStatName!==stat||d.type!==specs(league)[stat]||d.leagueDetails?.id!==league.fotmobId||!d.seasons?.some(s=>String(s.id)===String(league.fotmobSeason)&&s.name==='2026/2027'))throw new Error('FotMob: competición, temporada o métrica incorrecta.');
- if(!Array.isArray(d.statsData)||!d.statsData.length&&stat!=='penalty_save'||d.statsData.length>1500)throw new Error('Ranking incompleto.');
+ const d=page?.data,season=league.fotmobStatSeasons?.[stat]||league.fotmobSeason;
+ if(String(d?.currentSeasonId)!==String(season)||d.currentStatName!==stat||d.type!==specs(league)[stat]||d.leagueDetails?.id!==league.fotmobId||!d.seasons?.some(s=>String(s.id)===String(season)&&s.name==='2026/2027'))throw new Error('FotMob: competición, temporada o métrica incorrecta.');
+ if(!Array.isArray(d.statsData)||!d.statsData.length&&!['penalty_save','penalty_conceded'].includes(stat)||d.statsData.length>1500)throw new Error('Ranking incompleto.');
  const seen=new Set();for(const r of d.statsData){const pid=id(r.id);id(r.teamId);name(r.name);if(seen.has(pid)||r.statValue?.name!==stat)throw new Error('Fila incoherente.');seen.add(pid);number(r.statValue.value,{signed:stat==='_goals_prevented'});}
  return {statsData:d.statsData};
 }
@@ -75,6 +75,7 @@ function buildFotmob(pages,league){
    const c=context(p,stat);if(isRate)c.reportedPer90=value;if(format==='percent')c.reportedValue=true;
    if(rateCount.has(stat)){if(r.statValue.format!=='fraction')throw new Error('Tasa inválida.');c.reportedPer90=number(r.statValue.value);}
    if(stat==='total_att_assist'){if(r.substatValue?.format!=='fraction')throw new Error('Ocasiones /90 inválidas.');c.reportedPer90=number(r.substatValue.value);}
+   if(stat==='penalty_conceded'){if(r.substatValue?.format!=='number')throw new Error('PJ de penaltis inválidos.');const appearances=number(r.substatValue.value,{integer:true});if(appearances>leagues.teamMatchLimit(league))throw new Error('PJ fuera de fase.');c.matches=appearances;if(appearances!==p.matches||Math.abs(Date.parse(pages[stat].captured_at)-Date.parse(pages.mins_played.captured_at))>600000){c.minutes=null;c.minutes_captured_at=null;}c.season_id=league.fotmobStatSeasons?.[stat]||league.fotmobSeason;c.reportedValue=true;}
    p[key]=value;p.metricContexts[key]=c;
   }
  }
@@ -111,7 +112,7 @@ function buildFotmob(pages,league){
 }
 async function fetchFotmob(leagueId,{fetcher=fetch,now=()=>new Date().toISOString()}={}){
  const league=leagues.get(leagueId),entries=Object.entries(specs(league)),pages={};let cursor=0,failed=false;
- async function worker(){while(!failed&&cursor<entries.length){const [stat,kind]=entries[cursor++],base='https://www.fotmob.com/leagues/'+league.fotmobId,url=stat==='overview'?base+'/overview/'+league.fotmobSlug:base+'/stats/season/'+league.fotmobSeason+'/'+kind+'/'+stat+'/'+league.fotmobSlug;try{const html=await textResponse(url,{fetcher});pages[stat]={url,captured_at:now(),data:parseFotmob(html,stat,league)};}catch(error){failed=true;throw error;}}}
+ async function worker(){while(!failed&&cursor<entries.length){const [stat,kind]=entries[cursor++],base='https://www.fotmob.com/leagues/'+league.fotmobId,url=stat==='overview'?base+'/overview/'+league.fotmobSlug:base+'/stats/season/'+(league.fotmobStatSeasons?.[stat]||league.fotmobSeason)+'/'+kind+'/'+stat+'/'+league.fotmobSlug;try{const html=await textResponse(url,{fetcher});pages[stat]={url,captured_at:now(),data:parseFotmob(html,stat,league)};}catch(error){failed=true;throw error;}}}
  const results=await Promise.allSettled([worker(),worker()]),error=results.find(r=>r.status==='rejected');if(error)throw error.reason;return buildFotmob(pages,league);
 }
 function extractUnderstat(html){

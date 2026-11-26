@@ -51,6 +51,7 @@ EXTRA={
  'yellow_card':[('yellowCards','statValue','number',False,False)],
  'red_card':[('redCards','statValue','number',False,False)],
  'penalty_save':[('penaltiesSaved','statValue','number',False,False),('penaltiesFaced','substatValue','number',False,False)],
+ 'penalty_conceded':[('penaltiesCommitted','statValue','number',False,False)],
  'clean_sheet':[('clean','statValue','number',False,False)],
  '_save_percentage':[('savepct','statValue','percent',False,False)],
  '_goals_prevented':[('prevented','statValue','fraction',True,False)],
@@ -74,7 +75,9 @@ TEAM_SPECS['overview']=('overview','fotmob-overview.html')
 
 def specs(league):return {**SPECS,**TEAM_SPECS,**(CORE if league['primary']=='FotMob' else {})}
 
-def base_url(league):return f"https://www.fotmob.com/leagues/{league['fotmobId']}/stats/season/{league['fotmobSeason']}"
+def stat_season(league,stat):return league.get('fotmobStatSeasons',{}).get(stat,league['fotmobSeason'])
+
+def base_url(league,stat=None):return f"https://www.fotmob.com/leagues/{league['fotmobId']}/stats/season/{stat_season(league,stat)}"
 
 class NextData(HTMLParser):
  def __init__(self):
@@ -99,12 +102,12 @@ def parse(body,stat,league=DEFAULT):
   if len(tables)!=1 or len(tables[0])!=league['teams']:raise ValueError('Incomplete FotMob standings')
   return {'statsData':tables[0]}
  doc=page['data']
- if str(doc.get('currentSeasonId'))!=str(league['fotmobSeason']) or doc.get('currentStatName')!=stat or doc.get('type')!=specs(league)[stat][0] or doc.get('leagueDetails',{}).get('id')!=league['fotmobId']:raise ValueError('Wrong FotMob competition, season or statistic')
- if not any(str(s.get('id'))==str(league['fotmobSeason']) and s.get('name')=='2026/2027' for s in doc.get('seasons',[])):raise ValueError('Season 2026/27 not confirmed')
+ if str(doc.get('currentSeasonId'))!=str(stat_season(league,stat)) or doc.get('currentStatName')!=stat or doc.get('type')!=specs(league)[stat][0] or doc.get('leagueDetails',{}).get('id')!=league['fotmobId']:raise ValueError('Wrong FotMob competition, season or statistic')
+ if not any(str(s.get('id'))==str(stat_season(league,stat)) and s.get('name')=='2026/2027' for s in doc.get('seasons',[])):raise ValueError('Season 2026/27 not confirmed')
  rows=doc.get('statsData')
  # A verified empty penalty-save ranking supplies no player values. Keeper
  # profiles must still publish actual counts before combined coverage passes.
- if not isinstance(rows,list) or len(rows)>1500 or not rows and stat!='penalty_save':raise ValueError('Missing statistic rows')
+ if not isinstance(rows,list) or len(rows)>1500 or not rows and stat not in {'penalty_save','penalty_conceded'}:raise ValueError('Missing statistic rows')
  seen=set()
  for r in rows:
   pid=str(r.get('id'));tid=str(r.get('teamId'))
@@ -114,6 +117,19 @@ def parse(body,stat,league=DEFAULT):
   if r.get('statValue',{}).get('name')!=stat:raise ValueError('Mismatched row statistic')
   number(r['statValue']['value'],signed=stat=='_goals_prevented')
  return doc
+
+def penalty_context(player,row,page,minutes_page,league):
+ if row.get('substatValue',{}).get('format')!='number':raise ValueError('Penalty appearances missing')
+ matches=number(row['substatValue']['value'],True)
+ if matches>league.get('maxTeamMatches',league['matches']*2//league['teams']):raise ValueError('Penalty appearances exceed phase')
+ own=next((r for r in (minutes_page or {}).get('data',{}).get('statsData',[]) if str(r.get('id'))==str(player.get('id')) and str(r.get('teamId'))==str(player.get('team_id'))),None)
+ same_batch=minutes_page and abs((datetime.fromisoformat(page['captured_at'])-datetime.fromisoformat(minutes_page['captured_at'])).total_seconds())<=600
+ minutes=None
+ if same_batch and own and own.get('substatValue',{}).get('format')=='number' and number(own['substatValue']['value'],True)==matches:
+  minutes=number(own['statValue']['value'])
+ return {'source':'FotMob','minutes':minutes,'matches':matches,
+         'captured_at':page['captured_at'],'url':page['url'],'season_id':stat_season(league,'penalty_conceded'),
+         'minutes_captured_at':minutes_page['captured_at'] if minutes is not None else None,'reportedValue':True}
 
 def atomic(path,body):
  path.parent.mkdir(parents=True,exist_ok=True);temporary=None
@@ -174,6 +190,8 @@ def build(pages,league=DEFAULT):
     if stat=='total_att_assist':
      if r['substatValue']['format']!='fraction':raise ValueError('Expected chances created per 90')
      ctx['reportedPer90']=number(r['substatValue']['value'])
+    if stat=='penalty_conceded':
+     ctx.update(penalty_context(p,r,pages[stat],pages.get('mins_played'),league))
     p['metricContexts'][key]=ctx
  for p in players.values():
   for key in ['minutes','matches']:p['metricContexts'][key]=context(p,'mins_played')
@@ -267,7 +285,7 @@ def database(payload):
 def main():
  parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--league',choices=LEAGUES,default='laliga');parser.add_argument('--input-dir',type=Path);parser.add_argument('--output-dir',type=Path,default=ROOT/'dist/downloads');args=parser.parse_args();league=LEAGUES[args.league]
  def get(item):
-  stat,(kind,filename)=item;url=f"{base_url(league)}/{kind}/{stat}/{league['fotmobSlug']}" if stat!='overview' else f"https://www.fotmob.com/leagues/{league['fotmobId']}/overview/{league['fotmobSlug']}"
+  stat,(kind,filename)=item;url=f"{base_url(league,stat)}/{kind}/{stat}/{league['fotmobSlug']}" if stat!='overview' else f"https://www.fotmob.com/leagues/{league['fotmobId']}/overview/{league['fotmobSlug']}"
   if args.input_dir:
    path=args.input_dir/filename
    if path.stat().st_size>MAX_BYTES:raise ValueError('Source file too large')

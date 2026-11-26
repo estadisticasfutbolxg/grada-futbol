@@ -3,11 +3,11 @@
   const leagues=typeof module==='object'&&module.exports?require('./leagues.js'):root.GradaLeagues;
   const roles=typeof module==='object'&&module.exports?require('./roles.js'):root.GradaRoles;
   const nationality=typeof module==='object'&&module.exports?require('./nationality.js'):root.GradaNationality;
-  const counts=['lineBreakingPasses','clearances','blocks','highClaims','sweeperActions','saves','conceded','chancesCreated','bigChancesCreated','bigChancesMissed','yellowCards','redCards','penaltiesSaved','penaltiesFaced','clean'];
+  const counts=['lineBreakingPasses','clearances','blocks','highClaims','sweeperActions','saves','conceded','chancesCreated','bigChancesCreated','bigChancesMissed','yellowCards','redCards','penaltiesSaved','penaltiesFaced','penaltiesCommitted','clean'];
   const publishedRates=['shotsOnTargetPer90','longBallsPer90','dribblesPer90','finalThirdRecoveriesPer90','midfieldRecoveriesPer90','foulsPer90'];
   const percentages=['shotsOnTargetPct','longBallAccuracy','dribbleSuccess','savepct'];
   const fields=[...counts,...publishedRates,...percentages,'prevented','xgot'];
-  const labels={lineBreakingPasses:'Pases rompelíneas',clearances:'Despejes',blocks:'Bloqueos',highClaims:'Balones aéreos atrapados',sweeperActions:'Acciones de líbero',chancesCreated:'Ocasiones creadas',bigChancesCreated:'Grandes ocasiones creadas',bigChancesMissed:'Grandes ocasiones falladas',yellowCards:'Amarillas',redCards:'Rojas',penaltiesSaved:'Penaltis parados',penaltiesFaced:'Penaltis afrontados',shotsOnTargetPer90:'Tiros a puerta /90',shotsOnTargetPct:'Tiros a puerta %',longBallsPer90:'Pases largos precisos /90',longBallAccuracy:'Pases largos %',dribblesPer90:'Regates logrados /90',dribbleSuccess:'Regates %',finalThirdRecoveriesPer90:'Recup. tercio final /90',midfieldRecoveriesPer90:'Recup. zona media /90',foulsPer90:'Faltas /90',xgot:'xGOT de los tiros'};
+  const labels={lineBreakingPasses:'Pases rompelíneas',clearances:'Despejes',blocks:'Bloqueos',highClaims:'Balones aéreos atrapados',sweeperActions:'Acciones de líbero',chancesCreated:'Ocasiones creadas',bigChancesCreated:'Grandes ocasiones creadas',bigChancesMissed:'Grandes ocasiones falladas',yellowCards:'Amarillas',redCards:'Rojas',penaltiesCommitted:'Penaltis cometidos',penaltiesSaved:'Penaltis parados',penaltiesFaced:'Penaltis afrontados',shotsOnTargetPer90:'Tiros a puerta /90',shotsOnTargetPct:'Tiros a puerta %',longBallsPer90:'Pases largos precisos /90',longBallAccuracy:'Pases largos %',dribblesPer90:'Regates logrados /90',dribbleSuccess:'Regates %',finalThirdRecoveriesPer90:'Recup. tercio final /90',midfieldRecoveriesPer90:'Recup. zona media /90',foulsPer90:'Faltas /90',xgot:'xGOT de los tiros'};
   const descriptions={
     lineBreakingPasses:'Pases que rompen una línea rival según FotMob. Se mantiene esta definición separada de los pases progresivos de StatsBomb.',
     clearances:'Despejes defensivos publicados por FotMob.',blocks:'Bloqueos defensivos publicados por FotMob.',
@@ -15,6 +15,7 @@
     chancesCreated:'Ocasiones creadas según FotMob. Se conservan separadas de otras definiciones de pases clave.',
     bigChancesCreated:'Grandes ocasiones creadas, según la clasificación del proveedor FotMob.',bigChancesMissed:'Grandes ocasiones falladas según FotMob. Un mayor volumen no implica mayor rendimiento.',
     yellowCards:'Tarjetas amarillas publicadas por FotMob.',redCards:'Tarjetas rojas publicadas por FotMob.',
+    penaltiesCommitted:'Penaltis señalados en contra por una infracción de este jugador, según FotMob; cuenta aunque el lanzamiento se falle o pare. Ausencias del ranking desconocidas. La tasa /90 exige minutos de la misma muestra. Penaliza juego limpio como cinco amarillas, con al menos 200 minutos propios; si falta esa muestra, no se retira el score.',
     penaltiesSaved:'Penaltis detenidos por el portero según FotMob.',penaltiesFaced:'Penaltis afrontados por el portero, de la misma tabla FotMob que sus penaltis detenidos.',
     shotsOnTargetPer90:'Tiros entre los tres palos por 90 minutos: tasa publicada por FotMob; el total no se deduce de una cifra redondeada.',
     shotsOnTargetPct:'Porcentaje de tiros a puerta publicado por FotMob. No se combina con los tiros totales de otro proveedor para reconstruir un recuento.',
@@ -45,10 +46,10 @@
       for(const key of ['xga','psxg','xgaOnTarget'])if(p[key]!==undefined&&p[key]!==null&&(!numeric(p[key])||p.metricContexts?.[key]?.profileVerified!==true||(key!=='xga'&&!['keeper_shotmap',...(key==='psxg'?['goals_prevented_identity']:[])].includes(p.metricContexts[key].derived))))throw new Error('Métrica recibida sin atribución verificada.');
       if(p.accuracy!==null&&(!numeric(p.accuracy)||p.accuracy>100))throw new Error('Porcentaje FotMob inválido.');
       for(const k of fields){
-        const value=p[k];if(value===null)continue;
+        const value=p[k];if(value===null||value===undefined&&k==='penaltiesCommitted')continue;
         if(typeof value!=='number'||!Number.isFinite(value)||(k!=='prevented'&&value<0)||(counts.includes(k)&&!Number.isInteger(value))||(percentages.includes(k)&&value>100))throw new Error('Métrica FotMob inválida: '+k);
       }
-      for(const [contextKey,c] of Object.entries(p.metricContexts||{}))if(c.source!=='FotMob'||!Number.isFinite(Date.parse(c.captured_at))||!numeric(c.minutes)||!Number.isInteger(c.matches)||c.matches<0||('reportedPer90'in c&&(!Number.isFinite(c.reportedPer90)||(contextKey!=='prevented'&&c.reportedPer90<0))))throw new Error('Contexto FotMob inválido.');
+      for(const [contextKey,c] of Object.entries(p.metricContexts||{}))if(c.source!=='FotMob'||!Number.isFinite(Date.parse(c.captured_at))||!(numeric(c.minutes)||contextKey==='penaltiesCommitted'&&c.minutes===null)||!Number.isInteger(c.matches)||c.matches<0||('reportedPer90'in c&&(!Number.isFinite(c.reportedPer90)||(contextKey!=='prevented'&&c.reportedPer90<0))))throw new Error('Contexto FotMob inválido.');
       if(m.profile==='full'||league.primary==='FotMob'){
         for(const k of ['goals','assists','shots','xg','xa','shotsPer90','conversion'])if(p[k]!==undefined&&p[k]!==null&&(!numeric(p[k])||(['goals','assists','shots'].includes(k)&&!Number.isInteger(p[k]))))throw new Error('Métrica principal FotMob inválida.');
         if(p.conversion>100)throw new Error('Modelo FotMob inválido.');
@@ -73,6 +74,17 @@
       pages:{...data.metadata.pages,...Object.fromEntries(pageEntries)},coverage:{...data.metadata.coverage,...Object.fromEntries(pageEntries.map(([key])=>[key,previous.metadata.coverage?.[key]]))},
       team_capture_recovery:{captured_at:new Date(captured(previous)).toISOString(),definition:'Equipos de una captura posterior con igual o mayor cobertura; se conservan sus muestras y las fichas de jugadores por separado.'}}};
   }
-  const api={validate,restoreTeams,fields,counts,publishedRates,percentages,labels,descriptions};
+  function restorePenalties(data,previous){
+    const stat='penalty_conceded',page=previous?.metadata.pages?.[stat],current=data.metadata.pages?.[stat];
+    if(!page||data.metadata.league_key!==previous.metadata.league_key||data.metadata.season_id!==previous.metadata.season_id||!Number.isFinite(Date.parse(page.captured_at))||Date.parse(page.captured_at)<=Date.parse(current?.captured_at||0))return data;
+    const prior=new Map(previous.players.map(p=>[String(p.id),p]));
+    return {...data,players:data.players.map(p=>{
+      const old=prior.get(String(p.id));if(!old||String(old.team_id)!==String(p.team_id))return p;
+      const metricContexts={...p.metricContexts};delete metricContexts.penaltiesCommitted;
+      if(old.metricContexts?.penaltiesCommitted)metricContexts.penaltiesCommitted={...old.metricContexts.penaltiesCommitted};
+      return {...p,penaltiesCommitted:old.penaltiesCommitted??null,metricContexts};
+    }),metadata:{...data.metadata,pages:{...data.metadata.pages,[stat]:{...page},...(previous.metadata.pages.penalty_minutes?{penalty_minutes:{...previous.metadata.pages.penalty_minutes}}:{})},coverage:{...data.metadata.coverage,[stat]:previous.metadata.coverage?.[stat]}}};
+  }
+  const api={validate,restoreTeams,restorePenalties,fields,counts,publishedRates,percentages,labels,descriptions};
   if(typeof module==='object'&&module.exports)module.exports=api;else root.GradaFotmob=api;
 })(typeof window==='object'?window:globalThis);

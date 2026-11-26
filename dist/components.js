@@ -4,19 +4,27 @@
   const numberFormat = new Intl.NumberFormat('es-ES',{maximumFractionDigits:2});
   const dateFormat = new Intl.DateTimeFormat('es-ES',{dateStyle:'medium',timeStyle:'short',timeZone:'Europe/Madrid'});
   const format = value => numberFormat.format(value);
+  function penaltyNote(record,metadata,profile){
+    const info=profile.fairPlay;
+    if(!Number.isSafeInteger(info.penaltiesCommitted))return '';
+    if(info.penaltiesStatus!=='verified')return '<p class="sub fairplay-note">Penaltis cometidos: '+info.penaltiesCommitted+' · sin ajuste: faltan minutos propios suficientes (mínimo '+profile.minimumMinutes+' min). No se toman los minutos de otras métricas.</p>';
+    const source=provenance(record.penaltySample||record,'penaltiesCommitted',metadata);
+    return '<p class="sub fairplay-note">Penaltis cometidos: '+info.penaltiesCommitted+' · '+format(info.penaltiesMinutes)+' min propios · '+format(info.penaltiesPer90)+' /90 · descuento adicional '+format(info.penaltiesPenaltyFraction*100)+' %. Un penalti pesa '+info.penaltyWeight+' amarillas (la mitad de una roja). '+(info.cardsStatus!=='verified'?'Tarjetas sin ajuste por falta de muestra; factor aplicado '+format(info.factor)+'. ':'')+'Se suman infracciones y tarjetas como consecuencias distintas: los totales no permiten identificar si son de la misma jugada. '+esc(source?.text||'FotMob')+'</p>';
+  }
   function fairPlayNote(record,metadata,profile){
     const info=profile?.fairPlay;if(!info)return '';
+    if(info.penaltiesStatus==='verified'&&info.cardsStatus!=='verified')return penaltyNote(record,metadata,profile);
     if(info.status!=='verified'){
       const reason=info.status==='insufficient_sample'?'muestra propia insuficiente':info.status==='incompatible_sample'?'amarillas y rojas de muestras diferentes':'faltan tarjetas verificadas';
-      return '<p class="sub fairplay-note">Juego limpio sin ajuste: '+esc(reason)+'. Se conserva la base del score.</p>';
+      return '<p class="sub fairplay-note">Juego limpio sin ajuste: '+esc(reason)+'. Se conserva la base del score.</p>'+penaltyNote(record,metadata,profile);
     }
     const sample=record.disciplineSample||record,coverage=info.contexts?.yellowCards?.coverage;
     const fixed=n=>new Intl.NumberFormat('es-ES',{minimumFractionDigits:3,maximumFractionDigits:3}).format(n),penalty=numberFormat.format(info.penaltyFraction*100),yellow=provenance(sample,'yellowCards',metadata),red=provenance(sample,'redCards',metadata),source=yellow?.date===red?.date?yellow?.text:'Amarillas: '+yellow?.text+'; rojas: '+red?.text;
-    return '<p class="sub fairplay-note">Juego limpio: '+info.yellowCards+(info.yellowCards===1?' amarilla y ':' amarillas y ')+info.redCards+(info.redCards===1?' roja · ':' rojas · ')+format(info.weightedCardsPer90)+' puntos /90 · descuento '+penalty+' %. '+
+    return '<p class="sub fairplay-note">Juego limpio: '+info.yellowCards+(info.yellowCards===1?' amarilla y ':' amarillas y ')+info.redCards+(info.redCards===1?' roja · ':' rojas · ')+format(info.weightedCardsPer90)+' puntos de tarjetas /90 · descuento total '+penalty+' %. '+
       (Number.isFinite(profile.baseScore)?'Base del score '+fixed(profile.baseScore)+' × factor '+fixed(info.factor)+' ≈ score '+fixed(profile.score)+'. ':'')+
       'Descuento por amarillas: '+format(info.yellowPenaltyFraction*100)+' %; por rojas: '+format(info.redPenaltyFraction*100)+' % antes del mínimo de score 0. '+
       'Una roja pesa como '+info.redWeight+' amarillas; penalización lineal de '+format(info.yellowPenaltyPer90*100)+' % por punto /90. Pesos propios de GRADA. '+
-      'No estima sanciones cumplidas ni minutos en inferioridad. '+esc(source||info.source)+' · muestra emparejada de ambas tarjetas.'+(coverage&&coverage.known<coverage.total?' Ajuste parcial: '+coverage.known+'/'+coverage.total+' competiciones con ambas tarjetas verificadas.':'')+'</p>';
+      'No estima sanciones cumplidas ni minutos en inferioridad. '+esc(source||info.source)+' · muestra emparejada de ambas tarjetas.'+(coverage&&coverage.known<coverage.total?' Ajuste parcial: '+coverage.known+'/'+coverage.total+' competiciones con ambas tarjetas verificadas.':'')+'</p>'+penaltyNote(record,metadata,profile);
   }
   function attackNote(record,metadata,profile){
     const attack=profile.attack;

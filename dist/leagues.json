@@ -75,7 +75,10 @@
     "primary": "FotMob",
     "espnFile": "espn-bundesliga-2026-27.json",
     "espnName": "German Bundesliga",
-    "division": 1
+    "division": 1,
+    "fotmobStatSeasons": {
+      "penalty_conceded": 1000001451
+    }
   },
   {
     "id": "ligue-1",
@@ -91,7 +94,10 @@
     "primary": "FotMob",
     "espnFile": "espn-ligue-1-2026-27.json",
     "espnName": "French Ligue 1",
-    "division": 1
+    "division": 1,
+    "fotmobStatSeasons": {
+      "penalty_conceded": 1000001834
+    }
   },
   {
     "id": "portugal",

@@ -8,7 +8,7 @@ Recuentos: suma de valores conocidos, sin convertir ausencias en ceros. Tasas: m
 
 Juego limpio mantiene la fórmula vigente. Solo usa contribuciones con ambas tarjetas y muestra compatible; si a un torneo le falta una, conserva el ajuste de la muestra emparejada de las otras competiciones y declara su cobertura. No supone cero ni elimina una penalización ya verificada. La regeneración debe preservar score, posición y perfil; las posiciones derivadas no se reutilizan como evidencia original.
 
-Modelo vigente `role_fairplay_radar_v8`. El score de temporada incorpora un bloque de aporte ofensivo para los jugadores de campo. El modelo común es `dist/scores.js`; tablas, tarjetas, fichas, comparador, filtros y generador consumen sus resultados.
+Modelo vigente `role_fairplay_radar_v9`. El score de temporada incorpora un bloque de aporte ofensivo para los jugadores de campo. El modelo común es `dist/scores.js`; tablas, tarjetas, fichas, comparador, filtros y generador consumen sus resultados.
 
 ## Jugadores
 
@@ -126,7 +126,7 @@ Con las capturas publicadas al preparar este cambio hay 1.029 asistencias conoci
 
 ## Artefactos y reproducción
 
-`scores.build` calcula índices MED, perfil, área del radar, aporte ofensivo y ajuste de juego limpio en ese orden; `scores.value`, `scores.eligible` y `scores.rankingAxes` resuelven rankings y columnas. `fairplay.js` conserva fuente/muestra de ambas tarjetas. `squads.js` produce promedios y contribuciones con el score final y el perfil utilizado. `withScores` añade `playerScore`, `playerBaseScore`, `fairPlay`, `scorePosition`, `scoreProfile`, `scoreProfileLabel`, `midfieldProfile` y scores/ledgers de equipo al combinado. El modelo se identifica como `role_fairplay_radar_v8` en `metadata.derived_metrics.playerScore`. Todas las ligas descarta derivados previos antes de recalcular.
+`scores.build` calcula índices MED, perfil, área del radar, aporte ofensivo y ajuste de juego limpio en ese orden; `scores.value`, `scores.eligible` y `scores.rankingAxes` resuelven rankings y columnas. `fairplay.js` conserva fuente/muestra de ambas tarjetas. `squads.js` produce promedios y contribuciones con el score final y el perfil utilizado. `withScores` añade `playerScore`, `playerBaseScore`, `fairPlay`, `scorePosition`, `scoreProfile`, `scoreProfileLabel`, `midfieldProfile` y scores/ledgers de equipo al combinado. El modelo se identifica como `role_fairplay_radar_v9` en `metadata.derived_metrics.playerScore`. Todas las ligas descarta derivados previos antes de recalcular.
 
 El generador lee las capturas verificadas de las ligas disponibles para compartir referencia. En una importación por etapas, `--reference-dir` aporta las otras ligas, y `import_leagues.py` recalcula todos los derivados tras completar las fuentes. No actualiza las fechas originales por recalcular scores. Todas las ligas descarta derivados anteriores y usa el modelo común. En el navegador, el modelo se invalida al cambiar una captura, no al cambiar de vista.
 
@@ -141,3 +141,10 @@ El Worker empaqueta HTML con hashes en las URLs de scripts y CSS para que cada p
 La auditoría de la revisión de nombres y posiciones, sus jugadores recuperados y los pendientes reales están en [SCORE_REVIEW.md](SCORE_REVIEW.md).
 
 Selecciones compara siete sistemas con contención, creación y puestos publicados compatibles. Cada sistema maximiza la suma de scores canónicos; entre sus onces completos se elige la mayor media simple. El puesto propuesto y el perfil del score se muestran separados; no hay una nueva puntuación individual. [Asignación y límites](NATIONS.md).
+
+
+## Penaltis cometidos · ampliación del juego limpio
+
+A petición del usuario, cada penalti cometido añade `0,50 × penaltis × 90 / minutos propios` a la fracción de penalización. Equivale a cinco amarillas o media roja. El ajuste total se limita a 1 y el score no baja de cero. Los penaltis tienen una muestra independiente de las tarjetas: identidad/club/temporada y apariciones coincidentes con el ranking de minutos de la misma tanda, mínimo 200 minutos. En varias competiciones solo se suman para el ajuste contribuciones con minutos propios conocidos; se declara cobertura. La tabla puede conservar otros recuentos sin incluirlos en la tasa.
+
+Ausencia o muestra insuficiente no significa cero, no elimina un score válido ni borra el ajuste verificado de tarjetas. Si solo hay penaltis verificados, se aplica su componente y se declara que faltan tarjetas. Estos son pesos de diseño de GRADA, no una estimación del valor causal de un penalti. Los totales no identifican la jugada: penalti y tarjeta se contabilizan como consecuencias distintas, sin afirmar deduplicación por evento. Aplica también a porteros que cometan un penalti; su bloque de rendimiento sigue sin métricas ofensivas. Método `linear_cards_penalties_v3` cuando la muestra de penaltis es válida; en los demás casos se mantiene el componente `linear_cards_v2`.

@@ -4,7 +4,7 @@
   const {minimumScoreMinutes}=typeof module==='object'&&module.exports?require('./sampling.js'):root.GradaSampling;
   // GRADA design parameters, not observed suspension lengths or causal estimates.
   const method='linear_cards_v2',yellowPenaltyPer90=0.10,redWeight=10,maximumPenalty=1;
-  function evaluate(record,minimumMinutes=minimumScoreMinutes){
+  function evaluateCards(record,minimumMinutes=minimumScoreMinutes){
     record=record.competitionAggregate?(record.disciplineSample||{metricContexts:{}}):record;
     const yellow=record.yellowCards,red=record.redCards;
     const a=metrics.context(record,'yellowCards'),b=metrics.context(record,'redCards');
@@ -33,12 +33,26 @@
       yellowCardsPer90,redCardsPer90,yellowPenaltyFraction,redPenaltyFraction,rawPenaltyFraction,
       penaltyFraction,factor:1-penaltyFraction};
   }
+  const penaltyWeight=5;
+  function evaluate(record,minimumMinutes=minimumScoreMinutes){
+    const cards=evaluateCards(record,minimumMinutes);
+    const sample=record.competitionAggregate&&Object.hasOwn(record,'penaltySample')?(record.penaltySample||{}):record;
+    const value=sample.penaltiesCommitted,c=metrics.context(sample,'penaltiesCommitted');
+    const known=Number.isSafeInteger(value)&&value>=0;
+    const result={...cards,cardsStatus:cards.status,penaltyWeight,penaltiesCommitted:known?value:null,penaltiesStatus:'unavailable',penaltiesPer90:null,penaltiesMinutes:c?.minutes??null,penaltiesContext:c||null,penaltiesPenaltyFraction:null};
+    if(!known||c?.source!=='FotMob'||!Number.isFinite(Date.parse(c.captured_at)))return result;
+    if(!Number.isFinite(minimumMinutes)||minimumMinutes<0||!Number.isFinite(c.minutes)||c.minutes<=0||c.minutes<minimumMinutes)return {...result,penaltiesStatus:'insufficient_sample'};
+    const rate=value/c.minutes*90,extra=rate*yellowPenaltyPer90*penaltyWeight;
+    if(!Number.isFinite(extra))return {...result,penaltiesStatus:'invalid_rate'};
+    const raw=(cards.status==='verified'?cards.rawPenaltyFraction:0)+extra,penaltyFraction=Math.min(maximumPenalty,raw);
+    return {...result,method:'linear_cards_penalties_v3',status:'verified',penaltiesStatus:'verified',penaltiesPer90:rate,penaltiesPenaltyFraction:extra,rawPenaltyFraction:raw,penaltyFraction,factor:1-penaltyFraction};
+  }
   function apply(record,profile){
     const fairPlay=evaluate(record,profile.minimumMinutes),baseScore=profile.score;
     const score=Number.isFinite(baseScore)&&fairPlay.factor!==null?baseScore*fairPlay.factor:baseScore;
     return {...profile,baseScore,score,comparableArea:score,fairPlay:{...fairPlay,
       scoreDeduction:Number.isFinite(baseScore)&&fairPlay.factor!==null?baseScore-score:null}};
   }
-  const api={evaluate,apply,method,yellowPenaltyPer90,maximumPenalty,redWeight};
+  const api={evaluate,apply,method,yellowPenaltyPer90,maximumPenalty,redWeight,penaltyWeight};
   if(typeof module==='object'&&module.exports)module.exports=api;else root.GradaFairPlay=api;
 })(typeof window==='object'?window:globalThis);

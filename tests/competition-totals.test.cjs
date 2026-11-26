@@ -38,3 +38,10 @@ test('regenerated snapshots keep the same position evidence and canonical scores
  const a=data('laliga',600),b=data('champions-league',300);a.players[24].pos='—';const scopes=require('../dist/scopes'),reference=scopes.aggregate([a,b]),before=S.build(reference),generated=[a,b].map(d=>S.withScores(d,{referencePlayers:reference.players})),again=scopes.aggregate(generated),after=S.build(again);
  assert.equal(generated[0].players[24].seasonPosition.original_position,'—');for(const p of again.players){const original=reference.players.find(q=>C.identity(q)===C.identity(p));assert.equal(p.pos,original.pos);assert.equal(after.players.get(p).profileKey,before.players.get(original).profileKey);assert.equal(after.players.get(p).score,before.players.get(original).score);}
 });
+test('penalty adjustments aggregate only contributions with own minutes, without discarding a known penalty sample',()=>{
+ const a=data('laliga',900),b=data('champions-league',300),p=a.players[0],q=b.players[0];
+ p.penaltiesCommitted=1;p.metricContexts.penaltiesCommitted={source:'FotMob',minutes:900,matches:10,captured_at:'2026-11-26T07:00:00Z'};
+ q.penaltiesCommitted=2;q.metricContexts.penaltiesCommitted={source:'FotMob',minutes:null,matches:3,captured_at:'2026-11-26T07:00:00Z'};
+ const row=aggregate(a,b).players.find(r=>C.identity(r)===C.identity(p)),info=F.evaluate(row);
+ assert.equal(row.penaltiesCommitted,3);assert.equal(row.penaltySample.penaltiesCommitted,1);assert.equal(info.penaltiesCommitted,1);assert.equal(info.penaltiesMinutes,900);assert(Math.abs(info.penaltiesPenaltyFraction-0.05)<1e-12);assert.equal(info.penaltiesContext.coverage.known,1);assert.equal(info.penaltiesContext.coverage.total,2);
+});

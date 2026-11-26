@@ -1,6 +1,6 @@
 (function (root) {
   'use strict';
-  const rates = new Set(['goals','assists','xg','xa','delta','passes','completed','shots','shotsOnTarget','saves','conceded','xga','tackles','interceptions','recoveries','keypasses','progressive','lineBreakingPasses','clearances','blocks','highClaims','sweeperActions','chancesCreated','bigChancesCreated','bigChancesMissed','yellowCards','redCards','penaltiesSaved','penaltiesFaced','xgot','prevented','psxg','xgaOnTarget']);
+  const rates = new Set(['goals','assists','xg','xa','delta','passes','completed','shots','shotsOnTarget','saves','conceded','xga','tackles','interceptions','recoveries','keypasses','progressive','lineBreakingPasses','clearances','blocks','highClaims','sweeperActions','chancesCreated','bigChancesCreated','bigChancesMissed','yellowCards','redCards','penaltiesSaved','penaltiesFaced','penaltiesCommitted','xgot','prevented','psxg','xgaOnTarget']);
   const fixedRates = {goalsPer90:'goals',assistsPer90:'assists',savesPer90:'saves',xga90:'xga',conceded90:'conceded',completedPer90:'completed',psxg90:'psxg',xgaOnTarget90:'xgaOnTarget',goalInvolvementsPer90:'goalInvolvements',xgXaPer90:'expectedInvolvements',preventedPer90:'prevented'};
   const ratios = {goalsPerXg:['goals','xg'],assistsPerXa:['assists','xa'],xgPerShot:['xg','shots']};
   const sums={goalInvolvements:['goals','assists'],expectedInvolvements:['xg','xa']};

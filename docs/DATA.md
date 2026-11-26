@@ -16,7 +16,7 @@ Cada competición conserva JSON y SQLite originales. La unión de temporada se c
 
 > Desde el 22 de noviembre: [país deportivo publicado y selecciones teóricas con sistemas coherentes](NATIONS.md). `nationality` conserva código, nombre, ID de selección y contexto de identidad/club/liga/temporada/fecha/URL. No cambia estadísticas ni el score canónico del jugador; los onces incompletos conservan score desconocido.
 
-> [Score único de temporada por jugador](SCORES.md), modelo `role_fairplay_radar_v8`, con aporte de goles, asistencias, xG y xA por 90 en jugadores de campo y mínimo de 200 minutos inclusive. La posición y sus discrepancias siguen resolviéndose con fuentes; no se elige la posición ni el score para maximizar su puntuación.
+> [Score único de temporada por jugador](SCORES.md), modelo `role_fairplay_radar_v9`, con aporte de goles, asistencias, xG y xA por 90 en jugadores de campo y mínimo de 200 minutos inclusive. La posición y sus discrepancias siguen resolviéndose con fuentes; no se elige la posición ni el score para maximizar su puntuación.
 
 > Definición vigente desde el 9 de noviembre: [score único por posición, referencia común, promedios de equipo y totales con cobertura](SCORES.md). Las definiciones anteriores de subperfiles, índices independientes, referencias por liga o sumas que aparezcan en el registro histórico quedan sustituidas por ese modelo.
 
@@ -114,3 +114,13 @@ La [captura FotMob](FOTMOB.md) añade métricas de pase, defensa, ataque, discip
 ## Ámbito de varias ligas y equipos
 
 El catálogo y las diferencias de modelos están en [LEAGUES.md](LEAGUES.md). Se conservan fechas y denominadores por campo al concatenar fichas; no se unen personas por nombre entre ligas. Los rankings requieren todos los ejes y mínimos por origen. Los equipos usan PJ propios, con signo en diferencias de goles/xG y escala invertida en goles/xG recibidos. Los tiros a puerta totales ESPN y las tasas publicadas FotMob son campos distintos. No se infieren recuentos ni se llama pases clave a las ocasiones creadas de otra definición.
+
+## Penaltis cometidos y Analítica Fantasy · 26 de noviembre de 2026
+
+`penaltiesCommitted` procede del ranking FotMob `penalty_conceded`: infracción individual que concede un penalti, independientemente del resultado del lanzamiento. Se verifica en las dieciocho competiciones. El ranking publica recuento y apariciones, no minutos: el enriquecimiento obtiene también el ranking de minutos de la misma tanda e ID/club, con iguales apariciones. Si falta esa comprobación conserva `minutes: null` y no toma los minutos antiguos del jugador para /90. Un refresco completo solo usa minutos del ranking propio capturado en la misma tanda y con iguales apariciones. Los jugadores ausentes permanecen desconocidos, nunca cero supuesto. No añade otro eje obligatorio. Por petición posterior del usuario penaliza juego limpio con peso de cinco amarillas, siempre con al menos 200 minutos propios.
+
+Bundesliga y Ligue 1 publican este ranking 2026/27 bajo los IDs de temporada `1000001451` y `1000001834`; `fotmobStatSeasons` declara estas excepciones por ranking. No cambia las cifras ni el identificador de las capturas originales de otras métricas. Cada página debe confirmar el ID, nombre de temporada 2026/2027, competición y estadística; no basta un ID en la URL. El servicio usa la misma validación.
+
+El generador `scripts/enrich_player_penalties.py --league laliga` actualiza únicamente el campo y su procedencia, preparando JSON/SQLite. El generador completo y el botón de actualización incluyen el ranking; navegador y Worker recuperan una captura de penaltis posterior independientemente de la fecha del resto. Las capturas válidas anteriores se conservan ante un fallo.
+
+`scripts/import_analitica_fantasy.py` descarga la tabla pública de LaLiga Fantasy desde [Analítica Fantasy](https://www.analiticafantasy.com/fantasy-la-liga/estadisticas) y extrae el conjunto completo publicado, no solo la primera página visible. Produce JSON/CSV atribuidos con fecha y SHA256. Conserva recuentos, puntos fantasy y valores de mercado como campos distintos. Los IDs pertenecen a esa fuente; no se mezclan con FotMob/ESPN ni se usan para score, posiciones o referencias de GRADA. La descarga verificada tiene 618 filas. Acceso público no acredita licencia; no se presume permiso nuevo. No se sirven estos datos desde el Site ni se suben a GitHub: solo el generador y pruebas. Ejemplo: `python scripts/import_analitica_fantasy.py --output-dir data/analitica-fantasy`.
