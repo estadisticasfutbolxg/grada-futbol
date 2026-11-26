@@ -1,6 +1,6 @@
 # Penaltis cometidos y descarga de Analítica Fantasy
 
-- Estado: `review`
+- Estado: `done`
 - Responsable: Codex
 - Revisor: autocontrol, sin revisión independiente
 - Rama: `feat/penalties-conceded`
@@ -31,6 +31,15 @@ Auditoría real: 8.302 registros de otras estadísticas idénticos, base de scor
 
 Analítica Fantasy: descarga real de 618 filas de LaLiga Fantasy 2026/27, con goles, asistencias, minutos, tiros, regates, recuperaciones, pérdidas, despejes, portería, tarjetas, penaltis/autogoles, valor de mercado y puntos fantasy separados. Se extrae el payload público completo; la tabla visual solo muestra veinte filas. Generador reproducible y validado sin ejecutar JavaScript. Datos sin mezclar con GRADA ni servir en el Site. Archivos JSON/CSV atribuidos en `/workspace/entregas/analitica-fantasy-laliga-2026-27.*`; CSV de 466 fichas en `/workspace/entregas/grada-penaltis-cometidos-2026-11-26.csv`. No se presume permiso nuevo de reutilización.
 
-Pruebas: 36 archivos Node y 22 casos Python, incluidas identidad/temporada, ceros/ausencias, minutos propios, muestras parciales entre competiciones, reparto de penalizaciones, caché/Worker y parser/CSV Fantasy. ESLint/Ruff, enlaces y diff correctos. Autocontrol sin revisión independiente. Sin QA visual disponible; se comprueba el Worker exacto con VM/DOM y HTTP al publicar. Evidencias privadas bajo `/workspace/scratch/grada-penalties/`. Pendientes PR, integración y publicación privada.
+Pruebas: 36 archivos Node y 22 casos Python, incluidas identidad/temporada, ceros/ausencias, minutos propios, muestras parciales entre competiciones, reparto de penalizaciones, caché/Worker y parser/CSV Fantasy. ESLint/Ruff, enlaces y diff correctos. Autocontrol sin revisión independiente. Sin QA visual disponible; se comprueba el Worker exacto con VM/DOM y HTTP al publicar. Evidencias privadas bajo `/workspace/scratch/grada-penalties/`. PR, integración y publicación privada verificados abajo.
 
 El validador histórico StatsBomb sigue sin su JSON local; no valida estas capturas activas FotMob/ESPN ni se presenta como aprobado.
+
+
+## Entrega verificada
+
+[PR #78](https://github.com/estadisticasfutbolxg/grada-futbol/pull/78) integrado en `0a866494aeade93fd490b39368f2fa61219ff257`. Quality success en head `6735eb23da1e94fa2b5667d646cbcd5740945e76`, job 139740516066. Los 27 archivos subidos se comprobaron por SHA de blob. 36 archivos Node y 22 casos Python correctos. Tres arranques VM/DOM del Worker exacto cubren columna visible, tasas con minutos propios, penalización real positiva, radar, comparaciones, selecciones y fallo de una fuente. Sin QA visual ni revisión independiente.
+
+[GRADA privada](https://grada-futbol-analitica.ivanmatema2.chatgpt.site), **v42**, fuente nativa `211cd46f5aa42ba7830800e4ad6eb6135bef04b1`, despliegue `appgdep_6b07d5479dc48191950a1b77f2cb668a` succeeded. Worker SHA256 `9390d9f75c3a0781517778d64b51831d91b75c097f0c1fd2837c8b97dfd629ce`, 373 assets, 12 módulos. HTTP confirma HTML y bundle exactos (94.558 bytes gzip), 36 capturas fuente por hash, 42 rutas retiradas 400/404 y actualización sin identidad 401. Los datos Fantasy no se sirven (404). Política custom revisión 3 con solo propietario, cero editores/grupos/visitantes y runtime revisión 1 conservados.
+
+Fuente FotMob: 466 registros jugador/competición con la nueva métrica y minutos propios en dieciocho competiciones, ningún cruce dudoso. 403 scores reducidos, cero perdidos, 4.224 válidos; 393 pendientes anteriores sobre 200 minutos por métricas obligatorias siguen sin imputarse. Cero jugadores nuevos y cero partidos individuales actualizados. Cobertura agregada previa de 1.572 partidos por proveedor conservada; no se consultaron encuentros individuales. Analítica Fantasy: 618 filas descargadas en archivos separados, fuera de GitHub y del Site. Capturas/bases/CSV privados, con generadores versionados. Evidencias `audit.json`, `enrichment.json`, `runtime-cups.json`, `live.json`, auditorías de score/métricas y extracción Fantasy bajo `/workspace/scratch/grada-penalties/`.
