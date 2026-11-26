@@ -3,6 +3,9 @@ import importlib.util
 from pathlib import Path
 import unittest
 
+import numpy as np
+from sklearn.preprocessing import StandardScaler
+
 SCRIPTS = Path(__file__).resolve().parents[1] / 'scripts'
 spec = importlib.util.spec_from_file_location('regression', SCRIPTS / 'analyze_fantasy_regression.py')
 module = importlib.util.module_from_spec(spec)
@@ -48,8 +51,47 @@ class RegressionContract(unittest.TestCase):
         self.assertIn('redCards', fitted['constant_features'])
         self.assertFalse(any(c['key'] == 'redCards' for c in fitted['coefficients']))
 
+    def test_signed_groups_split_effect_and_preserve_predictions(self):
+        rng = np.random.default_rng(2)
+        a, b = rng.normal(size=(2, 100))
+        x = np.column_stack([a, -2 * a, b, 3 * a])
+        scaler = StandardScaler().fit(x)
+        z = scaler.transform(x)
+        grouper = module.CorrelationGroups(control_indices=(3,)).fit(z)
+        self.assertEqual(grouper.groups_, [[0, 1], [2], [3]])
+        beta = np.array([6., 2., 10.])
+        distributed = grouper.distribute(beta)
+        np.testing.assert_allclose(distributed, [3, -3, 2, 10])
+        np.testing.assert_allclose(grouper.transform(z) @ beta, z @ distributed)
+        raw = distributed / scaler.scale_
+        intercept = 12 - raw @ scaler.mean_
+        np.testing.assert_allclose(12 + grouper.transform(z) @ beta, intercept + x @ raw)
+
+    def test_complete_link_does_not_chain_and_test_rows_do_not_define_groups(self):
+        rng = np.random.default_rng(9)
+        a, b = rng.normal(size=(2, 5000))
+        x = np.column_stack([a, 0.9 * a + 0.44 * b, 0.62 * a + 0.78 * b])
+        grouper = module.CorrelationGroups().fit(x)
+        self.assertEqual(sorted(len(g) for g in grouper.groups_), [1, 2])
+        before = [list(g) for g in grouper.groups_]
+        grouper.transform(np.column_stack([a, a, a]))
+        self.assertEqual(grouper.groups_, before)
+
+    def test_axis_weights_are_profile_specific_and_exclude_minutes_and_extras(self):
+        first = records()
+        second = records()
+        for row in second:
+            row['points'] = 15 * row['metrics']['tackles'] + 0.1 * row['minutes']
+        defense = module.fit_profile(first, 'DEF')
+        attack = module.fit_profile(second, 'DEL')
+        d = next(c for c in defense['coefficients'] if c['key'] == 'tackles')
+        a = next(c for c in attack['coefficients'] if c['key'] == 'tackles')
+        self.assertGreater(a['ridge_raw'], d['ridge_raw'] * 2)
+        self.assertAlmostEqual(sum(c['suggested_axis_share'] or 0 for c in defense['coefficients']), 1)
+        self.assertTrue(all(c['suggested_axis_share'] is None for c in defense['coefficients'] if c['kind'] != 'axis'))
+
     def test_small_profile_is_explicitly_not_estimated(self):
-        result = module.fit_profile(records(5), 'MED_BALANCED')
+        result = module.fit_profile(records(5), 'MED_DEF')
         self.assertEqual(result['status'], 'insufficient_sample')
         self.assertEqual(result['coefficients'], [])
         self.assertEqual(result['players'], [])

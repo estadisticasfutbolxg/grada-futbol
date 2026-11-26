@@ -17,3 +17,10 @@ test('provenance explains newer goal selection and original same-source componen
  const c={source:'FotMob',captured_at:'2026-11-08T12:00:00Z',matches:12,minutes:930,profileVerified:true},raw={goals:8,xg:7.02,metricContexts:{goals:c,xg:c}},p={goals:8,xg:6.5,matches:10,metricContexts:{goals:{...c,selection:{method:'goal_sample_freshness_v1',preferred_source:'Understat'}},xg:{source:'Understat',matches:10,minutes:769,captured_at:'2026-11-01T12:00:00Z'}},sourceRecords:{FotMob:raw}},metadata={sources:{FotMob:{imported_at:c.captured_at}}};
  const goals=root.GradaComponents.provenance(p,'goals',metadata),ratio=root.GradaComponents.provenance(p,'goalsPerXg',metadata);assert(goals.text.includes('recuento posterior'));assert(goals.text.includes('Understat'));assert(ratio.text.includes('componentes originales de FotMob'));assert(ratio.text.includes('goles 8'));assert(ratio.text.includes('xG 7,02'));assert.equal(ratio.matches,12);
 });
+
+ test('weighted sector areas reproduce score including unequal attack weights and discipline',()=>{
+ const p={kind:'player',score:0.22,axes:[{key:'tackles',label:'Entradas',percentile:20},{key:'recoveries',label:'Recuperaciones',percentile:50},{key:'interceptions',label:'Intercepciones',percentile:80}],attack:{usedWeight:0.2,entries:[{key:'goals',weight:0.2,percentile:50}]},fairPlay:{factor:0.8}};
+ const base=(0.2*0.5+0.5*0.8+0.8*0.2)/3*0.8+0.2*0.5**2;p.score=base*0.8;
+ const sectors=radar.scoreSectors(p);assert.equal(sectors.length,4);assert(Math.abs(sectors.reduce((s,a)=>s+a.weight,0)-1)<1e-12);assert(Math.abs(sectors.reduce((s,a)=>s+a.contribution,0)-p.score)<1e-12);assert.notEqual(sectors[0].weight,sectors[3].weight);
+ assert.deepEqual(radar.scoreSectors({...p,score:null}),[]);assert.deepEqual(radar.scoreSectors({...p,kind:'team'}),[]);
+ });

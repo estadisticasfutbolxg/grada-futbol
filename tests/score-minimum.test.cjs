@@ -49,6 +49,6 @@ test('browser modules share the rule; ranking defaults, exported metadata and KP
  const root={GradaMetrics:require('../dist/metrics.js'),GradaRoles:require('../dist/roles.js')};
  for(const name of ['sampling','fairplay','radar'])vm.runInNewContext(fs.readFileSync(__dirname+'/../dist/'+name+'.js','utf8'),{window:root});
  assert.equal(root.GradaRadar.minimumScoreMinutes,200);assert(root.GradaRadar.rankingDefinitions.filter(d=>d.kind==='player').every(d=>d.minimum===200));assert.equal(root.GradaRadar.definition('MED').minimum,200);
- const metadata=scores.withScores(fixture()).metadata.derived_metrics.playerScore;assert.equal(metadata.method,'role_fairplay_radar_v9');assert.deepEqual(metadata.minimum_minutes,{POR:200,DEF:200,MED:200,DEL:200});
+ const metadata=scores.withScores(fixture()).metadata.derived_metrics.playerScore;assert.equal(metadata.method,'role_fairplay_radar_v10');assert.deepEqual(metadata.minimum_minutes,{POR:200,DEF:200,MED:200,DEL:200});
  const html=fs.readFileSync(__dirname+'/../dist/index.html','utf8');assert(html.indexOf('src="sampling.js"')<html.indexOf('src="fairplay.js"'));assert.match(html,/id="ranking-min"[^>]*value="200"/);assert(!/mínimo (450|180) min/.test(html));assert.match(html,/id="leader-field-min"[^>]*value="450"/);assert.match(html,/id="leader-saves-min"[^>]*value="180"/);
 });

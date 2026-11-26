@@ -26,10 +26,9 @@
     POR:['savepct','savesPerMatch','concededPerMatch','psxgEfficiency','prevented','highClaims','sweeperActions','cleanPerMatch','longBallsPer90','accuracy','completedPer90','passes'],
     MED_DEF:['completedPer90','accuracy','recoveries','tackles','interceptions','lineBreakingPasses'],
     MED_ATT:['xa','chancesCreated','bigChancesCreated','shotsOnTargetPer90','dribblesPer90','goals'],
-    MED_BALANCED:['completedPer90','xa','chancesCreated','recoveries','tackles','interceptions'],
   };
   const attackKeys = ['goals','assists','xg','xa'];
-  const attackWeights = Object.freeze({DEF:0.05,DEF_FB:0.15,MED_DEF:0.05,MED:0.10,MED_BALANCED:0.15,MED_ATT:0.25,DEL:0.35});
+  const attackWeights = Object.freeze({DEF:0.05,DEF_FB:0.15,MED_DEF:0.05,MED:0.10,MED_ATT:0.25,DEL:0.35});
   const rankingDefinitions=[
     {key:'DEL',label:'Delanteros',position:'DEL',kind:'player',minimum:minimumScoreMinutes},
     {key:'POR',label:'Porteros',position:'POR',kind:'player',minimum:minimumScoreMinutes},
@@ -38,7 +37,6 @@
     {key:'DEF_FB',label:'Laterales y carrileros · ataque y defensa',position:'DEF',roleKey:'FB',kind:'player',minimum:minimumScoreMinutes},
     {key:'MED_DEF',label:'Centrocampistas · perfil defensivo',position:'MED',kind:'player',minimum:minimumScoreMinutes},
     {key:'MED_ATT',label:'Centrocampistas · perfil ofensivo',position:'MED',kind:'player',minimum:minimumScoreMinutes},
-    {key:'MED_BALANCED',label:'Centrocampistas · perfil equilibrado',position:'MED',kind:'player',minimum:minimumScoreMinutes},
     {key:'TEAM_ATTACK',label:'Equipos · mejores ataques',kind:'team',minimum:5,aggregateProfile:'ATTACK'},
     {key:'TEAM_STRIKERS',label:'Equipos · mejor delantera',kind:'team',minimum:5,aggregateProfile:'DEL'},
     {key:'TEAM_DEFENSE',label:'Equipos · mejores defensas',kind:'team',minimum:5,aggregateProfile:'DEF'},
@@ -141,11 +139,11 @@
     if(kind!=='player')throw new Error('Los equipos usan promedios de sus jugadores en GradaScores.');
     const roles=midfieldRoles||new Map(),indices=midfieldRoles?null:midfieldIndices(all,{referencePlayers});
     if(indices)for(const p of all)if(p.pos==='MED')roles.set(p,midfieldRole(p,indices));
-    const keyFor=p=>p.pos==='DEF'&&tactical.matches(p,'FB')?'DEF_FB':p.pos==='MED'&&['MED_ATT','MED_DEF','MED_BALANCED'].includes(roles.get(p))?roles.get(p):p.pos;
+    const keyFor=p=>p.pos==='DEF'&&tactical.matches(p,'FB')?'DEF_FB':p.pos==='MED'&&['MED_ATT','MED_DEF'].includes(roles.get(p))?roles.get(p):p.pos;
     const plans=new Map([...new Set(all.map(keyFor))].map(key=>[key,reference(referencePlayers,key,{withAttack:true})]));
     return new Map(all.map(p=>{
       const key=keyFor(p),result=profile(p,referencePlayers,plans.get(key));
-      if(p.pos==='MED')result.profileLabel={MED_ATT:'Centrocampista · perfil ofensivo',MED_DEF:'Centrocampista · perfil defensivo',MED_BALANCED:'Centrocampista · perfil equilibrado',MED:'Centrocampista · perfil general (sin clasificar)'}[key];
+      if(p.pos==='MED')result.profileLabel={MED_ATT:'Centrocampista · perfil ofensivo',MED_DEF:'Centrocampista · perfil defensivo',MED:'Centrocampista · perfil general (sin clasificar)'}[key];
       if(key==='DEF_FB')result.profileLabel='Lateral / carrilero · ataque y defensa';
       return [p,fairplay.apply(p,result)];
     }));
@@ -162,7 +160,7 @@
     if(player.pos!=='MED')return null;
     const attack=indices.get('MED_ATT')?.get(player)?.rolePercentile,defense=indices.get('MED_DEF')?.get(player)?.rolePercentile;
     if(!Number.isFinite(attack)||!Number.isFinite(defense))return null;
-    return Math.abs(attack-defense)<=10?'MED_BALANCED':attack>defense?'MED_ATT':'MED_DEF';
+    return attack-defense>10?'MED_ATT':'MED_DEF';
   }
   function rankingEligible(record,profile,minimum){
     if(!profile||profile.comparableArea===null||!Number.isFinite(minimum)||minimum<0)return false;
@@ -174,6 +172,21 @@
     });
   }
   const axis=key=>axes[key]?{label:axes[key][0],unit:axes[key][1],lowerBetter:!!axes[key][2]}:null;
+  // Exact additive decomposition of the current polygon + attack formula.
+  // Split each polygon edge equally between its two adjacent axes.
+  function scoreSectors(profile){
+    if(!Number.isFinite(profile?.score)||profile.kind==='team')return [];
+    const axes=profile.axes,n=axes.length;
+    if(n<3||axes.some(a=>!Number.isFinite(a.percentile)))return [];
+    const factor=Number.isFinite(profile.fairPlay?.factor)?profile.fairPlay.factor:1;
+    const weight=(1-(profile.attack?.usedWeight||0))/n;
+    const entries=axes.map((a,i)=>{
+      const r=a.percentile/100,previous=axes[(i+n-1)%n].percentile/100,next=axes[(i+1)%n].percentile/100;
+      return {key:a.key,label:a.label,weight,performance:r*(previous+next)/2*factor,percentile:a.percentile,joint:true};
+    });
+    for(const a of profile.attack?.entries||[])if(a.weight>0&&Number.isFinite(a.percentile))entries.push({key:a.key,label:axis(a.key).label,weight:a.weight,performance:(a.percentile/100)**2*factor,percentile:a.percentile,joint:false});
+    return entries.map(a=>({...a,contribution:a.weight*a.performance}));
+  }
   function explain(profile){
     if(profile?.identityConflict)return 'Score pendiente: el mismo ID tiene posiciones de portero y jugador de campo incompatibles entre fuentes.';
     if(!profile)return 'No hay una referencia suficiente para calcular el score.';
@@ -186,6 +199,6 @@
     if((profile.expectedAxes?.length||0)<3)parts.push('No hay al menos tres ejes con cinco referencias suficientes');
     return (parts.join('. ')||'Faltan métricas o muestra suficiente de su posición')+'. Los ceros reales sí se incluyen; un dato ausente no se sustituye por cero.';
   }
-  const api = {attackKeys,attackWeights,profile,profiles,midfieldIndices,midfieldRole,percentile,relativeArea,rankingDefinitions,definition,rankingEligible,axis,explain,minimumScoreMinutes};
+  const api = {scoreSectors,attackKeys,attackWeights,profile,profiles,midfieldIndices,midfieldRole,percentile,relativeArea,rankingDefinitions,definition,rankingEligible,axis,explain,minimumScoreMinutes};
   if (typeof module === 'object' && module.exports) module.exports = api; else root.GradaRadar = api;
 })(typeof window === 'object' ? window : globalThis);

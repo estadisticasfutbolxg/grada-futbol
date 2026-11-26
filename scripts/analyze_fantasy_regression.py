@@ -8,6 +8,7 @@ import json
 from pathlib import Path
 
 import numpy as np
+from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.dummy import DummyRegressor
 from sklearn.linear_model import Ridge
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
@@ -22,7 +23,7 @@ MINUTES = 200
 MIN_ROWS = 20
 ALPHAS = [0.1, 1, 10, 100, 1000]
 EXTRAS = {'yellowCards': 'Amarillas /90 · Fantasy', 'redCards': 'Expulsiones /90 · directa + doble amarilla', 'penaltiesWon': 'Penaltis provocados /90 · Fantasy'}
-LABELS = {'POR': 'Porteros', 'DEF': 'Centrales y defensas generales', 'DEF_FB': 'Laterales y carrileros', 'MED': 'Centrocampistas sin perfil estadístico', 'MED_DEF': 'Centrocampistas defensivos', 'MED_ATT': 'Centrocampistas ofensivos', 'MED_BALANCED': 'Centrocampistas equilibrados', 'DEL': 'Delanteros'}
+LABELS = {'POR': 'Porteros', 'DEF': 'Centrales y defensas generales', 'DEF_FB': 'Laterales y carrileros', 'MED': 'Centrocampistas sin perfil estadístico', 'MED_DEF': 'Centrocampistas defensivos', 'MED_ATT': 'Centrocampistas ofensivos', 'DEL': 'Delanteros'}
 
 
 def finite(value):
@@ -67,9 +68,55 @@ def prepare(records, keys):
     return rows, excluded
 
 
-def tune(x, y, groups):
+class CorrelationGroups(TransformerMixin, BaseEstimator):
+    """Complete-link, sign-consistent Pearson groups learned on training rows only."""
+
+    def __init__(self, threshold=0.8, control_indices=()):
+        self.threshold = threshold
+        self.control_indices = control_indices
+
+    def fit(self, x, y=None):
+        x = np.asarray(x)
+        with np.errstate(divide='ignore', invalid='ignore'):
+            correlation = np.corrcoef(x, rowvar=False) if x.shape[1] > 1 else np.ones((1, 1))
+        self.correlation_ = np.nan_to_num(correlation)
+        np.fill_diagonal(self.correlation_, 1)
+        groups = [[i] for i in range(x.shape[1])]
+        while True:
+            candidates = []
+            for i, left in enumerate(groups):
+                for j in range(i + 1, len(groups)):
+                    right = groups[j]
+                    members = sorted(left + right)
+                    if any(k in self.control_indices for k in members):
+                        continue
+                    strength = min(abs(self.correlation_[a, b]) for a in left for b in right)
+                    signs = {k: 1 if self.correlation_[members[0], k] >= 0 else -1 for k in members}
+                    consistent = all(signs[a] * signs[b] * self.correlation_[a, b] > 0 for a in members for b in members)
+                    if strength >= self.threshold and consistent:
+                        candidates.append((-strength, members, i, j))
+            if not candidates:
+                break
+            _, members, i, j = min(candidates)
+            groups = [g for k, g in enumerate(groups) if k not in (i, j)] + [members]
+            groups.sort(key=lambda g: g[0])
+        self.groups_ = groups
+        self.weights_ = np.zeros((x.shape[1], len(groups)))
+        for j, members in enumerate(groups):
+            for i in members:
+                self.weights_[i, j] = (1 if self.correlation_[members[0], i] >= 0 else -1) / len(members)
+        return self
+
+    def transform(self, x):
+        return np.asarray(x) @ self.weights_
+
+    def distribute(self, coefficients):
+        return self.weights_ @ coefficients
+
+
+def tune(x, y, groups, control_indices=()):
     cv = GroupKFold(n_splits=min(3, len(set(groups))))
-    search = GridSearchCV(make_pipeline(StandardScaler(), Ridge()), {'ridge__alpha': ALPHAS}, scoring='neg_mean_absolute_error', cv=cv, n_jobs=1, error_score='raise')
+    search = GridSearchCV(make_pipeline(StandardScaler(), CorrelationGroups(control_indices=control_indices), Ridge()), {'ridge__alpha': ALPHAS}, scoring='neg_mean_absolute_error', cv=cv, n_jobs=1, error_score='raise')
     return search.fit(x, y, groups=groups)
 
 
@@ -107,20 +154,27 @@ def fit_profile(records, key):
     folds, fold_coefficients = [], []
     exposure_col = features.index('minutesExposure')
     for fold, (train, test) in enumerate(outer.split(x, y, groups)):
-        estimator = tune(x[train], y[train], groups[train])
+        estimator = tune(x[train], y[train], groups[train], (exposure_col,))
         predicted[test] = estimator.predict(x[test])
         baseline[test] = DummyRegressor().fit(x[train], y[train]).predict(x[test])
-        minutes_model = tune(x[train, exposure_col:exposure_col+1], y[train], groups[train])
+        minutes_model = tune(x[train, exposure_col:exposure_col+1], y[train], groups[train], (0,))
         exposure[test] = minutes_model.predict(x[test, exposure_col:exposure_col+1])
-        fold_coefficients.append(estimator.best_estimator_['ridge'].coef_)
-        folds.append({'fold': fold + 1, 'training': len(train), 'test': len(test), 'test_clubs': sorted(set(groups[test])), 'alpha': estimator.best_params_['ridge__alpha']})
-    final = tune(x, y, groups)
+        fold_pipeline = estimator.best_estimator_
+        fold_coefficients.append(fold_pipeline['correlationgroups'].distribute(fold_pipeline['ridge'].coef_))
+        folds.append({'fold': fold + 1, 'training': len(train), 'test': len(test), 'test_clubs': sorted(set(groups[test])), 'alpha': estimator.best_params_['ridge__alpha'], 'groups': [[features[i] for i in g] for g in fold_pipeline['correlationgroups'].groups_]})
+    final = tune(x, y, groups, (exposure_col,))
     pipeline = final.best_estimator_
-    coefficients = pipeline['ridge'].coef_
+    grouper = pipeline['correlationgroups']
+    group_coefficients = pipeline['ridge'].coef_
+    coefficients = grouper.distribute(group_coefficients)
     scaler = pipeline['standardscaler']
     result.update(status='fitted', alpha=final.best_params_['ridge__alpha'], validation=metrics(y, predicted), baseline=metrics(y, baseline), minutes_only=metrics(y, exposure), training=metrics(y, pipeline.predict(x)), folds=folds, intercept=float(pipeline['ridge'].intercept_ - np.dot(coefficients / scaler.scale_, scaler.mean_)))
     z = scaler.transform(x)
-    design = sm.add_constant(z, has_constant='add')
+    grouped = grouper.transform(z)
+    design = sm.add_constant(grouped, has_constant='add')
+    result['correlation'] = {'method': 'Pearson', 'threshold': 0.8, 'features': features, 'matrix': grouper.correlation_.tolist(), 'minutes_grouped': False}
+    result['groups'] = []
+    result['group_parameters'] = len(grouper.groups_)
     rank = np.linalg.matrix_rank(design)
     result['condition_number'] = float(np.linalg.cond(design)) if rank == design.shape[1] else None
     result['ols_status'] = 'insufficient_sample'
@@ -131,26 +185,42 @@ def fit_profile(records, key):
         result['ols_method'] = 'OLS; CR1 cluster covariance by club; t with club-count minus one degrees of freedom'
     elif rank < design.shape[1]:
         result['ols_status'] = 'rank_deficient'
-    for i, feature in enumerate(features):
-        vif = float(variance_inflation_factor(design, i + 1)) if rank == design.shape[1] else None
-        item = {'key': feature, 'label': labels[feature], 'control': feature == 'minutesExposure', 'ridge_standardized': float(coefficients[i]), 'ridge_raw': float(coefficients[i] / scaler.scale_[i]), 'sd': float(scaler.scale_[i]), 'mean': float(scaler.mean_[i]), 'sign_stability': float(np.mean(np.sign(np.array(fold_coefficients)[:, i]) == np.sign(coefficients[i]))), 'vif': vif if vif is not None and np.isfinite(vif) else None}
+    for j, members in enumerate(grouper.groups_):
+        vif = float(variance_inflation_factor(design, j + 1)) if rank == design.shape[1] else None
+        item = {'id': 'G' + str(j + 1), 'members': [features[i] for i in members], 'signs': [int(np.sign(grouper.weights_[i, j])) for i in members], 'size': len(members), 'control': exposure_col in members, 'ridge': float(group_coefficients[j]), 'min_abs_correlation': min((abs(grouper.correlation_[a, b]) for a in members for b in members if a != b), default=1.0), 'vif': vif if vif is not None and np.isfinite(vif) else None}
         if ols is not None:
-            ci = ols.conf_int(alpha=0.05)[i + 1]
-            item.update(ols_standardized=float(ols.params[i + 1]), ols_raw=float(ols.params[i + 1] / scaler.scale_[i]), ols_ci=[float(ci[0]), float(ci[1])], ols_p=float(ols.pvalues[i + 1]))
-        result['coefficients'].append(item)
+            item.update(ols=float(ols.params[j + 1]), ols_ci=[float(v) for v in ols.conf_int(alpha=0.05)[j + 1]], ols_p=float(ols.pvalues[j + 1]))
+        result['groups'].append(item)
+        for i in members:
+            feature = features[i]
+            weight = float(grouper.weights_[i, j])
+            coefficient = {'key': feature, 'label': labels[feature], 'control': feature == 'minutesExposure', 'kind': 'control' if feature == 'minutesExposure' else 'extra' if feature in EXTRAS else 'axis', 'group': item['id'], 'group_size': len(members), 'group_weight': weight, 'ridge_standardized': float(coefficients[i]), 'ridge_raw': float(coefficients[i] / scaler.scale_[i]), 'sd': float(scaler.scale_[i]), 'mean': float(scaler.mean_[i]), 'sign_stability': float(np.mean(np.sign(np.array(fold_coefficients)[:, i]) == np.sign(coefficients[i]))), 'vif': item['vif']}
+            if ols is not None:
+                coefficient.update(ols_standardized=item['ols'] * weight, ols_raw=item['ols'] * weight / float(scaler.scale_[i]), ols_ci=sorted(v * weight for v in item['ols_ci']), ols_p=item['ols_p'])
+            result['coefficients'].append(coefficient)
+    # Positive axis associations suggest a within-profile allocation, never automatic weights.
+    total = sum(max(c['ridge_standardized'], 0) for c in result['coefficients'] if c['kind'] == 'axis')
+    for c in result['coefficients']:
+        c['suggested_axis_share'] = max(c['ridge_standardized'], 0) / total if c['kind'] == 'axis' and total > 0 else None
+    result['coefficients'].sort(key=lambda c: features.index(c['key']))
     result['players'] = [{'id': r['id'], 'name': r['name'], 'team': r['team'], 'points': r['points'], 'predicted_oof': float(predicted[i]), 'residual_oof': float(y[i] - predicted[i]), 'fantasy_minutes': r['fantasy_minutes']} for i, r in enumerate(rows)]
-    result['warning'] = 'Asociaciones condicionadas al resto de variables y minutos; no causalidad. Los predictores correlacionados pueden repartirse el peso o cambiar de signo.'
+    result['warning'] = 'Asociaciones con puntos Fantasy, no efecto causal ni regresión del score actual. Los grupos se aprenden dentro de cada entrenamiento; su coeficiente se reparte por igual con orientación de signo. Ese reparto conserva la predicción, pero no identifica efectos individuales. Pesos orientativos por perfil: solo asociaciones positivas de ejes, sin minutos ni extras; nunca se aplican automáticamente.'
     return result
 
 
 def analyze(dataset):
     models = [fit_profile([r for r in dataset['records'] if r['profile'] == key], key) for key in LABELS]
-    tested = [c for model in models for c in model['coefficients'] if 'ols_p' in c and np.isfinite(c['ols_p']) and not c['control']]
+    tested = [g for model in models for g in model.get('groups', []) if 'ols_p' in g and np.isfinite(g['ols_p']) and not g['control']]
     if tested:
-        q_values = multipletests([c['ols_p'] for c in tested], method='fdr_bh')[1]
+        q_values = multipletests([g['ols_p'] for g in tested], method='fdr_bh')[1]
         for item, q_value in zip(tested, q_values):
             item['ols_q'] = float(q_value)
-    return {'metadata': {**dataset['metadata'], 'generated_at': datetime.now(timezone.utc).isoformat(), 'minimum_minutes': MINUTES, 'unclassified': sum(r['profile'] not in LABELS for r in dataset['records']), 'target': 'Puntos Fantasy acumulados', 'method': 'ridge_nested_group_cv_v1', 'validation': 'Five outer club-held-out folds; three inner club-held-out folds select alpha. Scaling fitted inside each training fold. Complete cases only, no imputation.', 'cohort': 'Feature minutes within max(5 min, 1%) of Fantasy and captures within 24 hours. PJ differences are diagnostic only: the fields are not proven equivalent. Approximate compatibility, not event-level reconciliation.', 'controls': 'Fantasy minutes; each player contributes one observation.', 'extra_sources': 'Published Fantasy yellowCard, redCard + secondYellowCard and penaltyWon counts per own 90 minutes; *Pts components excluded.', 'inference': 'OLS only when full rank and n >= max(30, 3*(p+1)); CR1 intervals clustered by club. Global Benjamini-Hochberg q values for tested non-control coefficients.'}, 'models': models, 'unmatched': dataset['unmatched']}
+        for model in models:
+            by_group = {g['id']: g for g in model.get('groups', [])}
+            for c in model['coefficients']:
+                if 'ols_q' in by_group[c['group']]:
+                    c['ols_q'] = by_group[c['group']]['ols_q']
+    return {'metadata': {**dataset['metadata'], 'generated_at': datetime.now(timezone.utc).isoformat(), 'minimum_minutes': MINUTES, 'unclassified': sum(r['profile'] not in LABELS for r in dataset['records']), 'target': 'Puntos Fantasy acumulados', 'method': 'ridge_correlated_group_cv_v2', 'validation': 'Five outer club-held-out folds; three inner club-held-out folds select alpha. Scaling and complete-link sign-consistent Pearson |r| >= 0.80 grouping fitted inside each training fold; minutes never grouped. Complete cases only, no imputation.', 'cohort': 'Feature minutes within max(5 min, 1%) of Fantasy and captures within 24 hours. PJ differences are diagnostic only: the fields are not proven equivalent. Approximate compatibility, not event-level reconciliation.', 'controls': 'Fantasy minutes; each player contributes one observation.', 'weight_purpose': 'Separate model per canonical profile. Positive standardized axis contributions normalized within profile suggest candidate score weights; minutes and extras excluded. Negative axes require review, not automatic inversion. No current score change. Groups do not identify separate causal effects.', 'group_formula': 'G = mean(s_i * Z_i); beta_i = s_i * beta_G / k; raw beta_i = beta_i / SD_i. Equal signed split conserves predictions.', 'extra_sources': 'Published Fantasy yellowCard, redCard + secondYellowCard and penaltyWon counts per own 90 minutes; *Pts components excluded.', 'inference': 'OLS only when full rank and n >= max(30, 3*(p+1)); CR1 intervals clustered by club. Global Benjamini-Hochberg q values once per tested non-control group, not duplicated per member.'}, 'models': models, 'unmatched': dataset['unmatched']}
 
 
 def main():

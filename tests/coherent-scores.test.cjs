@@ -36,7 +36,7 @@ test('midfield profiles select candidates without replacing their MED score, and
  const data=fixture(),model=scores.build(data);
  for(const p of data.players.filter(p=>p.pos==='MED'))for(const key of ['MED_ATT','MED_DEF']){
   assert.equal(scores.value(model,p,radar.definition(key)),model.players.get(p).score);
-  const belongs=model.roles.get(p)===key||model.roles.get(p)==='MED_BALANCED';assert.equal(scores.eligible(model,p,radar.definition(key)),belongs);
+  const belongs=model.roles.get(p)===key;assert.equal(scores.eligible(model,p,radar.definition(key)),belongs);
  }
  const p=data.players.find(p=>p.pos==='MED');p.bigChancesCreated=null;const unknown=scores.build(data);assert.equal(unknown.roles.get(p),null);assert(!scores.eligible(unknown,p,radar.definition('MED_ATT')));
 });

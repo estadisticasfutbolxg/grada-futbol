@@ -8,7 +8,7 @@ Recuentos: suma de valores conocidos, sin convertir ausencias en ceros. Tasas: m
 
 Juego limpio mantiene la fórmula vigente. Solo usa contribuciones con ambas tarjetas y muestra compatible; si a un torneo le falta una, conserva el ajuste de la muestra emparejada de las otras competiciones y declara su cobertura. No supone cero ni elimina una penalización ya verificada. La regeneración debe preservar score, posición y perfil; las posiciones derivadas no se reutilizan como evidencia original.
 
-Modelo vigente `role_fairplay_radar_v9`. El score de temporada incorpora un bloque de aporte ofensivo para los jugadores de campo. El modelo común es `dist/scores.js`; tablas, tarjetas, fichas, comparador, filtros y generador consumen sus resultados.
+Modelo vigente `role_fairplay_radar_v10`. El score de temporada incorpora un bloque de aporte ofensivo para los jugadores de campo. El modelo común es `dist/scores.js`; tablas, tarjetas, fichas, comparador, filtros y generador consumen sus resultados.
 
 ## Jugadores
 
@@ -30,7 +30,6 @@ Goles, asistencias, xG y xA por 90 usan cada uno los minutos propios de su fuent
 | MED defensivo | 5 % |
 | MED general, sin clasificar | 10 % |
 | Laterales y carrileros | 15 % |
-| MED equilibrado | 15 % |
 | MED ofensivo | 25 % |
 | Delanteros | 35 % |
 
@@ -76,7 +75,7 @@ La ficha y el comparador muestran base, factor, descuento, tarjetas y procedenci
 
 ## Perfiles de centrocampistas
 
-Desde el 14 de noviembre, los dos índices auxiliares de acciones ofensivas y defensivas se convierten en percentiles de sus respectivas distribuciones MED, con referencia común y mínimos fijos. Una diferencia de hasta 10 puntos percentiles se considera equilibrada; por encima, domina el percentil mayor. La regla de clasificación no cambia el 17 de noviembre. Este umbral descriptivo no es un intervalo de confianza.
+Desde el 14 de noviembre, los dos índices auxiliares de acciones ofensivas y defensivas se convierten en percentiles de sus respectivas distribuciones MED, con referencia común y mínimos fijos. Desde el 26 de noviembre solo se asigna perfil ofensivo cuando su percentil supera al defensivo en más de 10 puntos; el resto de casos con ambos índices completos se integra en defensivos. Se retira la categoría equilibrada. Este umbral descriptivo no es un intervalo de confianza.
 
 La corrección del 17 de noviembre hace que ese perfil determine los ejes del score mostrado. No se calculan scores alternativos para elegir el mayor ni se sustituye el score al abrir otro ranking.
 
@@ -84,10 +83,9 @@ La corrección del 17 de noviembre hace que ese perfil determine los ejes del sc
 | --- | --- |
 | Ofensivo | ocasiones creadas/90, grandes ocasiones creadas/90, tiros a puerta/90, regates logrados/90 |
 | Defensivo | pases completados/90, precisión de pase, recuperaciones/90, entradas/90, intercepciones/90, pases rompelíneas/90 |
-| Equilibrado | pases completados/90, ocasiones creadas/90, recuperaciones/90, entradas/90, intercepciones/90 |
 | Sin perfil verificable | pases completados/90, precisión, recuperaciones/90, entradas/90, intercepciones/90 y pases clave/90, según cobertura |
 
-Sin ambos índices completos, el perfil es desconocido: no se atribuye ofensivo/defensivo por intuición. Puede tener un score general si sus propios ejes tienen muestra y datos suficientes, pero no entra en los rankings de subgrupos. Los equilibrados tienen ranking propio y pueden aparecer en ambos grupos, siempre conservando su score equilibrado. La tabla reúne los ejes de los perfiles presentes y muestra qué perfil produce cada score; no toma los ejes del primer MED de la captura.
+Sin ambos índices completos, el perfil es desconocido: no se atribuye ofensivo/defensivo por intuición. Puede tener un score general si sus propios ejes tienen muestra y datos suficientes, pero no entra en los rankings de subgrupos. Los dos subgrupos son excluyentes y cada uno usa su propio score; no hay categoría equilibrada ni doble inclusión. La tabla reúne los ejes de los perfiles presentes y muestra qué perfil produce cada score; no toma los ejes del primer MED de la captura.
 
 No se infiere una posición táctica real a partir de estadísticas. Álex Baena sigue MED por acuerdo ESPN/FotMob frente a DEL Understat, con esa discrepancia visible. Su perfil ofensivo selecciona un radar ofensivo: el 17 de noviembre pasó a una base 0,751949 frente al anterior 0,174481. Desde el 18 se le aplica también juego limpio cuando está verificado. No se descargan cifras nuevas para estos cambios. Los centros del campo de equipos muestran además el número de MED sin perfil verificable.
 
@@ -108,9 +106,9 @@ Solo participan scores válidos con minutos positivos y asignación al equipo po
 | Defensa | DEF |
 | Centro del campo | MED |
 | Delantera | DEL |
-| Ataque | DEL y MED de perfil ofensivo o equilibrado |
-| Centro del campo ofensivo | MED de perfil ofensivo o equilibrado |
-| Centro del campo defensivo | MED de perfil defensivo o equilibrado |
+| Ataque | DEL y MED de perfil ofensivo |
+| Centro del campo ofensivo | MED de perfil ofensivo |
+| Centro del campo defensivo | MED de perfil defensivo |
 
 Un jugador se cuenta una sola vez en cada promedio. El score de un bloque está entre el mínimo y máximo de sus contribuyentes. El radar de equipo dibuja las medias de POR/DEF/MED/DEL; la cifra central es el mismo promedio general mostrado en la tabla. Ya no existe un segundo score de defensa/ataque calculado con estadísticas agregadas del equipo. Goles, xG, porterías a cero y otras estadísticas de equipo siguen disponibles como KPI, con sus propias fuentes.
 
@@ -126,7 +124,7 @@ Con las capturas publicadas al preparar este cambio hay 1.029 asistencias conoci
 
 ## Artefactos y reproducción
 
-`scores.build` calcula índices MED, perfil, área del radar, aporte ofensivo y ajuste de juego limpio en ese orden; `scores.value`, `scores.eligible` y `scores.rankingAxes` resuelven rankings y columnas. `fairplay.js` conserva fuente/muestra de ambas tarjetas. `squads.js` produce promedios y contribuciones con el score final y el perfil utilizado. `withScores` añade `playerScore`, `playerBaseScore`, `fairPlay`, `scorePosition`, `scoreProfile`, `scoreProfileLabel`, `midfieldProfile` y scores/ledgers de equipo al combinado. El modelo se identifica como `role_fairplay_radar_v9` en `metadata.derived_metrics.playerScore`. Todas las ligas descarta derivados previos antes de recalcular.
+`scores.build` calcula índices MED, perfil, área del radar, aporte ofensivo y ajuste de juego limpio en ese orden; `scores.value`, `scores.eligible` y `scores.rankingAxes` resuelven rankings y columnas. `fairplay.js` conserva fuente/muestra de ambas tarjetas. `squads.js` produce promedios y contribuciones con el score final y el perfil utilizado. `withScores` añade `playerScore`, `playerBaseScore`, `fairPlay`, `scorePosition`, `scoreProfile`, `scoreProfileLabel`, `midfieldProfile` y scores/ledgers de equipo al combinado. El modelo se identifica como `role_fairplay_radar_v10` en `metadata.derived_metrics.playerScore`. Todas las ligas descarta derivados previos antes de recalcular.
 
 El generador lee las capturas verificadas de las ligas disponibles para compartir referencia. En una importación por etapas, `--reference-dir` aporta las otras ligas, y `import_leagues.py` recalcula todos los derivados tras completar las fuentes. No actualiza las fechas originales por recalcular scores. Todas las ligas descarta derivados anteriores y usa el modelo común. En el navegador, el modelo se invalida al cambiar una captura, no al cambiar de vista.
 
@@ -148,3 +146,11 @@ Selecciones compara siete sistemas con contención, creación y puestos publicad
 A petición del usuario, cada penalti cometido añade `0,50 × penaltis × 90 / minutos propios` a la fracción de penalización. Equivale a cinco amarillas o media roja. El ajuste total se limita a 1 y el score no baja de cero. Los penaltis tienen una muestra independiente de las tarjetas: identidad/club/temporada y apariciones coincidentes con el ranking de minutos de la misma tanda, mínimo 200 minutos. En varias competiciones solo se suman para el ajuste contribuciones con minutos propios conocidos; se declara cobertura. La tabla puede conservar otros recuentos sin incluirlos en la tasa.
 
 Ausencia o muestra insuficiente no significa cero, no elimina un score válido ni borra el ajuste verificado de tarjetas. Si solo hay penaltis verificados, se aplica su componente y se declara que faltan tarjetas. Estos son pesos de diseño de GRADA, no una estimación del valor causal de un penalti. Los totales no identifican la jugada: penalti y tarjeta se contabilizan como consecuencias distintas, sin afirmar deduplicación por evento. Aplica también a porteros que cometan un penalti; su bloque de rendimiento sigue sin métricas ofensivas. Método `linear_cards_penalties_v3` cuando la muestra de penaltis es válida; en los demás casos se mantiene el componente `linear_cards_v2`.
+
+## Gráfico ponderado del score
+
+El gráfico principal de jugador usa sectores: ángulo `2π × peso`, radio `R × √rendimiento efectivo`. La suma de áreas coloreadas dividida por el área del círculo máximo equivale exactamente al score final. El radar regular de percentiles se conserva desplegable y descriptivo; su área no sustituye el score. Los promedios de equipo conservan su visualización propia.
+
+Para descomponer la fórmula vigente sin cambiarla, cada producto de percentiles vecinos del área no ofensiva se reparte a medias entre sus dos ejes. Cada eje pesa `(1 − peso ofensivo utilizado) / número de ejes` y su rendimiento efectivo es `r_i × (r_anterior + r_siguiente) / 2`. Los ejes ofensivos conservan su peso explícito y `r_i²`. El factor verificado de juego limpio multiplica todas las contribuciones; sin ajuste permanece 1, sin afirmar limpieza. No son efectos independientes y el radio no es un percentil individual. Los ceros tienen sector sin relleno; scores pendientes conservan radar descriptivo y motivo.
+
+Los pesos orientativos de [las regresiones Fantasy](FANTASY_REGRESSION.md) se muestran separados y no alteran estos pesos ni rankings automáticamente.

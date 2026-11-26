@@ -11,7 +11,7 @@
     MED_ATT:{area:'midfieldAttackArea',coverage:'midfieldAttackPlayers',position:'MED',population:'centrocampistas',label:'Score del centro del campo ofensivo'},
     MED_DEF:{area:'midfieldDefenseArea',coverage:'midfieldDefensePlayers',position:'MED',population:'centrocampistas',label:'Score del centro del campo defensivo'}
   };
-  function unitDefinition(key){const config=unitKeys[key];return definition+' Incluye '+config.population+(config.position?' ('+config.position+')':'')+'.'+(['MED_ATT','MED_DEF','ATTACK'].includes(key)?' El perfil MED compara los percentiles de sus índices ofensivo y defensivo; hasta 10 puntos de diferencia se considera equilibrado. Ese perfil selecciona los ejes de su score; el equipo usa exactamente esa misma puntuación y no afirma una posición táctica. Los equilibrados pueden pertenecer a ambos perfiles.':'')+' Referencia común de ligas; mínimo '+radar.minimumScoreMinutes+' min del jugador y de cada eje (2 PJ por eje de portero si su proveedor no publica minutos).';}
+  function unitDefinition(key){const config=unitKeys[key];return definition+' Incluye '+config.population+(config.position?' ('+config.position+')':'')+'.'+(['MED_ATT','MED_DEF','ATTACK'].includes(key)?' El perfil MED compara los percentiles de sus índices ofensivo y defensivo; solo una ventaja ofensiva superior a 10 puntos asigna perfil ofensivo; el resto pertenece al defensivo. Ese perfil selecciona los ejes de su score; el equipo usa exactamente esa misma puntuación y no afirma una posición táctica. Cada MED clasificado pertenece a un solo perfil.':'')+' Referencia común de ligas; mínimo '+radar.minimumScoreMinutes+' min del jugador y de cada eje (2 PJ por eje de portero si su proveedor no publica minutos).';}
   const midfieldKeys=Object.fromEntries(Object.entries(unitKeys).filter(([key])=>key.startsWith('MED_'))),midfieldDefinition=unitDefinition('MED_ATT');
   function summarize(data,profiles=radar.profiles(data.players),{position=null,accept=()=>true}={}){
     if(new Set(data.teams.map(t=>String(t.id))).size!==data.teams.length||new Set(data.players.map(p=>String(p.id))).size!==data.players.length)throw new Error('Identidades duplicadas en la plantilla.');
@@ -34,7 +34,7 @@
     return {teams,unassignedPlayerIds};
   }
   function unitSummaries(data,{profiles=radar.profiles(data.players),indices=radar.midfieldIndices(data.players),roles=new Map(data.players.map(p=>[p,radar.midfieldRole(p,indices)]))}={}){
-    function inRole(player,key){return roles.get(player)===key||roles.get(player)==='MED_BALANCED';}
+    function inRole(player,key){return roles.get(player)===key;}
     const result=new Map(Object.entries(unitKeys).map(([key,config])=>[key,summarize(data,profiles,{position:config.position||null,accept:player=>key==='ATTACK'?player.pos==='DEL'||player.pos==='MED'&&inRole(player,'MED_ATT'):key.startsWith('MED_')?inRole(player,key):true})]));
     for(const key of ['ATTACK','MED_ATT','MED_DEF'])for(const player of data.players)if(player.pos==='MED'&&!roles.get(player)){const team=result.get(key).teams.get(String(player.team_id));if(team)team.unclassifiedPlayers++;}
     return result;

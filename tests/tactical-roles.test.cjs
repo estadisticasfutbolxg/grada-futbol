@@ -35,7 +35,7 @@ test('central and fullback rankings filter published positions while keeping one
 });
 test('midfield styles compare percentile ranks, keep a balanced band, and leave missing references unclassified',()=>{
  const p={pos:'MED'},indices=(a,b)=>new Map([['MED_ATT',new Map([[p,{score:0.1,rolePercentile:a}]])],['MED_DEF',new Map([[p,{score:0.9,rolePercentile:b}]])]]);
- assert.equal(radar.midfieldRole(p,indices(70,60)),'MED_BALANCED');assert.equal(radar.midfieldRole(p,indices(70.1,60)),'MED_ATT');assert.equal(radar.midfieldRole(p,indices(10,90)),'MED_DEF');assert.equal(radar.midfieldRole(p,indices(null,80)),null);
+ assert.equal(radar.midfieldRole(p,indices(70,60)),'MED_DEF');assert.equal(radar.midfieldRole(p,indices(70.1,60)),'MED_ATT');assert.equal(radar.midfieldRole(p,indices(10,90)),'MED_DEF');assert.equal(radar.midfieldRole(p,indices(null,80)),null);
 });
 test('refresh reports a changed role but does not call a fresh role capture date a player update',()=>{
  const s=roles.parseSquad(squadFixture().html(),{id:'1'},'laliga',date),row={...s.players[0],pos:'DEF'},before={combined:{players:[row]},fotmob:{players:[row],metadata:{imported_matches:1}}},after=structuredClone(before);
