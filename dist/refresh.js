@@ -16,7 +16,7 @@
  function selectCapture(current,candidate,key,league){
   const next=validate(candidate,key,league),newer=Date.parse(next.metadata.imported_at)>Date.parse(current.metadata.imported_at);
   const selected=newer?next:current,backup=newer?current:next;
-  return key==='fotmob'?validate(fotmob.restoreTeams(profiles.restore(selected,backup),backup),key,league):key==='espn'?validate(espn.restoreIdentities(selected,backup),key,league):selected;
+  return key==='fotmob'?validate(fotmob.restorePenalties(fotmob.restoreTeams(profiles.restore(selected,backup),backup),backup),key,league):key==='espn'?validate(espn.restoreIdentities(selected,backup),key,league):selected;
  }
  async function refresh(state,league,{fetchers,combine,onProgress=()=>{}}){
   const keys=refreshSources(league),results=await Promise.allSettled(keys.map(async key=>{onProgress(key);return validate(await fetchers[key](league),key,league);}));

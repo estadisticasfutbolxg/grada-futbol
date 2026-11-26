@@ -34,7 +34,7 @@
   }
   function breakdown(rows){return rows.map(p=>({competition:p.league_key,label:leagues.get(p.league_key).name,minutes:p.minutes??null,matches:p.matches??null,goals:p.goals??null,assists:p.assists??null,xg:p.xg??null,xa:p.xa??null,team:p.team||p.name,player_id:p.id}));}
   function statistics(rows,base){
-    if(rows.length===1)return {...base,competitionAggregate:true,disciplineSample:base,competitionBreakdown:breakdown(rows)};
+    if(rows.length===1)return {...base,competitionAggregate:true,disciplineSample:base,penaltySample:base,competitionBreakdown:breakdown(rows)};
     const result={...base,metricContexts:{},fieldSources:{}};
     function assign(key,parts,value,method){if(!parts.length||!numeric(value)){result[key]=null;return;}result[key]=value;result.metricContexts[key]=context(parts,method,rows.length);result.fieldSources[key]=result.metricContexts[key].source;}
     for(const key of totalKeys){
@@ -56,6 +56,8 @@
     if(paired.length){
       result.disciplineSample={};for(const key of ['yellowCards','redCards']){const parts=partsFor(paired,key);result.disciplineSample[key]=sum(parts.map(p=>p.value));(result.disciplineSample.metricContexts??={})[key]=context(parts,'sum_paired_cards',rows.length);}
     }else result.disciplineSample=null;
+    const penaltyParts=partsFor(rows,'penaltiesCommitted',{weight:'minutes'});
+    result.penaltySample=penaltyParts.length?{penaltiesCommitted:sum(penaltyParts.map(p=>p.value)),metricContexts:{penaltiesCommitted:context(penaltyParts,'sum_penalties_with_own_minutes',rows.length)}}:null;
     result.competitionAggregate=true;
     result.competitionBreakdown=breakdown(rows);
     result.league=[...new Set(result.competitionBreakdown.map(p=>p.label))].join(' + ');

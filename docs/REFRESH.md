@@ -121,3 +121,7 @@ Python 3.11+ y Node 22+; sin paquetes adicionales. Para acceso a Internet desde 
 Para reutilizar HTML real, `--input-root` mantiene los rankings/ESPN y `--profiles-root` lee `<liga>/<id>.html`, conservando mtime como fecha de captura. `scripts/enrich_fotmob.py` también se ejecuta por liga y regenera JSON/SQLite coherentes. `scripts/build_combined.cjs` incorpora los scores ponderados y sus contribuciones. Los datos, caches, bases y Worker generado quedan fuera de GitHub.
 
 El servidor estático de Python permite revisar las capturas y la interfaz; las rutas de actualización de FotMob/Understat requieren el Worker. GitHub Pages sirve capturas estáticas y no ejecuta estos endpoints. Sites es el alojamiento principal.
+
+### Penaltis cometidos
+
+El refresco FotMob incluye `penalty_conceded`, con las temporadas por ranking documentadas en DATA.md. La copia de penaltis puede ser posterior al resto: su recuperación por ID/club conserva esa fecha, incluye desconocidos de la captura posterior y evita recuperar valores anteriores de jugadores que ya no aparecen. El dato penaliza como cinco amarillas con muestra propia suficiente; no deja al jugador sin score cuando falta la métrica. La descarga de Analítica Fantasy es independiente, mediante su generador local; no añade un proveedor al botón de actualización ni mezcla puntos fantasy con estadísticas del Site.
