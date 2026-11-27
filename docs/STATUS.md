@@ -1,5 +1,13 @@
 # Estado comprobado de GRADA
 
+## Onces ideales de ligas con score de todas las competiciones · publicación privada verificada · 27 de noviembre de 2026
+
+Nueva sección **Onces ideales**, selector de quince primeras divisiones y global. Se reutilizan los siete sistemas y el dibujo de Selecciones: puestos compatibles, contención/creación, máximo de suma/media simple de once scores, sin ponderación de minutos. Candidatos domésticos por ID FotMob y sin nacionalidad obligatoria; no se repiten personas ni entran candidatos exclusivos de UEFA. **El score y mínimo de cada jugador son los canónicos de todas las competiciones**, con liga y torneos; el selector solo filtra candidatos. Club/escudo original, ranking score primero, líneas, explicación de encaje y alternativas. Datos nuevos invalidan la caché del once. [Fórmula y límites](IDEAL.md).
+
+Datos actuales: 3.938 candidatos elegibles, quince onces de liga completos y el global 4-2-3-1/0,814432. Se auditan las 176 plazas contra fichas y modelo conjunto de dieciocho competiciones, identidad/roles, media simple y mínimo 200. 43 archivos Node y 28 pruebas Python, ESLint/Ruff y documentación correctos; cuatro arranques VM/DOM del Worker exacto con entrada directa, selectores, detalle/desglose y fallo de fuente. Revisión técnica cruzada, sin revisión humana ni QA visual disponible. Ningún jugador/partido descargado o actualizado; capturas, DB, pesos y fórmulas intactos.
+
+[PR #88](https://github.com/estadisticasfutbolxg/grada-futbol/pull/88) integrado, CI correcto. **v47**, fuente `eb63c6fc1f83b8cc85b28c5c97c8930e34d1e69f`, despliegue `appgdep_6b094ee4461c819191b8f2ae7c23f15e` succeeded; Worker SHA256 `eb64a228a110b2d5758e9522e7f67f5f963bbe01b09cf1b51d49940dc0ba782b`. HTTP: bundle exacto gzip 107.090 bytes, sección/selector nuevos, cuatro informes y 36 capturas intactos, 42 rutas retiradas 400/404 y actualización sin identidad 401. Solo propietario, política revisión 3 y runtime revisión 1 conservados. [Tarea y evidencia](../loop/tasks/20261127-codex-ideal-elevens.md).
+
 ## Carga con progreso, ligas recuperables y refresco paralelo · publicación privada verificada · 27 de noviembre de 2026
 
 Indicador accesible desde HTML, contador/porcentaje/fases y reintento de ligas pendientes. Carga inicial de tres ligas/seis fuentes, un reintento transitorio y respaldo local validado, excluido en modo publicado estricto. Los estados se incorporan juntos para mantener referencia común; una caché incompleta no descarta otra combinación válida. Mutex carga/refresco y avance sin bloqueo en pestañas de fondo.
