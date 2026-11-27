@@ -23,6 +23,30 @@
   }
   return {data,players,indices,roles,overall,units,teams,referenceLabel};
  }
+ // Use the same season records and profiles as the table, including a valid zero.
+ function coverage(model){
+  const definitions=[['identity','Identidad en conflicto'],['minutes_unknown','Minutos sin verificar'],['minutes','Menos de '+radar.minimumScoreMinutes+' minutos'],['position','Posición sin verificar'],['metrics_and_sample','Métricas ausentes y muestra insuficiente'],['metrics','Métricas necesarias ausentes'],['sample','Muestra insuficiente de algún eje'],['reference','Referencia estadística insuficiente']];
+  const counts=new Map(definitions.map(([key])=>[key,0])),missing=new Map();let valid=0;
+  for(const player of model.data.players){
+   const profile=model.players.get(player),record=profile?.scoreRecord||player;
+   if(Number.isFinite(profile?.score)){valid++;continue;}
+   const minutes=profile?.scoreSample?.minutes??record.minutes;
+   let reason;
+   if(profile?.identityConflict||record.identityConflict)reason='identity';
+   else if(!Number.isFinite(minutes))reason='minutes_unknown';
+   else if(minutes<radar.minimumScoreMinutes)reason='minutes';
+   else if(!Object.hasOwn(positionLabels,record.pos))reason='position';
+   else if(!profile)reason='reference';
+   else{
+    const absent=!!profile.missingAxes?.length,short=!!profile.insufficientSamples?.length;
+    reason=absent&&short?'metrics_and_sample':absent?'metrics':short?'sample':'reference';
+    for(const key of profile.missingAxes||[])missing.set(key,(missing.get(key)||0)+1);
+   }
+   counts.set(reason,counts.get(reason)+1);
+  }
+  const total=model.data.players.length;
+  return {total,valid,pending:total-valid,minimumMinutes:radar.minimumScoreMinutes,reasons:definitions.map(([key,label])=>({key,label,count:counts.get(key)})).filter(r=>r.count),missingMetrics:[...missing].map(([key,count])=>({key,count})).sort((a,b)=>b.count-a.count||a.key.localeCompare(b.key))};
+ }
  function value(model,record,definition){
   if(definition.kind==='player')return model.players.get(record)?.score??null;
   return (definition.aggregateProfile?model.units.get(definition.aggregateProfile):model.overall)?.teams.get(String(record.id))?.area??null;
@@ -47,5 +71,5 @@
   const model=build(data,options),result=squads.withTeamAreas(data,model.overall,model.units,{reference:model.referenceLabel});
   return {...result,metadata:{...result.metadata,derived_metrics:{...result.metadata.derived_metrics,playerScore:{method:'role_fairplay_radar_v12',scope:seasonal?'season_all_competitions':'selected_competition',reference:model.referenceLabel,attack_max_weights:radar.attackWeights,attack_calibration:radar.weightCalibration,minimum_minutes:Object.fromEntries(Object.keys(positionLabels).map(pos=>[pos,radar.minimumScoreMinutes])),definition:(seasonal?'Score de temporada por ID FotMob entre las competiciones disponibles, con muestras propias, posición publicada y desglose. ':'')+'Un score por jugador desde '+radar.minimumScoreMinutes+' minutos verificados. El perfil MED y el puesto publicado de lateral eligen los ejes originales antes de separar el bloque ofensivo, sin promover métricas de respaldo a requisitos nuevos. El radar visual conserva el perfil completo; el cálculo usa una sola vez los ejes no ofensivos y cada métrica del bloque. En jugadores de campo, goles, asistencias, xG y xA por 90 tienen pesos propios por perfil: magnitud del coeficiente estandarizado repartido sobre la suma de magnitudes de todos los predictores Fantasy, incluidos minutos y extras. Calibración LaLiga 2026/27 del 26 de noviembre, aplicada por perfil a todas las competiciones; no es calibración propia de otras ligas. El peso restante conserva el área no ofensiva original. No se aplican signos negativos ni se añaden los predictores de control como ejes. Se usan percentiles al cuadrado frente a su posición, con referencia de laterales separada y minutos propios. Si falta una métrica válida, su peso se queda en el radar. La conversión conserva su porcentaje observado con minutos propios cuando el cociente agregado de recuentos carece de muestra temporal fiable; la cobertura parcial sigue visible. La base resultante se multiplica por el ajuste de juego limpio verificado, con descuento relativo lineal 0,10 × (amarillas + 10 × rojas) × 90 / minutos propios, limitado solo por el score mínimo 0. Se añade 0,50 × penaltis cometidos × 90 / minutos propios verificados (mínimo 200), con su muestra independiente; un penalti pesa cinco amarillas. Sin dato o muestra suficiente no se imputa cero ni se retira el score. Son pesos manuales, no una estimación de sanciones cumplidas o minutos en inferioridad. Sin tarjetas emparejadas/suficientes se conserva base y se declara sin ajuste. Cambiar de ranking no recalcula el score.'}}},players:data.players.map(p=>{const profile=model.players.get(p);return {...p,playerScore:profile.score,scoreMinutes:profile.scoreSample?.minutes??p.minutes,scoreCompetitions:profile.scoreSample?.competitions.map(c=>c.competition)||[data.metadata.league_key],playerBaseScore:profile.baseScore,scorePosition:p.pos,scoreProfile:profile.profileKey,scoreProfileLabel:profile.profileLabel,fairPlay:profile.fairPlay,midfieldProfile:model.roles.get(p)};})};
  }
- const api={build,value,eligible,rankingAxes,withScores,positionLabels};if(node)module.exports=api;else root.GradaScores=api;
+ const api={build,coverage,value,eligible,rankingAxes,withScores,positionLabels};if(node)module.exports=api;else root.GradaScores=api;
 })(typeof window==='object'?window:globalThis);
