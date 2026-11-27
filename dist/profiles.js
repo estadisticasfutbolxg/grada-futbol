@@ -4,7 +4,7 @@
  const positions=node?require('./positions.js'):root.GradaPositions;
  const roles=node?require('./roles.js'):root.GradaRoles;
  const nationality=node?require('./nationality.js'):root.GradaNationality;
- const fields={successful_passes:['completed','number'],successful_passes_accuracy:['accuracy','percent'],shots:['shots','number'],shots_on_target:['shotsOnTarget','number'],expected_goals:['xg','fraction'],expected_assists:['xa','fraction'],expected_goals_on_target:['xgot','fraction'],line_breaking_passes:['lineBreakingPasses','number'],chances_created:['chancesCreated','number'],big_chances_created:['bigChancesCreated','number'],'matchstats.headers.tackles':['tackles','number'],interceptions:['interceptions','number'],recoveries:['recoveries','number'],clearances:['clearances','number'],blocked_shots:['blocks','number'],saves:['saves','number'],save_percentage:['savepct','percent'],goals_conceded:['conceded','number'],goals_prevented:['prevented','fraction'],clean_sheet_team_title:['clean','number'],penalty_saves:['penaltiesSaved','number'],keeper_high_claim:['highClaims','number'],keeper_sweeper:['sweeperActions','number'],yellow_cards:['yellowCards','number'],red_cards:['redCards','number'],expected_goals_against_while_on_pitch:['xga','fraction']};
+ const fields={successful_passes:['completed','number'],successful_passes_accuracy:['accuracy','percent'],shots:['shots','number'],shots_on_target:['shotsOnTarget','number'],ShotsOnTarget:['shotsOnTarget','number'],expected_goals:['xg','fraction'],expected_assists:['xa','fraction'],expected_goals_on_target:['xgot','fraction'],line_breaking_passes:['lineBreakingPasses','number'],chances_created:['chancesCreated','number'],big_chances_created:['bigChancesCreated','number'],big_chance_created_team_title:['bigChancesCreated','number'],'matchstats.headers.tackles':['tackles','number'],interceptions:['interceptions','number'],recoveries:['recoveries','number'],clearances:['clearances','number'],blocked_shots:['blocks','number'],saves:['saves','number'],save_percentage:['savepct','percent'],goals_conceded:['conceded','number'],goals_prevented:['prevented','fraction'],clean_sheet_team_title:['clean','number'],penalty_saves:['penaltiesSaved','number'],keeper_high_claim:['highClaims','number'],keeper_sweeper:['sweeperActions','number'],yellow_cards:['yellowCards','number'],red_cards:['redCards','number'],expected_goals_against_while_on_pitch:['xga','fraction']};
  const rates={dribbles_succeeded:'dribblesPer90',long_balls_accurate:'longBallsPer90',fouls_committed:'foulsPer90'};
  function numeric(value,format,signed=false){
   if(typeof value==='string'&&!/^-?\d+(?:\.\d+)?$/.test(value))throw new Error('Formato de ficha inválido.');
@@ -27,7 +27,7 @@
   for(const [key,field] of [['goals','goals'],['assists','assists']])if(mainStats.has(key))assign(field,numeric(mainStats.get(key),'number'));
   for(const group of d.firstSeasonStats?.statsSection?.items||[])for(const item of group.items||[]){
    const spec=Object.hasOwn(fields,item.localizedTitleId)?fields[item.localizedTitleId]:null;
-   if(spec&&item.statFormat===spec[1]){assign(spec[0],numeric(item.statValue,spec[1],spec[0]==='prevented'),item);if(spec[0]==='shots'&&Number.isFinite(item.per90)&&item.per90>=0)assign('shotsPer90',item.per90,item);}
+   if(spec&&item.statFormat===spec[1]){assign(spec[0],numeric(item.statValue,spec[1],spec[0]==='prevented'),item);if(['shots','shotsOnTarget'].includes(spec[0])&&Number.isFinite(item.per90)&&item.per90>=0)assign(spec[0]==='shots'?'shotsPer90':'shotsOnTargetPer90',item.per90,item);}
    const rate=Object.hasOwn(rates,item.localizedTitleId)?rates[item.localizedTitleId]:null;if(rate&&Number.isFinite(item.per90)&&item.per90>=0)assign(rate,item.per90,item);
   }
   const ownShots=d.firstSeasonStats?.shotmap;
@@ -57,7 +57,13 @@
   for(const [key,denominator] of [['delta','xg'],['conversion','shots']])if(changed.has('goals')||changed.has(denominator)){
    const a=next.metricContexts.goals,b=next.metricContexts[denominator];
    const paired=a&&b&&a.source==='FotMob'&&b.source==='FotMob'&&a.captured_at===b.captured_at&&a.minutes===b.minutes&&a.matches===b.matches;
-   next[key]=paired&&Number.isFinite(next.goals)&&Number.isFinite(next[denominator])?(key==='delta'?next.goals-next.xg:next.shots>0?next.goals/next.shots*100:null):null;
+   // A published ratio or difference has its own sample. Older counts must not
+   // erase that independent observation or recompute it using mixed samples.
+   const own=next.metricContexts[key],value=next[key];
+   const reported=Number.isFinite(value)&&(key==='delta'||value>=0&&value<=100)&&own?.source==='FotMob'&&own.reportedValue===true&&!own.derived&&Number.isFinite(Date.parse(own.captured_at))&&Number.isFinite(own.minutes)&&own.minutes>=0&&Number.isInteger(own.matches)&&own.matches>=0;
+   const derivable=paired&&Number.isFinite(next.goals)&&Number.isFinite(next[denominator])&&(key==='delta'||next.shots>0);
+   if(reported&&(!derivable||Date.parse(own.captured_at)>Date.parse(a.captured_at)))continue;
+   next[key]=derivable?(key==='delta'?next.goals-next.xg:next.goals/next.shots*100):null;
    delete next.metricContexts[key];
    if(next[key]!==null){next.metricContexts[key]={...b,reportedValue:false,derived:'profile_counts'};delete next.metricContexts[key].reportedPer90;}
   }
