@@ -66,29 +66,46 @@
   return {players,sources};
  }
  async function loadProfiles(data,league,{fetchImpl=fetch,onProgress=()=>{}}={}){
-  const found=[],size=profiles.batchSize;let done=0,batchSupported=true;
-  async function singles(rows){
-   let cursor=0;
-   async function worker(){while(cursor<rows.length){const row=rows[cursor++];try{
-    const r=await fetchImpl('/api/player/fotmob?league='+encodeURIComponent(league.id)+'&player='+encodeURIComponent(row.id),{signal:AbortSignal.timeout(30000),cache:'no-store'});
-    if(r.ok)found.push(await r.json());
-   }catch(_){/* A failed profile keeps the previous verified fields. */}}}
-   await Promise.all(Array.from({length:Math.min(3,rows.length)},worker));
-  }
-  for(let offset=0;offset<data.players.length;offset+=size){
-   const rows=data.players.slice(offset,offset+size),ids=rows.map(p=>String(p.id));
-   if(batchSupported){try{
+  const found=new Array(data.players.length),size=profiles.batchSize,fallback=[];
+  const rows=data.players.map((row,index)=>({id:String(row.id),index})),batches=[];
+  for(let offset=0;offset<rows.length;offset+=size)batches.push(rows.slice(offset,offset+size));
+  let done=0,batchSupported=true,blocked=false;
+  const denied=status=>status===401||status===403||status===429;
+  const complete=rows=>{done+=rows.length;onProgress(done,data.players.length);};
+  const valid=(item,id)=>item&&typeof item==='object'&&!Array.isArray(item)&&String(item.id)===id;
+  async function batch(rows){
+   if(blocked){complete(rows);return;}
+   if(!batchSupported){fallback.push(...rows);return;}
+   const ids=rows.map(row=>row.id);
+   try{
     const r=await fetchImpl('/api/players/fotmob?league='+encodeURIComponent(league.id)+'&players='+ids.map(encodeURIComponent).join(','),{signal:AbortSignal.timeout(60000),cache:'no-store'});
-    if(r.status===401||r.status===403){done+=rows.length;onProgress(done,data.players.length);continue;}
+    if(denied(r.status)){blocked=true;complete(rows);return;}
     if(!r.ok){if(r.status===404||r.status===405)batchSupported=false;throw new Error('Ficha agrupada no disponible.');}
-    const payload=await r.json(),items=payload.profiles;
-    if(!Array.isArray(items)||items.length>rows.length||new Set(items.map(p=>String(p?.id))).size!==items.length||items.some(p=>!ids.includes(String(p?.id))))throw new Error('Respuesta de fichas inválida.');
-    found.push(...items);
-   }catch(_){await singles(rows);}}
-   else await singles(rows);
-   done+=rows.length;onProgress(done,data.players.length);
+    const items=(await r.json()).profiles;
+    if(!Array.isArray(items)||items.length>rows.length||new Set(items.map(p=>String(p?.id))).size!==items.length||items.some(p=>!ids.some(id=>valid(p,id))))throw new Error('Respuesta de fichas inválida.');
+    const byId=new Map(items.map(item=>[String(item.id),item]));
+    for(const row of rows)if(byId.has(row.id))found[row.index]=byId.get(row.id);
+    complete(rows);
+   }catch(_){fallback.push(...rows);}
   }
-  return found;
+  // Probe compatibility/auth once before opening two requests concurrently.
+  // A failed batch still gets the same individual coverage as the old path.
+  if(batches.length)await batch(batches[0]);
+  let cursor=1;
+  async function worker(){while(cursor<batches.length)await batch(batches[cursor++]);}
+  await Promise.all(Array.from({length:Math.min(2,Math.max(0,batches.length-1))},worker));
+  // One shared pool bounds fallback requests even when both batches failed.
+  cursor=0;
+  async function single(){while(cursor<fallback.length){const row=fallback[cursor++];
+   if(!blocked)try{
+    const r=await fetchImpl('/api/player/fotmob?league='+encodeURIComponent(league.id)+'&player='+encodeURIComponent(row.id),{signal:AbortSignal.timeout(30000),cache:'no-store'});
+    if(denied(r.status))blocked=true;
+    else if(r.ok){const item=await r.json();if(valid(item,row.id))found[row.index]=item;}
+   }catch(_){/* A failed profile keeps the previous verified fields. */}
+   complete([row]);
+  }}
+  await Promise.all(Array.from({length:Math.min(3,fallback.length)},single));
+  return found.filter(Boolean);
  }
  function captureStore(){
   let connection;

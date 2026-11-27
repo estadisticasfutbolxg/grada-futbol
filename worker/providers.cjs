@@ -113,7 +113,7 @@ function buildFotmob(pages,league){
 async function fetchFotmob(leagueId,{fetcher=fetch,now=()=>new Date().toISOString()}={}){
  const league=leagues.get(leagueId),entries=Object.entries(specs(league)),pages={};let cursor=0,failed=false;
  async function worker(){while(!failed&&cursor<entries.length){const [stat,kind]=entries[cursor++],base='https://www.fotmob.com/leagues/'+league.fotmobId,url=stat==='overview'?base+'/overview/'+league.fotmobSlug:base+'/stats/season/'+(league.fotmobStatSeasons?.[stat]||league.fotmobSeason)+'/'+kind+'/'+stat+'/'+league.fotmobSlug;try{const html=await textResponse(url,{fetcher});pages[stat]={url,captured_at:now(),data:parseFotmob(html,stat,league)};}catch(error){failed=true;throw error;}}}
- const results=await Promise.allSettled([worker(),worker()]),error=results.find(r=>r.status==='rejected');if(error)throw error.reason;return buildFotmob(pages,league);
+ const results=await Promise.allSettled(Array.from({length:4},worker)),error=results.find(r=>r.status==='rejected');if(error)throw error.reason;return buildFotmob(pages,league);
 }
 function extractUnderstat(html){
  const title=html.match(/<title>([\s\S]*?)<\/title>/i);if(!title||!/2026\s*[/–-]\s*(?:20)?27/.test(title[1]))throw new Error('Understat no confirma LaLiga 2026/27.');
