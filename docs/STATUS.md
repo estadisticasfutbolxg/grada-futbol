@@ -1,5 +1,15 @@
 # Estado comprobado de GRADA
 
+## Carga con progreso, ligas recuperables y refresco paralelo · publicación privada verificada · 27 de noviembre de 2026
+
+Indicador accesible desde HTML, contador/porcentaje/fases y reintento de ligas pendientes. Carga inicial de tres ligas/seis fuentes, un reintento transitorio y respaldo local validado, excluido en modo publicado estricto. Los estados se incorporan juntos para mantener referencia común; una caché incompleta no descarta otra combinación válida. Mutex carga/refresco y avance sin bloqueo en pestañas de fondo.
+
+Se evita combinación repetida al seleccionar cachés. Rankings FotMob con cuatro consultas por captura; fichas con prueba inicial y hasta dos lotes de seis simultáneos por liga, respaldo individual compartido de tres y detención ante 401/403/429. Mantiene métricas, muestras, fuentes, permisos y recuperación. Medición offline con resultados equivalentes: latencia simulada 12 ms para 43 páginas, 272→137 ms; 96 fichas/16 lotes, 203→113 ms. Cinco ligas reales con respaldos, 1.859→1.423 ms. No son tiempos reales de proveedores ni de navegador. [Método y límites](PERFORMANCE.md).
+
+41 archivos Node y 28 pruebas Python, ESLint/Ruff, documentación y diff correctos. Cuatro arranques VM/DOM del Worker exacto y casos 17/18→18 por reintento; reproducción LaLiga real recupera 488 jugadores ante fuente ausente y caché incompatible. Revisión técnica adicional por agente; sin revisión humana ni QA visual. Sin jugadores/partidos descargados o actualizados; pesos, modelos, DB y estadísticas intactos.
+
+[PR #86](https://github.com/estadisticasfutbolxg/grada-futbol/pull/86) integrado, CI correcto. **v46**, fuente `5078493aa35a268ee683addf800dfb2f0f2bb8f8`, despliegue `appgdep_6b09193ca9d48191b026ff9382a209f2` succeeded; Worker SHA256 `2ec79fbd24e6789b9e4f0a73c4fdb355fc2864dc67a9ed14cb65c7df36ac52cb`. HTTP: bundle exacto gzip 104.823 bytes, cuatro informes y 36 fuentes intactos, 42 rutas retiradas 400/404 y actualización sin identidad 401. Solo propietario, política revisión 3 y runtime revisión 1 conservados. [Tarea y evidencia](../loop/tasks/20261127-codex-loading-refresh.md).
+
 ## Pesos Fantasy aprobados aplicados · publicación privada verificada · 26 de noviembre de 2026
 
 Modelo `role_fairplay_radar_v11`: goles, asistencias, xG y xA tienen pesos propios por perfil, derivados de magnitudes de coeficientes estandarizados sobre todos los predictores Fantasy (incluidos minutos/extras). Se aplica la tabla aprobada por el usuario; el resto conserva el radar no ofensivo y el juego limpio, sin cambios en porteros. Calibración LaLiga aplicada por perfil a todas las competiciones, sin afirmar validación fuera de LaLiga. Configuración con fecha/hash, generador determinista y rechazo de modelos parciales. Refrescar estadísticas no reentrena ni cambia pesos; se revisan cuando el usuario lo solicita. [Fórmula y porcentajes](SCORES.md).
