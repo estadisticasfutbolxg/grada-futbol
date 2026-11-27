@@ -1,6 +1,6 @@
 # Camello y métricas publicadas borradas al recuperar fichas
 
-- Estado: `review`
+- Estado: `done`
 - Responsable: Codex
 - Revisión: agentes y autocontrol, sin revisión humana independiente
 - Rama: `fix/reported-conversion-refresh`
@@ -41,3 +41,15 @@ Además se corrigen dos etiquetas reales omitidas al extraer fichas: grandes oca
 - No se han descargado jugadores ni partidos nuevos; las 36 capturas originales y sus fechas se conservan. Si un refresco previo borró el porcentaje de la caché local, se requiere un refresco del propietario para consultar de nuevo el valor publicado: no se reconstruye con muestras mezcladas.
 
 Worker exacto: cuatro arranques VM/DOM (ideal, Fantasy, selecciones y fallo de fuente), selectores/detalles/equipos y score canónico liga/copa correctos. Referencia completa6.766, 36 consultas de fuente, máximo6 simultáneas; fallo controlado17/18. SHA256 `7f32bc87dc23b58c2b242f7adb1978bc8c842df456115d7c5a5d005976ba9d44`, 379 assets/12 módulos, 9.832.261 bytes; bundle gzip107.544. Sin QA visual disponible.
+
+## Publicación comprobada · 28 de noviembre de 2026
+
+[PR #90](https://github.com/estadisticasfutbolxg/grada-futbol/pull/90) integrado con CI quality correcto (`28a76c77f9617c599b04def64ea88d6800fc6c33`). [PR #91](https://github.com/estadisticasfutbolxg/grada-futbol/pull/91) añade el resumen y está integrado con CI correcto (`acc3e98cc86f417aafe50ac09e322431ed8b4af1`).
+
+Ambos publicados en **v48**, fuente nativa `6a989d3f06eec4644bc5d61fe3d88985572a81e2`, despliegue `appgdep_6b0a18f23354819184d281a3406a351e` succeeded. Worker SHA256 `c30582349fabb898314ff00b025ab61d0139d40f8713fa569648acab8b35c436`; bundle SHA256 `14afe1ff4e3a65491e3cd58e31bdcd62bbbb9f150bb2efd70c4393dc308bb584`, gzip108.668 bytes, 379 assets/12 módulos. Cuatro arranques VM/DOM del artefacto exacto comprueban también total6.766/con4.234/sin2.532 y suma de motivos, además de filtros y fallo de fuente. Sin QA visual disponible.
+
+HTTP publicado: HTML y bundle coinciden con el artefacto local; resumen y cálculo presentes; cuatro informes y36 capturas originales iguales por hash,42 rutas retiradas400/404, actualización sin identidad401. Solo propietario, política revisión3 y entorno revisión1, sin editores ni visitantes. Ningún jugador ni partido descargado/actualizado; diez scores recuperados y referencias derivadas recalculadas, con fechas y pesos intactos.
+
+Consulta del usuario sobre los12 pendientes de posición: en todos, la captura FotMob carece de posición/puesto detallado y no existe un registro ESPN enlazado con seguridad. No es un conflicto entre dos posiciones. No se asigna perfil por nombre o por score; las futuras fichas verificadas conservan el mecanismo de enriquecimiento existente.
+
+Siguiente acción del usuario solo si el porcentaje fue borrado de su caché antes del arreglo: pulsar Actualizar datos una vez para recuperar la observación original. Cierre documental posterior sin reconstruir ni volver a publicar el mismo Worker.
