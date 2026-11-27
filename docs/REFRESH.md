@@ -1,5 +1,9 @@
 # Actualización general y scores
 
+## Progreso y concurrencia vigentes · 27 de noviembre
+
+La barra distingue carga de competiciones, fuentes consultadas y preparación de scores. Ante fallos iniciales se reintenta una vez la lectura transitoria; se conservan respaldos locales validados, con sus fechas, y se ofrece reintentar ligas pendientes sin recargar. Solo una carga/reintento o actualización puede ejecutarse a la vez. La carga inicial limita tres ligas simultáneas; el refresco conserva dos. Las fichas abren un lote de compatibilidad y hasta dos lotes posteriores de seis por liga, con respaldo individual limitado a tres consultas en conjunto. Los rankings FotMob usan cuatro consultas por captura. No se omiten métricas ni jugadores para ganar velocidad. Acceso del propietario, TTL y muestras no cambian. [Medición, límites y pruebas](PERFORMANCE.md).
+
 ## Torneos y caché de lectura
 
 Champions, Europa y Conference usan rankings de su competición y fase de liga verificada; se omite enriquecimiento individual cuyo endpoint representa la liga doméstica. Se validan identidad, temporada y clubes antes de sustituir una captura. Las fechas por campo y por contribución preservan la competición real, sin atribuir una fecha agregada a la liga principal.
