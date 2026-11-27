@@ -1,6 +1,6 @@
 # Once ideal por liga y de todas las ligas
 
-- Estado: `review`
+- Estado: `done`
 - Responsable: Codex (coordinación/publicación)
 - Revisión: autocontrol y revisión técnica de agentes, sin revisión humana independiente
 - Rama: `feat/ideal-league-elevens`
@@ -27,4 +27,8 @@ Se mantiene el score v11 y todos los pesos/capturas. Nueva vista se calcula al a
 
 43 archivos Node y 28 pruebas Python, ESLint/Ruff, documentación y diff correctos. Pruebas de mínimos canónicos con 150 minutos de liga/250 de temporada, identidad/transferencias, roles, ausencia de país, vacantes, clubes seguros, caché/navegación y media. Se sustituye el máximo con miles de argumentos por reducción equivalente para evitar límites del navegador; prueba de 8.000 candidatos. Revisión técnica cruzada sin bloqueos, sin revisión humana independiente.
 
-Worker exacto probado en cuatro arranques VM/DOM con capturas reales, acceso directo a once LaLiga, cambios de selector, detalle con desglose y referencia de temporada, navegación a otras vistas y fallo de fuente. Sin QA visual disponible. Worker SHA256 `eb64a228a110b2d5758e9522e7f67f5f963bbe01b09cf1b51d49940dc0ba782b`, 379 assets/12 módulos y bundle gzip 107.090 bytes. Sin datos, jugadores o partidos descargados. Integración y publicación privada pendientes de confirmar.
+Worker exacto probado en cuatro arranques VM/DOM con capturas reales, acceso directo a once LaLiga, cambios de selector, detalle con desglose y referencia de temporada, navegación a otras vistas y fallo de fuente. Sin QA visual disponible. Worker SHA256 `eb64a228a110b2d5758e9522e7f67f5f963bbe01b09cf1b51d49940dc0ba782b`, 379 assets/12 módulos y bundle gzip 107.090 bytes. Sin datos, jugadores o partidos descargados. [PR #88](https://github.com/estadisticasfutbolxg/grada-futbol/pull/88) integrado con CI quality correcto, merge `7a8148d659725af9f15acb49c90a4593f6d28e3d`. Dieciséis blobs contrastados con la base y verificados por hash tras enviar. Fuente nativa `eb63c6fc1f83b8cc85b28c5c97c8930e34d1e69f` subida y comprobada en remoto.
+
+**Sites v47**, despliegue `appgdep_6b094ee4461c819191b8f2ae7c23f15e` succeeded; Worker SHA256 `eb64a228a110b2d5758e9522e7f67f5f963bbe01b09cf1b51d49940dc0ba782b`, 9.830.248 bytes, 379 assets/12 módulos. [Onces ideales privados](https://grada-futbol-analitica.ivanmatema2.chatgpt.site/?vista=ideal). Política custom revisión 3, un propietario, cero editores/grupos/visitantes, runtime revisión 1.
+
+HTTP publicado: HTML/bundle exactos, sección y selector de onces, cuatro informes analíticos y 36 capturas idénticas a v46, 42 rutas retiradas 400/404 y actualización sin identidad 401. Auditoría final: 3.938 candidatos elegibles únicos, quince ligas, 16 XI y 176 plazas iguales al score canónico de todas las competiciones. Ningún jugador ni partido nuevo/actualizado, sin cambios de capturas, DB, pesos o fórmulas de score. Cierre documental posterior sin otro despliegue idéntico.
