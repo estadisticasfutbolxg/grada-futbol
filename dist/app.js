@@ -460,7 +460,15 @@ function renderRankingPreviews(){
   }
   $$('#overview [data-open-ranking]').forEach(button=>button.onclick=()=>openRanking(button.dataset.openRanking,button.dataset.previewId));
 }
+function renderScoreCoverage(){
+  const panel=$('#score-coverage');panel.hidden=!loaded;
+  if(!loaded)return;
+  const report=GradaScores.coverage(scoreModel),format=new Intl.NumberFormat('es-ES').format;
+  const cards=[['Jugadores',report.total],['Con score',report.valid],['Sin score',report.pending]];
+  panel.innerHTML='<div class="sectionhead"><div><h2 id="score-coverage-title">Cobertura del score</h2><p class="sub">Jugadores de la selección de competiciones · score de toda la temporada cargada.</p></div></div><div class="score-coverage-counts">'+cards.map(([label,value])=>'<div><span>'+label+'</span><strong>'+format(value)+'</strong></div>').join('')+'</div><progress max="'+Math.max(report.total,1)+'" value="'+report.valid+'" aria-label="'+report.valid+' de '+report.total+' jugadores con score"></progress>'+(report.pending?'<h3>¿Por qué falta el score?</h3><ul class="score-coverage-reasons">'+report.reasons.map(reason=>'<li><span>'+esc(reason.label)+'</span><b>'+format(reason.count)+'</b></li>').join('')+'</ul><p class="sub">Cada jugador sin score figura una sola vez. Se priorizan identidad, minutos y posición; después se comprueban los ejes necesarios de su perfil.</p>':'<p class="sub">'+(report.total?'Todos los jugadores de esta selección tienen score.':'No hay jugadores en esta selección.')+'</p>')+(report.missingMetrics.length?'<details><summary>Métricas que faltan en los ejes</summary><ul class="score-coverage-reasons">'+report.missingMetrics.map(({key,count})=>'<li><span>'+esc(GradaRadar.axis(key)?.label||labels[key]||key)+'</span><b>'+format(count)+'</b></li>').join('')+'</ul><p class="sub">Jugadores con al menos '+report.minimumMinutes+' minutos y posición verificada. Un jugador puede carecer de varias métricas; estos recuentos no se suman.</p></details>':'')+'<p class="sub">Mínimo '+report.minimumMinutes+' minutos del jugador y de cada eje; porteros: se admite la alternativa de 2 PJ por eje si no hay minutos propios. Un cero publicado sí cuenta. Un dato ausente no equivale a cero. La ficha de cada jugador explica su caso.</p>';
+}
 function dashboard() {
+  renderScoreCoverage();
   const ts = teams(), ps = players();
   const values = [['Goles',GradaMetrics.total(ts,'goals'),'Marcadores de equipos'],['Goles esperados · xG',GradaMetrics.total(ts,'xg'),'xG de los equipos'],['Asistencias',GradaMetrics.total(ps,'assists'),'Asistencias publicadas'],['Paradas',GradaMetrics.total(ps.filter(p=>p.pos==='POR'||GradaMetrics.number(p.saves)),'saves'),'Paradas publicadas']];
   $('#cards').innerHTML = values.map(([title,total,note])=>'<div class="card"><div class="label">'+title+'</div><strong>'+(total.value===null?'—':new Intl.NumberFormat('es-ES',{maximumFractionDigits:1}).format(total.value))+'</strong><small>'+note+' · '+(total.complete?'suma':'subtotal parcial')+' · '+total.known+'/'+total.total+' registros con dato</small></div>').join('');
