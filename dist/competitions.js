@@ -51,7 +51,12 @@
     const delta=metrics.pair(result,'goals','xg','same_source_difference');
     result.delta=delta?delta.first-delta.second:null;if(delta){result.metricContexts.delta=delta.context;result.fieldSources.delta=delta.context.source;}
     const conversion=metrics.pair(result,'goals','shots','same_source_ratio');
-    if(conversion&&conversion.second>0){result.conversion=conversion.first/conversion.second*100;result.metricContexts.conversion=conversion.context;result.fieldSources.conversion=conversion.context.source;}
+    if(conversion&&conversion.second>0){
+      // Retain a known percentage sample when totals include counts whose own
+      // minutes are unknown. Those counts can still be displayed separately.
+      const known=result.metricContexts.conversion,hasWeightedSample=numeric(result.conversion)&&known?.aggregation==='minutes_weighted_percentage'&&numeric(known.minutes)&&known.minutes>0;
+      if(!hasWeightedSample||numeric(conversion.context.minutes)&&conversion.context.minutes>0){result.conversion=conversion.first/conversion.second*100;result.metricContexts.conversion=conversion.context;result.fieldSources.conversion=conversion.context.source;}
+    }
     const paired=rows.filter(p=>numeric(p.yellowCards)&&numeric(p.redCards)&&metrics.sameSample(metrics.context(p,'yellowCards'),metrics.context(p,'redCards')));
     if(paired.length){
       result.disciplineSample={};for(const key of ['yellowCards','redCards']){const parts=partsFor(paired,key);result.disciplineSample[key]=sum(parts.map(p=>p.value));(result.disciplineSample.metricContexts??={})[key]=context(parts,'sum_paired_cards',rows.length);}

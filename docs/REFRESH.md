@@ -1,5 +1,11 @@
 # Actualización general y scores
 
+## Preservación de conversión durante la actualización
+
+Al recuperar campos de una ficha antigua, se conserva la conversión publicada de una captura posterior con su propia fecha/minutos/PJ si los nuevos recuentos no forman una pareja compatible o son más antiguos. No se calcula un porcentaje con goles recientes y tiros antiguos. Los derivados obsoletos siguen eliminándose. Al sumar torneos se conserva la muestra parcial conocida de conversión cuando otros recuentos no tienen minutos fiables.
+
+La corrección evita futuras pérdidas; un dato ya borrado de una copia local puede necesitar una actualización del propietario para volver a consultar el porcentaje original. Recargar la web no puede reconstruir por sí solo un valor que ya no está en las capturas disponibles. Los detalles de la ficha indican los ejes y muestras que faltan; no todos los jugadores con 200 minutos totales cumplen los minutos propios de cada eje.
+
 ## Progreso y concurrencia vigentes · 27 de noviembre
 
 La barra distingue carga de competiciones, fuentes consultadas y preparación de scores. Ante fallos iniciales se reintenta una vez la lectura transitoria; se conservan respaldos locales validados, con sus fechas, y se ofrece reintentar ligas pendientes sin recargar. Solo una carga/reintento o actualización puede ejecutarse a la vez. La carga inicial limita tres ligas simultáneas; el refresco conserva dos. Las fichas abren un lote de compatibilidad y hasta dos lotes posteriores de seis por liga, con respaldo individual limitado a tres consultas en conjunto. Los rankings FotMob usan cuatro consultas por captura. No se omiten métricas ni jugadores para ganar velocidad. Acceso del propietario, TTL y muestras no cambian. [Medición, límites y pruebas](PERFORMANCE.md).
@@ -133,3 +139,5 @@ El refresco FotMob incluye `penalty_conceded`, con las temporadas por ranking do
 ### Informe Fantasy de LaLiga
 
 Análisis Fantasy sirve modelos precomputados y fechados, más su cruce auditable. Sus capturas son independientes de los rankings; el botón de actualización general no reentrena modelos ni sustituye los puntos de la captura Fantasy. Para regenerar, usar los generadores y requisitos de [FANTASY_REGRESSION.md](FANTASY_REGRESSION.md), comprobar cohortes/validación y publicar los cuatro archivos coherentes.
+
+Las fichas admiten también los títulos publicados `big_chance_created_team_title` y `ShotsOnTarget`, con la misma comprobación de jugador, club, liga y temporada. Se conserva la tasa de tiros a puerta /90 cuando la ficha la publica explícitamente, sin exigir un mapa completo para ese valor. No se interpreta un ítem ausente como cero ni se confunden regates defensivos sufridos con regates logrados. Estas correcciones de extracción se aplican a las siguientes consultas verificadas, sin cambiar fechas o rellenar cifras a mano.

@@ -8,7 +8,7 @@ Recuentos: suma de valores conocidos, sin convertir ausencias en ceros. Tasas: m
 
 Juego limpio mantiene la fórmula vigente. Solo usa contribuciones con ambas tarjetas y muestra compatible; si a un torneo le falta una, conserva el ajuste de la muestra emparejada de las otras competiciones y declara su cobertura. No supone cero ni elimina una penalización ya verificada. La regeneración debe preservar score, posición y perfil; las posiciones derivadas no se reutilizan como evidencia original.
 
-Modelo vigente `role_fairplay_radar_v11`. El score de temporada incorpora un bloque de aporte ofensivo para los jugadores de campo. El modelo común es `dist/scores.js`; tablas, tarjetas, fichas, comparador, filtros y generador consumen sus resultados.
+Modelo vigente `role_fairplay_radar_v12`. El score de temporada incorpora un bloque de aporte ofensivo para los jugadores de campo. El modelo común es `dist/scores.js`; tablas, tarjetas, fichas, comparador, filtros y generador consumen sus resultados.
 
 ## Jugadores
 
@@ -129,7 +129,7 @@ Con las capturas publicadas al preparar este cambio hay 1.029 asistencias conoci
 
 ## Artefactos y reproducción
 
-`scores.build` calcula índices MED, perfil, área del radar, aporte ofensivo y ajuste de juego limpio en ese orden; `scores.value`, `scores.eligible` y `scores.rankingAxes` resuelven rankings y columnas. `fairplay.js` conserva fuente/muestra de ambas tarjetas. `squads.js` produce promedios y contribuciones con el score final y el perfil utilizado. `withScores` añade `playerScore`, `playerBaseScore`, `fairPlay`, `scorePosition`, `scoreProfile`, `scoreProfileLabel`, `midfieldProfile` y scores/ledgers de equipo al combinado. El modelo se identifica como `role_fairplay_radar_v11` en `metadata.derived_metrics.playerScore`. Todas las ligas descarta derivados previos antes de recalcular.
+`scores.build` calcula índices MED, perfil, área del radar, aporte ofensivo y ajuste de juego limpio en ese orden; `scores.value`, `scores.eligible` y `scores.rankingAxes` resuelven rankings y columnas. `fairplay.js` conserva fuente/muestra de ambas tarjetas. `squads.js` produce promedios y contribuciones con el score final y el perfil utilizado. `withScores` añade `playerScore`, `playerBaseScore`, `fairPlay`, `scorePosition`, `scoreProfile`, `scoreProfileLabel`, `midfieldProfile` y scores/ledgers de equipo al combinado. El modelo se identifica como `role_fairplay_radar_v12` en `metadata.derived_metrics.playerScore`. Todas las ligas descarta derivados previos antes de recalcular.
 
 El generador lee las capturas verificadas de las ligas disponibles para compartir referencia. En una importación por etapas, `--reference-dir` aporta las otras ligas, y `import_leagues.py` recalcula todos los derivados tras completar las fuentes. No actualiza las fechas originales por recalcular scores. Todas las ligas descarta derivados anteriores y usa el modelo común. En el navegador, el modelo se invalida al cambiar una captura, no al cambiar de vista.
 
@@ -163,3 +163,9 @@ Los pesos aplicados de [las regresiones Fantasy](FANTASY_REGRESSION.md) se muest
 ## Renovación de pesos
 
 `node scripts/calibrate_score_weights.cjs --report <informe.json>` calcula una vista previa. Con `--apply` sustituye únicamente el bloque de configuración aprobado en `dist/radar.js`, de forma atómica y determinista; exige los seis perfiles completos y los cuatro coeficientes finitos por perfil. Conserva fecha del modelo, SHA256 del informe, muestra por perfil, método y signos originales. Una calibración incompleta falla antes de escribir; no retiene en silencio una mezcla de versiones. Después ejecutar pruebas, regenerar todos los combinados, auditar y publicar dentro del loop. El refresco normal de datos no ejecuta este generador ni reentrena los modelos.
+
+## Recuperación de porcentajes y muestras · 27 de noviembre de 2026
+
+Los porcentajes publicados conservan su propia muestra al recuperar recuentos de fichas anteriores. Unos tiros antiguos y unos goles recientes no permiten derivar conversión: se mantiene el porcentaje observado válido con su contexto original. Un cálculo derivado obsoleto se invalida, y 0/0 no produce un cero inventado. Un porcentaje publicado explícitamente a cero sí se conserva. Una pareja compatible posterior o igual en fecha puede recalcular el valor con sus propios recuentos; una pareja antigua no sustituye un porcentaje publicado más reciente.
+
+Al agregar competiciones, se mantiene la media ponderada de porcentajes con minutos propios cuando el cociente de goles/tiros pierde sus minutos por contribuciones adicionales sin muestra temporal. Se conserva cobertura, contribuciones y etiqueta de porcentaje ponderado parcial. No se toman minutos FotMob para un recuento ESPN. Si el cociente exacto tiene minutos propios válidos mantiene su prioridad; si no hay porcentaje con muestra, puede seguir visible el cociente informativo sin fabricar su elegibilidad. Pesos, fórmula de área, disciplina, referencias y mínimo 200 no cambian. Modelo v12 para identificar esta corrección de manejo de muestras.
