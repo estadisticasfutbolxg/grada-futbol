@@ -56,3 +56,8 @@ test('minutes cannot change equal-score identities or the preferred system while
  for(const a of after.alternatives)if(a.complete)assert(Math.abs(a.score-a.quality/11)<1e-12);
  assert(after.score>=Math.max(...after.alternatives.filter(a=>a.complete).map(a=>a.score))-1e-12);
 });
+
+test('assignment supports global league pools without spreading tens of thousands of arguments',()=>{
+ const formation=require('../dist/formations'),pool=Array.from({length:8000},(_,i)=>({person:String(i),score:i/8000,codes:['CB'],player:{id:String(i),name:'Isolated '+i,pos:'DEF',minutes:200}})),slots=Array.from({length:11},(_,i)=>({key:'CB'+i,role:'CB',pos:'DEF',label:'Central',row:0}));
+ const assigned=formation.assign(pool,slots),selected=assigned.map(s=>s.candidate);assert.equal(new Set(selected.map(c=>c.person)).size,11);assert.deepEqual(selected.map(c=>Number(c.person)).sort((a,b)=>a-b),Array.from({length:11},(_,i)=>7989+i));
+});

@@ -28,6 +28,7 @@ let activeLeaderKey=null;
 const tablePageSize=100;
 let tablePage=0,tableRows=[],tablePageKey='',tableData=null;
 let selectedNation='ESP';const nationCache=new WeakMap();
+let selectedIdeal='leagues';const idealCache=new WeakMap();
 const leaderMinimums={field:450,saves:180},leaderMinimumEdited=new Set();
 const captureStore=GradaRefresh.captureStore();
 let dateHistory=null;
@@ -505,26 +506,40 @@ function renderNations(){
   $$('[data-nation]').forEach(b=>b.onclick=()=>{selectedNation=b.dataset.nation;renderNations();$('#nation-select').focus();$('#nation-lineup').scrollIntoView({behavior:'smooth',block:'start'});});
   $$('[data-national-player]').forEach(b=>b.onclick=()=>detail(b.dataset.nationalPlayer,false));
 }
+function renderIdeal(){
+  if(!loaded||!scoreModel){$('#ideal-ranking').innerHTML='<p class="empty">Cargando onces ideales…</p>';$('#ideal-lineup').innerHTML='';return;}
+  if(!idealCache.has(scoreModel))idealCache.set(scoreModel,GradaIdeal.build(scoreModel,{datasets:scoreContext().inputs}));
+  const model=idealCache.get(scoreModel);
+  if(!model.groups.some(group=>group.id===selectedIdeal))selectedIdeal='leagues';
+  $('#ideal-select').innerHTML=GradaIdeal.options(model,selectedIdeal);$('#ideal-select').value=selectedIdeal;$('#ideal-select').disabled=!model.groups.length;
+  $('#ideal-ranking').innerHTML=GradaIdeal.ranking(model,{selected:selectedIdeal});
+  $('#ideal-lineup').innerHTML=GradaIdeal.lineup(model.groups.find(group=>group.id===selectedIdeal),model);
+  const c=model.coverage;
+  $('#ideal-coverage').textContent='Candidatos: primeras divisiones · '+c.availableLeagues+'/'+c.expectedLeagues+' ligas disponibles · '+c.eligible+' jugadores únicos con score y muestra suficientes · '+c.complete+' onces de liga completos. '+(c.availableLeagues<c.expectedLeagues?'Cobertura parcial: faltan ligas; el once global usa las disponibles. ':'')+'Sin filtro de nacionalidad. Siete sistemas con contención y creación; media simple de los once scores, sin ponderar minutos. Score de temporada: liga y todos los torneos cargados; el selector solo filtra candidatos. Mínimo '+GradaRadar.minimumScoreMinutes+' min, también en sus fichas. '+(c.duplicateRecords?c.duplicateRecords+' fichas repetidas por ID: cada persona ocupa una sola plaza. ':'')+(c.conflicts?c.conflicts+' identidades incompatibles, excluidas.':'');
+  $$('[data-ideal]').forEach(button=>button.onclick=()=>{selectedIdeal=button.dataset.ideal;renderIdeal();$('#ideal-select').focus();$('#ideal-lineup').scrollIntoView({behavior:'smooth',block:'start'});});
+  $$('[data-national-player]').forEach(button=>button.onclick=()=>detail(button.dataset.nationalPlayer,false));
+}
 function navigate(v,scroll=true,preserveSort=false){
   if(v==='fantasy'&&currentLeague!=='laliga'){view=v;activateLeague('laliga');if(scroll)window.scrollTo({top:0,behavior:'smooth'});return;}
-  if(v==='nations'&&currentLeague!=='leagues'){view=v;activateLeague('leagues');if(scroll)window.scrollTo({top:0,behavior:'smooth'});return;}
+  if(['nations','ideal'].includes(v)&&currentLeague!=='leagues'){view=v;activateLeague('leagues');if(scroll)window.scrollTo({top:0,behavior:'smooth'});return;}
   if(['players','overview'].includes(v)&&view!==v&&!activeLeaderKey&&!preserveSort){sort='radarArea';direction=-1;}
   if(v!=='players')activeLeaderKey=null;
   const previous=view;view=v;
   if(v==='rankings'){const def=GradaRadar.definition(rankingProfile);if(def.kind==='player')pos=def.position;if(previous!==v){rankingMinimum=def.minimum;$('#ranking-min').value=rankingMinimum;}if(!preserveSort){sort=rankingSort();direction=-1;}}
   if(v==='teams'&&previous!==v){sort='teamArea';direction=-1;}
   updateRadarProfiles();
-  const info={fantasy:['Análisis Fantasy','LaLiga · regresiones Fantasy','Asociaciones entre métricas del perfil y puntos acumulados.'],nations:['Selecciones','Selecciones · el mejor encaje','Jugadores de las ligas disponibles, con su score de club y país deportivo publicado.'],overview:['Vista general','Estadísticas de fútbol','Líderes y estadísticas de jugadores y equipos.'],players:['Jugadores','Estadísticas de jugadores','Datos de '+source()+'. Selecciona un jugador para explorar.'],teams:['Equipos','Estadísticas de equipos','Ataque, defensa y rendimiento de los equipos.'],rankings:['Rankings','Rankings por score de temporada','Elige un perfil y compara dentro de la liga o del conjunto seleccionado.'],compare:['Comparador','Comparador de jugadores','Contrasta perfiles y métricas en su contexto.'],glossary:['Glosario','Glosario de métricas','Definiciones y límites de los datos disponibles.']}[v];
+  const info={ideal:['Onces ideales','Onces ideales · liga y conjunto global','El mejor once por liga y de todas las primeras divisiones disponibles, con el mismo score de cada ficha.'],fantasy:['Análisis Fantasy','LaLiga · regresiones Fantasy','Asociaciones entre métricas del perfil y puntos acumulados.'],nations:['Selecciones','Selecciones · el mejor encaje','Jugadores de las ligas disponibles, con su score de club y país deportivo publicado.'],overview:['Vista general','Estadísticas de fútbol','Líderes y estadísticas de jugadores y equipos.'],players:['Jugadores','Estadísticas de jugadores','Datos de '+source()+'. Selecciona un jugador para explorar.'],teams:['Equipos','Estadísticas de equipos','Ataque, defensa y rendimiento de los equipos.'],rankings:['Rankings','Rankings por score de temporada','Elige un perfil y compara dentro de la liga o del conjunto seleccionado.'],compare:['Comparador','Comparador de jugadores','Contrasta perfiles y métricas en su contexto.'],glossary:['Glosario','Glosario de métricas','Definiciones y límites de los datos disponibles.']}[v];
   $('#crumb').textContent=info[0];$('#pagetitle').textContent=info[1];$('#pagesub').textContent=info[2];
   renderDataDates();
   $$('nav button').forEach(b=>b.classList.toggle('active',b.dataset.view===v));
   $('#overview').classList.toggle('hidden',v!=='overview');$('#listing').classList.toggle('hidden',!['overview','teams','players','rankings'].includes(v));$('#compare').classList.toggle('hidden',v!=='compare');$('#glossary').classList.toggle('hidden',v!=='glossary');
-  $('#fantasy').classList.toggle('hidden',v!=='fantasy');$('#nations').classList.toggle('hidden',v!=='nations');$('#filters').classList.toggle('hidden',v==='glossary'||v==='nations'||v==='fantasy');$('#min-minutes').closest('label').classList.toggle('hidden',isTeamView());$('#positions').classList.toggle('hidden',isTeamView()||v==='rankings');$('#allplayers').classList.toggle('hidden',v!=='overview');
+  $('#fantasy').classList.toggle('hidden',v!=='fantasy');$('#nations').classList.toggle('hidden',v!=='nations');$('#ideal').classList.toggle('hidden',v!=='ideal');$('#filters').classList.toggle('hidden',v==='glossary'||v==='nations'||v==='fantasy'||v==='ideal');$('#min-minutes').closest('label').classList.toggle('hidden',isTeamView());$('#positions').classList.toggle('hidden',isTeamView()||v==='rankings');$('#allplayers').classList.toggle('hidden',v!=='overview');
   $$('#filters .seg, #filters .divider').forEach(control=>control.classList.toggle('hidden',v==='overview'||v==='rankings'));$('#ranking-controls').classList.toggle('hidden',v!=='rankings');$('#ranking-min-caption').textContent=isTeamView()?'Partidos mínimos':'Minutos mínimos';$('#ranking-profile').value=rankingProfile;
   $('#ranking-note').textContent=isTeamView()&&activeUnit()?GradaSquads.unitDefinition(activeUnit()):isTeamView()?GradaSquads.definition:GradaRadar.definition(rankingProfile).roleKey?'Solo candidatos con puesto publicado compatible. Los polivalentes pueden aparecer en varios grupos; conservan su mismo score individual, mixto para los laterales/carrileros. No se conoce el reparto de minutos por puesto.':rankingProfile.startsWith('MED_')?'Perfil estadístico por percentiles de los índices ofensivo y defensivo. Solo una ventaja ofensiva superior a 10 puntos asigna perfil ofensivo; los demás se integran en defensivos. El perfil selecciona los ejes del score; no indica un puesto táctico. Sin ambos índices completos, el perfil queda sin clasificar; puede tener un score general explícito.':'Un score único de su posición y perfil, con muestra suficiente y todos los ejes. La referencia común de ligas se conserva en tablas, fichas y rankings.';
   $('#tabletitle').textContent=v==='rankings'?GradaRadar.definition(rankingProfile).label:isTeamView()?'Ranking de equipos':'Ranking de jugadores';$('#tablesub').textContent=isTeamView()?'Scores de equipo ponderados por minutos, entre 0 y 1. Consulta pesos y contribuciones en la ficha.':activeLeaderKey?'Ranking de '+labels[activeLeaderKey]+(activeLeaderKey==='savesPer90'?' · porteros':' · jugadores de campo')+'. Misma selección que en portada.':'Selecciona un nombre para ver su radar. Score entre 0 y 1; — = no disponible.';
   if(v==='overview'){dashboard();renderLeaders();}
   if(v==='fantasy'){GradaFantasy.open(document);$('#team-comparison').hidden=true;if(scroll)window.scrollTo({top:0,behavior:'smooth'});return;}
+  if(v==='ideal'){renderIdeal();$('#team-comparison').hidden=true;if(scroll)window.scrollTo({top:0,behavior:'smooth'});return;}
   if(v==='nations'){renderNations();$('#team-comparison').hidden=true;if(scroll)window.scrollTo({top:0,behavior:'smooth'});return;}
   if(v==='glossary'){renderTerms();if(scroll)window.scrollTo({top:0,behavior:'smooth'});return;}
   syncPositions();renderClubOptions();if(v==='compare')renderCompare();else renderTable();renderTeamComparison();if(scroll)window.scrollTo({top:0,behavior:'smooth'});
@@ -710,6 +725,7 @@ $('#teamfilter').onkeydown=e=>{if(e.key==='Escape'){$('#teamfilter').open=false;
 for(const [i,id]of ['#compare-team-left','#compare-team-right'].entries())$(id).onchange=()=>{teamCompareChoices[i]=$(id).value;renderTeamComparison();};
 $('#compare-picked').onclick=()=>{if(selectedTeamIds().length===2){teamCompareChoices=selectedTeamIds();renderTeamComparison();$('#team-comparison').scrollIntoView({behavior:'smooth',block:'start'});}};
 $('#team-comparison-body').onclick=e=>{const button=e.target.closest('[data-team-detail]');if(button)detail(button.dataset.teamDetail,true);};
+$('#ideal-select').onchange=()=>{selectedIdeal=$('#ideal-select').value;renderIdeal();};
 $('#nation-select').onchange=()=>{selectedNation=$('#nation-select').value;renderNations();};
 $('#nation-complete').onchange=renderNations;
 GradaOwner.init({onRefresh:refreshData});
@@ -824,6 +840,7 @@ async function start(){
     if(loaded&&publishedCapture)$('#refresh-status').textContent+=' Estás viendo las capturas de esta publicación. Tus datos guardados se conservan; recargar sin «datos=publicados» vuelve a usarlos.';
     if(!(await cleaned))$('#refresh-status').textContent+=' No se pudieron eliminar algunos datos guardados de ligas retiradas en este navegador.';
     if(loaded&&initialQuery.get('vista')==='fantasy'){navigate('fantasy',false);return;}
+    if(loaded&&initialQuery.get('vista')==='ideal'){selectedIdeal=initialQuery.get('once')||'leagues';navigate('ideal',false);return;}
     if(loaded&&initialQuery.get('vista')==='selecciones'){selectedNation=initialQuery.get('pais')||selectedNation;navigate('nations',false);return;}
     const requestedId=initialQuery.get('jugador');
     let requestedPlayer=data?.players.find(p=>p.id===requestedId);

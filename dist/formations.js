@@ -58,7 +58,7 @@
  // an incompatible player always costs more than leaving the slot empty.
  function assign(pool,slots,weight=c=>c.score){
   const candidates=[...pool].sort(order),n=slots.length,m=candidates.length+n;
-  const proof=slots.map(slot=>candidates.map(c=>evidence(c,slot.role))),weights=slots.map(slot=>candidates.map(c=>weight(c,slot))),scale=Math.max(1,...weights.flat().map(Math.abs)),missing=2*n+1;
+  const proof=slots.map(slot=>candidates.map(c=>evidence(c,slot.role))),weights=slots.map(slot=>candidates.map(c=>weight(c,slot))),scale=weights.reduce((max,row)=>row.reduce((current,value)=>Math.max(current,Math.abs(value)),max),1),missing=2*n+1;
   const cost=proof.map((row,i)=>Array.from({length:m},(_,j)=>j>=candidates.length?missing:row[j]?-weights[i][j]/scale:4*missing));
   const u=Array(n+1).fill(0),v=Array(m+1).fill(0),p=Array(m+1).fill(0),way=Array(m+1).fill(0);
   for(let i=1;i<=n;i++){
